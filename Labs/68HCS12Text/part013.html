@@ -1,0 +1,123 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>General Purpose I/O Pins</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table border="1" width="100%">
+<tr><td><a href="part012a.html">Previous Section</a></td>
+<td><a href="part013a.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part013" target="q">Questions</a></td>
+<td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>General Purpose I/O Pins</h1>
+
+<ul>
+  <li><a href="#Operation of General Purpose I/O Pins">Operation of General Purpose I/O Pins</a></li>
+  <li><a href="#Overridden Pins">Overridden Pins</a></li>
+  <li><a href="#Additional Functionality">Additional Functionality and the Core Module Ports</a></li>
+</ul>
+
+<p>Microcontrollers contain various peripheral devices, however all microcontrollers contain general purpose I/O pins. These pins can be programmed (via
+control registers) to be input pins or output pins. The pins are typically grouped together in sets of eight, called <em>ports</em>. Control and data registers manipulate
+all eight pins of a port.</p>
+
+<p>The ports of the Freescale MC9S12DP256B microcontroller are shown below. This figure comes from the <a href="../motorola/S12DP256PIMV2.pdf"><em>Port Integration Module Block Users Guide</em></a>.</p>
+
+<p><img src="fig13-9.gif" width="419" height="539" align=bottom /></p>
+
+<p>There are eight eight-bit ports (A, B, E, H, M, P, S, and T) and
+two narrower ports (J and K) that can be used for general purpose I/O
+when they are not being used by internal peripheral modules (ports H,
+M, P, S, T, and J) or for the external memory interface in the Core
+Module (ports A, B, E, and K).</p>
+
+<h2><a name="Operation of General Purpose I/O Pins">Operation of General Purpose I/O Pins</a></h2>
+
+<p> We will discuss an arbitrary 8 bit port called <em>X, </em>where X
+is one of ports H, M, P, S, or T. The description also applies to the
+four implemented pins of port J. The port has control registers,
+DDR<em>X</em>, RDR<em>X</em>, PPS<em>X</em>, and PER<em>X</em>, and
+data registers PT<em>X</em> and PTI<em>X</em>. Note that register
+PTI<em>X</em> is read-only and always reads the level on the device
+pads. Each bit in these registers corresponds to a single pin
+<em>PXn</em> such that bit <em>n</em> in the register is for pin
+<em>n</em>&nbsp;of the port. The schematic for a single pin is shown
+below.</p>
+
+<p><img src="fig12a-7.gif" width="455" height="430" align=bottom /></p>
+
+<p>If DDR<em>Xn</em> is 1, then pin n is programmed as an output pin. The value written into data register bit PT<em>Xn</em> drives the interface pad. If RDR<em>Xn</em> is 1, then the
+drive current is reduced from 10mA maximum to 2mA maximum. This will save power and reduce radio interference, but does make the output response
+slower. Reading from the data register PT<em>IX</em> will read the value at the pad, which should be the same value written to PT<em>Xn </em>if the pad is not shorted out.</p>
+
+<p>If DDR<em>Xn</em> is 0, then pin n is programmed as an input pin. The value at the pad can be read as data register bit PTI<em>Xn</em>. Data register bit PTX<em>n </em>is not used, but
+can be written by the processor. A read from PTX<em>n</em> will read the value at the pad, not the register! As an input pin, it is possible to enable either a pull-up or
+pull-down resistor which will draw 130 uA. To enable the pull-up/pull-down register bit PER<em>Xn</em> must be 1, then PPS<em>Xn</em> is 1 for the pull-down and 0 for the
+pull-up. </p>
+
+<p>Unused pins should either be configured for output, or configured as input with the pads physically connected to ground, or as input with a pull-up or pull-down enabled. Input pads should never be allowed to float because they can consume current and generate (electrical) noise. Use of a pull-up input allows
+implementation of a "wired-or" circuit. Multiple devices can drive the input using "open-drain" configuration such that the devices can pull the circuit to
+logic low, but the pull-up will keep the circuit at logic high if no device is pulling it low.</p>
+
+<p><img src="fig12a-9.gif" width="210" height="80" align=bottom /> </p>
+
+<p>To use the pins independently, the registers are written using the <em>bset</em> and <em>bclr</em> instructions, while they are read using the <em>brset</em> and <em>brclr</em> instructions, as
+described in a <a href="part010d.html">preceding section</a>. For instance, if we wanted to use port H pin 2 as an input pin without pull, we would configure with the code:</p>
+<pre>    bclr    DDRH #4
+    bclr    PERH #4</pre>
+
+<p>We would read the value of the pin, and branch to <em>foo2</em> if a 1, with the code:</p>
+<pre>    brset   PTIH #4 foo2</pre>
+
+<p>If we wanted to use port H pin 3 as an output pin with reduced drive, we would configure with the code:</p>
+<pre>    bset    DDRH #8
+    bset    RDRH #8</pre>
+
+<p>We set the pin high with:</p>
+<pre>    bset    PTH #8</pre>
+
+<p>And set it low with:</p>
+<pre>    bclr    PTH #8</pre>
+
+<p>Any pin can be used a bidirectional or three-state pin by changing the
+value of DDRH to 1 to drive 0 or 1, and DDRH to 0 for high-Z.</p>
+<h2><a name="Overridden Pins">Overridden Pins</a></h2>
+<p>When an internal peripheral module or memory interface is enabled, its
+use of the port pins overrides the general purpose I/O usage; however some
+configuration is still possible.</p>
+
+<p><img src="fig12a-8.gif" width="519" height="430" align=bottom /></p>
+
+<p>The module controls the pins direction and drive level. However it is possible to configure reduced drive when used as an output and pull-up/pull-down when
+used as an input. The value on the pad can always be read from register PTI. Register PT has no effect but can be written and, if DDR bit is 1, read.</p>
+<h2><a name="Additional Functionality">Additional Functionality and the Core Module Ports</a></h2>
+<p>Some ports (M and S) have an additional control register that enables an open-collector mode when used as an output. This is particularly useful when the
+peripheral module is driving the port pins. When used as general purpose pins, open-collector operation can be simulated by using the appropriate DDR bit to
+control the output between driving the pin low and high-Z.</p>
+
+<p>Ports P, H, and J can also be used as external interrupt trigger pins. This operation, sometimes called Key Wakeups, will be discussed later in the section
+<a href="part016.html#Key Wakeups"><em>External Interrupts</em></a>. </p>
+
+<p>Ports A, B, E, and K are part of the CPU core module and have a simpler hardware interface. The data registers are named PORTA, PORTB, PORTE, and
+PORTK, respectively, and behave like a PTI<em>X</em> register when read and like a PT<em>X</em> register when written. Direction is controlled in the normal fashion via data
+direction registers DDRA, DDRB, DDRE, and DDRK. There are no pull-down resistors, and pull-up resistors for pins that are input pins are controlled
+simultaneously for the entire port using the PUCR register, while reduced drive for pins that are output pins are controlled simultaneously for the entire port
+using the RDRIV register. Bit 0 controls port A, bit 1 controls port B, bit 4 controls port E, and bit 7 controls port K. Port E has some special considerations
+and typically should not be used for general purpose I/O. Port K bit 7 has a reserved use as well during power-up and typically should not be used for
+general purpose I/O. For full information about these ports, see the document <a href="../motorola/S12CPU15UG.pdf"><em>HCS12 Core Users Guide</em></a>, section 12.</p>
+
+<p><img src="fig12a-10.gif" width="376" height="342" align=bottom /></p>
+
+<p>Continue with <a href="part013a.html"><em>Parallel I/O Ports</em></a></p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

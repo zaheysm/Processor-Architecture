@@ -1,0 +1,10 @@
+added_value 0020
+destination_array 1020
+divisor    0002
+end_destination_array 102e
+end_source_array 100e
+gotoend    202d
+loop       2010
+loop1      201b
+source_array 1000
+subroutine 2020

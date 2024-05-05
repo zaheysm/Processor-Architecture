@@ -1,0 +1,29 @@
+
+as12, an absolute assembler for Motorola MCU's, version 1.2h
+
+                        ; BEQ_Version1.asm
+                        ; Author         David Haley, Professor
+                        ; Date           6 June 2021
+                        ; Purpose        A simple program that illustrates a Branch Equal Zero statement
+                        ;               after SBA, the instruction for "Subtract A from B"
+                        
+2000                            org     $2000
+                        
+2000 86 06                      ldaa    #$06
+2002 c6 05                      ldab    #$05
+2004 18 16                      sba
+2006 27 04                      beq     Result1
+2008 86 ff              Result2 ldaa    #$FF
+200a 20 02                      bra Finish
+200c 86 aa              Result1 ldaa  #$AA
+200e                    Finish  ; some code
+200e 3f                         swi
+                                end
+                        
+                        
+                        
+                                
+
+Executed: Mon Oct 04 13:14:38 2021
+Total cycles: 29, Total bytes: 15
+Total errors: 0, Total warnings: 0

@@ -1,0 +1,164 @@
+
+as12, an absolute assembler for Motorola MCU's, version 1.2h
+
+                        ; Array_Fun.asm
+                        ; Author: D. Haley, Faculty, 26 Nov 2021
+                        ;
+                        ; Student Name(s):
+                        ; Student Number(s):
+                        ; Modification Date:
+                        ;
+                        ;
+                        ; Purpose:      The purpose of this program is to gain further experience with
+                        ;               the use of Arrays in 68HCS12 Assembly Language by performing
+                        ;               the following Tasks:
+                        ;
+                        ;               a. Determine the Maximum value in the Array and store the
+                        ;                  value at Max
+                        ;               b. Determine the Minumum value in the Array and store the
+                        ;                  value at Min
+                        ;               c. Using the value stored at Max, determine how often that
+                        ;                  value occurs in the Array and store that value at NumMax
+                        ;               d. Using the value stored at Min, determine how often that
+                        ;                  value occurs in the Array and store that value at NumMin
+                        ;               e. Range tells how far apart the Max and Min numbers are in a set
+                        ;                  It is the positive difference between the two values
+                        ;                  Using the values in Max and Min, subtract those two
+                        ;                  values a store the result at Range
+                        ;               f. MidRange is the Average of the Range - e.g. Range / 2
+                        ;                  Using the Values of Range and DIVISOR, calculate the
+                        ;                  MidRange using idiv (mandatory) and store an 8-bit version of
+                        ;                  the Answer at MidRange and an 8-bit version of the Reminder
+                        ;                  at MidRange+1
+                        ;               g. Display NumMax and NumMin on the two right-most HEX Displays
+                        ;                  (like you did with the Counter), alternating their
+                        ;                  displayed values every 250 ms. This coding is provided for you.
+                        ;                  NOTE: API.s19 must be loaded in order for this feature to work.
+                        ;               h. Code must run correctly for more than one program run
+                        ;                  e.g. File -> Reset, the GO on Simulator must give same results
+                        
+                        ; --- Do Not Change Code marker ---
+                        ; Library Routines used in this software
+                        ;
+2117                    Config_Hex_Displays         equ        $2117
+211f                    Delay_Ms                    equ        $211F
+2139                    Hex_Display                 equ        $2139
+                        
+                                                        ; Port P (PPT) Display Selection Values
+000b                    DIGIT1_PP2      equ     %1011   ; 2nd from Right-most display MSB
+0007                    DIGIT0_PP3      equ     %0111   ; Right-most display LSB
+                        
+                        ; Delay Subroutine Values
+00fa                    DVALUE  equ     #250            ; Delay value (base 10) 0 - 255 ms
+                                                        ; 125 = 1/8 second <- good for Dragon12 Board
+                        
+0002                    DIVISOR equ     $02
+                        
+1000                            org     $1000
+1000                    Array
+                        #include 21F_Array.txt
+1000 24 40 f0 c3 f4 02  	db	$24,$40,$F0,$C3,$F4,$02,$C3,$E5
+     c3 e5
+1008 02 f3 65 aa 56 f3  	db	$02,$F3,$65,$AA,$56,$F3,$F3,$B0
+     f3 b0
+1010 f3 d6 01 03 0e 3e  	db	$F3,$D6,$01,$03,$0E,$3E,$40,$CC
+     40 cc
+1018 03 08 f3 f0 31 02  	db	$03,$08,$F3,$F0,$31,$02,$40,$01
+     40 01
+1020 01 f3 65 aa 56 f3  	db	$01,$F3,$65,$AA,$56,$F3,$F4,$B0
+     f4 b0
+1028 24 40 f0 c3 a0 02  	db	$24,$40,$F0,$C3,$A0,$02,$C3,$E5
+     c3 e5
+                        #endinclude
+
+1030                    EndArray
+                        
+1030                            org     $1030
+1030                    Max     ds      1
+1031                    Min     ds      1
+                        
+1040                            org     $1040
+1040                    NumMax  ds      1
+1041                    NumMin  ds      1
+                        
+1050                            org     $1050
+1050                    Range           ds      1
+1051                    MidRange        ds      2
+                        
+2000                            org     $2000
+2000 cf 20 00                   lds     #$2000
+                        
+                        ; --- End of Do Not Change Code marker ---
+                        
+                        ; your code goes here (as many lines at it takes)
+2003 79 10 40           	clr     NumMax
+2006 79 10 41                   clr     NumMin
+2009 ce 10 00                   ldx     #Array
+200c 18 18 30           loop    maxa    1,x+
+Array_Fun.asm:81: Warning - Value too large and has been masked to 0xFF
+200f 81 30                      cmpa    #Max
+2011 24 02                      bhs     next
+2013 20 03                      bra     tomin
+2015 7a 10 30           next	staa    Max
+2018 18 19 1f           tomin   mina    -1,x
+Array_Fun.asm:86: Warning - Value too large and has been masked to 0xFF
+201b 81 31                      cmpa    #Min
+201d 25 00                      blo     save
+201f 7a 10 31           save	staa    Min
+2022 8e 10 30           	cpx     #EndArray
+2025 26 e5                      bne     loop
+                                
+2027 ce 10 00                   ldx     #Array
+202a a6 30              loop1   ldaa    1,x+
+202c b1 10 30                   cmpa    Max
+202f 27 07                      beq     countMax
+2031 b1 10 31                   cmpa    Min
+2034 27 07                      beq     countMin
+2036 20 08                      bra     continue1
+2038 72 10 40           countMax	inc     NumMax
+203b 20 03                      bra     continue1
+203d 72 10 41           countMin  	inc     NumMin
+2040 8e 10 30           continue1       cpx     #EndArray
+2043 26 e5                      bne     loop1
+2045 87                         clra
+2046 96 30                      ldaa    EndArray-Array
+2048 36                         psha
+2049 ce 00 02                   ldx     #DIVISOR
+204c 18 10                      idiv
+204e 7e 10 51                   stx     MidRange
+2051 7c 10 52                   std     MidRange+1
+2054 32                         pula
+2055 7a 10 50                   staa    Range
+2058 20 1f                      bra     toend
+                        ; --- Do Not Change Code marker ---
+                        
+                                ; Output Results to Hex Displays
+                        
+                                ; NOTE 1 : API.s19 must be loaded in order for this feature
+                                ; NOTE 2 : Once you STOP the execution of the code in simulator,
+                                ;          you will be able to see the calculated values in memory
+                                ;          at the memory locations specified in the assignment.
+                        
+205a 16 21 17                   jsr     Config_HEX_Displays ; Use the Hex Displays to display the count
+205d b6 10 40           Display ldaa    NumMax
+2060 c6 0b                      ldab    #DIGIT1_PP2     ; select 2nd from Right Most HEX Display
+2062 16 21 39                   jsr     HEX_Display     ; Display the value
+2065 86 fa                      ldaa    #DVALUE         ; delay for DVALUE milliseconds
+2067 16 21 1f                   jsr     Delay_ms
+206a b6 10 41                   ldaa    NumMin
+206d c6 07                      ldab    #DIGIT0_PP3     ; select Right Most HEX Display
+206f 16 21 39                   jsr     HEX_Display     ; Display the value
+2072 86 fa                      ldaa    #DVALUE         ; delay for DVALUE milliseconds
+2074 16 21 1f                   jsr     Delay_ms
+2077 20 e4                      bra     Display
+2079 3f                 toend   swi
+                                end
+                        ; --- End of Do Not Change Code marker ---
+                        
+                        
+                        
+                        
+
+Executed: Wed Dec 01 16:10:55 2021
+Total cycles: 175, Total bytes: 170
+Total errors: 0, Total warnings: 2

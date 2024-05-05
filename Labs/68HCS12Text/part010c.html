@@ -1,0 +1,82 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Decision Trees and Logic Instructions</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table border="1" width="100%">
+<tr><td><a href="part009.html">Previous Section</a></td>
+<td><a href="part011.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part010" target="q">Questions</a></td>
+<td><a href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>Decision Trees and Logic Instructions</h1>
+
+<ul>
+  <li><a href="part010.html">Boolean Logic Review</a></li>
+  <li><a href="part010a.html">Selection Control Structure</a></li>
+  <li><a href="part010b.html">Bitwise Boolean Operations</a></li>
+  <li><span class="selected">Advanced Bit Instructions</span></li>
+  <li><a href="part010d.html">Bitwise Boolean Summary</a></li>
+</ul>
+<h2><a name="Advanced Bit Instructions"></a>Advanced Bit Instructions</h2>
+
+<p>Well maybe "advanced" is being a bit extreme. Let's just say "convenient". These instructions are used to set, clear, or test memory bits. We will see that all I/O is controlled via bits which are
+mapped to memory locations, so these instructions are used frequently.</p>
+
+<div class="boxed"><ul>
+  <li><a name="bset"><em>bset</a></em> - Set bit(s) in memory</li>
+  <li><em><a name="bclr">bclr</a></em> - Clear bit(s) in memory</li>
+</ul></div>
+
+<p>These instructions have two operands. The first is a memory byte location, and the direct, extended, or any indexed addressing mode is allowed. The second is a mask. It is always immediate
+addressing mode. The <em>bset</em> instruction sets the bits at the memory location for which the corresponding mask bit is a 1. The <em>bclr</em> instruction clears the bits at the memory location for which the
+corresponding mask bit is a 1. Both instructions alter the N and Z condition code bits according to the result of the operation, and clear the V bit.</p>
+
+<p>Examples:</p>
+<pre>    bset    $810 #$4     ; Set bit number 2 in memory location $810
+    bclr    $812 #$81    ; Clear bits 0 and 7 in memory location $812</pre>
+
+<p>These example instructions are each equivalent to a three instruction sequence which uses an accumulator:</p>
+<pre>    ldaa    $810         ; sequence for bset example
+    oraa    #$4
+    staa    $810
+
+    ldaa    $812         ; sequence for bclr example
+    anda    #~$81        ; AND with complement of mask
+    staa    $812</pre>
+
+<p>Two instructions combine a bit test of memory with conditional branches:</p>
+
+<div class="boxed"><ul>
+  <li><em><a name="brset">brset</a></em> - Branch if memory bits set</li>
+  <li><em><a name="brclr">brclr</a></em> - Branch if memory bits clear</li>
+</ul></div>
+
+<p>These instructions have three operands. The first is a memory location, and the direct, extended, or any indexed addressing mode is allowed. The second is a mask, which is immediate addressing
+mode. The third operand is the branch target, which uses 8 bit PC relative addressing mode. Neither instruction affects the condition codes.</p>
+
+<p>The <em>brset</em> instruction will perform the branch if all the bits in the memory byte corresponding to 1 bits in the mask are 1. In other words, all the bits specified by the mask must be 1. The <em>brclr</em>
+instruction will perform the branch if all the bits in the memory byte corresponding to 1 bits in the mask are 0. In other words, all the bits specified by the mask must be 0. The typical use for either
+instruction is to have a mask with only one bit with a value of 1, so that the branch is taken depending on the corresponding memory bit being either 1 (<em>brset</em>) or 0 (<em>brclr</em>).</p>
+
+<p>The following code segment will count inefficiently the number of 1 bits in memory location $1000, placing the count in accumulator A:</p>
+<pre>    clra                 ; count is initially zero
+l1: brclr $1000 #1 l2    ; branch if lsb is clear
+    inca                 ; bit is set, so increment count
+l2: lsr   $1000          ; Shift $1000 to the right
+    bne   l1             ; if there are more 1's, loop
+</pre>
+
+<p>Continue with <a href="part010d.html"><em>Bitwise Boolean Summary</em></a></p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

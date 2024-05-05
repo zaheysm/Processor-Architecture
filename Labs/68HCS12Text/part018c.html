@@ -1,0 +1,194 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>The Timer Module</title>
+<link rel="shortcut icon" href="icon.ico">
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table BORDER="1" WIDTH="100%">
+<tr><td><a href="part017.html">Previous Section</a></td>
+<td><A href="part018e.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part018" target="q">Questions</a></td>
+<td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>The Timer Module</h1>
+
+<ul>
+  <li><a href="part018.html">Timer Count</a></li>
+  <li><a href="part018a.html">Input Capture</a></li>
+  <li><a href="part018b.html">Output Compare</a></li>
+  <li><span class="selected">The Special Case of Channel 7</span></li>
+  <li><a href="part018d.html">Pulse Accumulator</a></li>
+</ul>
+
+<p>Timer Channel 7 Output Compare has additional capabilities not in the other channels. These capabilities will be covered
+below. </p>
+<h2><a name="The Special Case of Channel 7"></a>The Special Case of Channel 7</h2>
+
+<p>Channel 7 has the ability to drive any or all Port T pins as the result of an output compare. To configure channel 7 for this
+capability, the timer must be enabled (TEN=1) and channel 7 must be configured for output compare (IOS7=1). Note that it
+is not necessary for channel 7 to drive PT7, so OM7 and OL7 can both be zero. Registers OC7M and OC7D are used to
+specify the special actions on channel 7 compare.</p>
+
+<table BORDER="1" WIDTH="100%">
+<tr><TD COLSPAN="9"><strong>Timer Output Compare Channel 7 Additional Functionality Control and Status Bits</strong>
+
+<br />(Bits in <FONT COLOR="#ff0000">red</FONT> are not used by output compare function)
+<br/>(Bits in <FONT COLOR="#0000ff">blue</FONT> are described under <a href="part018.html"><em>Timer Count</em></a>)</td></tr>
+<tr><th>Register</th>
+<th>Bit 7</th>
+<th>Bit 6</th>
+<th>Bit 5</th>
+<th>Bit 4</th>
+<th>Bit 3</th>
+<th>Bit 2</th>
+<th>Bit 1</th>
+<th>Bit 0</th></tr>
+<tr><td>TIOS</td>
+<td>IOS7</td>
+<td>IOS6</td>
+<td>IOS5</td>
+<td>IOS4</td>
+<td>IOS3</td>
+<td>IOS2</td>
+<td>IOS1</td>
+<td>IOS0</td></tr>
+<tr><td>OC7M</td>
+<td>OC7M7</td>
+<td>OC7M6</td>
+<td>OC7M5</td>
+<td>OC7M4</td>
+<td>OC7M3</td>
+<td>OC7M2</td>
+<td>OC7M1</td>
+<td>OC7M0</td></tr>
+<tr><td>OC7D</td>
+<td>OC7D7</td>
+<td>OC7D6</td>
+<td>OC7D5</td>
+<td>OC7D4</td>
+<td>OC7D3</td>
+<td>OC7D2</td>
+<td>OC7D1</td>
+<td>OC7D0</td></tr>
+<tr><td>TSCR2 (was
+originally
+TMSK2)</td>
+<td><FONT COLOR="#ff0000">TOI</FONT></td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>TCRE</td>
+<td><FONT COLOR="#0000ff">PR2</FONT></td>
+<td><FONT COLOR="#0000ff">PR1</FONT></td>
+<td><FONT COLOR="#0000ff">PR0</FONT></td></tr></table>
+
+<p>To enable channel 7 compare to alter any port T output, the corresponding bit of OC7M and IOS is set. When a channel 7
+compare occurs, the port T output is changed to the value in the corresponding bit of OC7D. For instance, to have a channel
+7 compare set PT5 and clear PT4, one would set bits OC7M5, OC7M4 and OC7D5, and also IOS5 and IOS4 if it were not
+already set.</p>
+
+<p>If a channel is configured for output both by OC7M and by TCTL1 or TCTL2, then if a compare occurs simultaneously on
+both channel 7 and the other channel, the channel 7 change (specified by OC7D) has priority.</p>
+
+<p>The following interrupt driven program uses only the channel 7 comparator
+to drive all channels. PT0 is driven at a frequency of 50 kHz (each half
+period is 10 microseconds), PT1 at a frequency of 25 kHz, PT2 at 12.5 kHz,
+and so on. Note that while the channel 7 interrupt occurs every 10 microseconds,
+the output of PT7 will only change every 327,670 microseconds based on
+the value of OC7D7.</p>
+<pre>#include registers.inc
+        org     PRSTART         ; Program memory
+entry:
+        ; Initialization code
+        lds     #RAMEND         ; Initialize stack pointer
+        movw    #tc7int UserTimerCh7   ; Set interrupt vector using D-BUG12
+        bset    TIOS #$ff       ; Set all TIOS bits 
+                                ;  (all pins will be driven)
+        bset    OC7M #$ff       ; Set all OC7M bits
+                                ;  (drive from OC7)
+        bset    TSCR1 #$90      ; Set TEN and TFFCA bits
+        bset    TIE #$80        ; Set C7I bit
+        ldd     TCNT            ; Set initial count
+        addd    #10*24
+        std     TC7
+        cli                     ; allow interrupts
+
+        ; Idle process
+idle:   wai
+        bra     idle
+
+        ; Interrupt Service Routine
+tc7int:
+        inc     OC7D            ; Increment OC7D
+        ldd     TC7             ; Set time for next match
+        addd    #10*24
+        std     TC7
+        rti</pre>
+
+<p>The program can be run from <a href="part018cx.html">here</a>
+   using the simulator. The D-BUG12 emulator is used, so the Go button must be pressed twice to start program execution. </p>
+
+<p><HR>
+If we program an Output Compare channel to toggle its Port T pin, and then never change the value in its TC<em>n</em> register, the pin will change state every 65536 TCNT clocks when TCNT equals TC<em>n</em>.
+Thus it is very easy to make a square wave generator with a period 2 * 65536 * 1/24 microseconds, or 5,461.33 milliseconds. Output Compare channel 7 can be used to reset the TCNT register to 0 at
+any count value. By using this feature, it's possible to generate a single square wave of any period (within the range of TCNT values) without any software overhead after initialization.
+
+<p>The magic bit that sets this mode is TCRE in the TSCR2 register. When this bit is 1, then an output compare 7 will reset the counter. It is important to realize that when TCRE is used, the counter never
+overflows, so programs cannot rely on the use of TOF. However C7F is set when the counter resets.</p>
+
+<p>The following program generates a 1 MHz square wave on pin PT7:</p>
+<pre>#include registers.inc
+       org     PRSTART
+       bset    TIOS #$80       ; Enable channel 7 output compare
+       bset    TCTL1 #$40      ; Set OL7 for toggle output on PT7
+       movw    #11 TC7         ; Reset at count 11 (12 counts total)
+       bset    TSCR2 #$8       ; Set TCRE
+       bset    TSCR1 #$80      ; Turn on timer module
+; At this point we can do anything, and the square wave will be 
+; continuously generated
+idle:  nop
+       nop
+       nop
+       bra idle</pre>
+
+<p>The program is <a href="part018c2.asm">here</a>, and can be executed <a href="part018c2x.html">here</a>.</p>
+
+<p>This feature can save a large number of processor cycles for other tasks, but it does restrict the use of the counter module. Many systems require pulse width modulated square waves as control signals
+for servos. In a pulse width modulated square wave, the period remains constant while the proportion of time spent in the high and low states varies. The program below drives PT0 with a 10 kHz
+square wave. The proportion of the period in the high state is (TC0+1)/2400. For a symmetrical signal (50 microseconds high and 50 microseconds low) TC0 would be set to 1199. For a 10% duty
+cycle (10 microseconds high and 90 microseconds low, TC0 would be set to 239.</p>
+<pre>#include registers.inc
+        org     PRSTART
+        bset    TIOS #$81       ; Enable channel 7, 0 output compares
+        bset    OC7M #$1        ; Channel 7 compare drives PT0 high
+        bset    OC7D #$1
+        bset    TCTL2 #$2       ; Channel 0 compare drives PT0 low
+        movw    #2399 TC7       ; Reset at count 2399 (2400 counts total)
+        movw    #1199 TC0       ; Toggle at count 1199 (50% duty cycle)
+        bset    TSCR2 #$8       ; Set TCRE
+        bset    TSCR1 #$80      ; Turn on timer module
+; At this point we can do anything, and the square wave will be 
+; continuously generated
+idle:   nop
+        nop
+        nop
+        bra     idle</pre>
+
+<p>The program uses TCRE and the OC7 compare to set the period and drive PT0 high. The OC0 circuit drives PT0 low when TCNT=TC0. </p>
+
+<p>The HCS12 and certain HC12 microcontrollers  have a dedicated module for generating PWM signals. This will be discussed in the section <a href="part018e.html"><em>Pulse Width Modulation</em></a>. </p>
+
+<p>The program is <a href="part018c3.asm">here</a>, and can be run from <a href="part018c3x.html">here</a>.</p>
+
+<p>Continue with <em><a href="part018d.html">Pulse Accumulator</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>68HC12 Instruction Set Overview</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table border="1" width="100%" cellpadding="1" cellspacing="1">
+<tr valign="top"><td><a href="part004.html">Previous Section</a></td>
+<td><a href="part006.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part005" target="q">Questions</a></td>
+<td><a href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>68HC12 Instruction Set Overview</h1>
+
+<ul>
+  <li><a href="part005.html">Classes of Instructions</a></li>
+  <li><a href="part005a.html">Addressing Modes</a></li>
+  <li><span class="selected">Instruction Timing</span></li>
+</ul>
+
+<p>It is often important to know the exact execution times of
+instructions. The instruction execution time is expressed in terms of
+<em>CPU Cycles</em>, which are the same as a basic memory clock cycle.
+A <em>memory clock cycle</em> is the time to read or write a memory
+location, and is 1/24 microseconds in the Dragon12-Plus system. It can be
+as little as 40ns and still meet the specifications of the HCS12 part.
+Earlier 68HC12 microcontrollers took 125ns. Timing information is
+provided at the bottom of the instruction descriptions in the
+ <a href="../motorola/S12CPUV2.pdf"><em>S12CPUV2
+Reference Manual</em></a>. Let's examine the table at the bottom
+of the description of the ADDA instruction (figure copied from the
+Reference Manual):</p>
+
+<p><img src="fig5b-1.gif" width="454" height="168" align=bottom /></p>
+
+<p>The execution time depends on the addressing mode used, and is calculated by counting the <em>CPU Cycles</em> shown. For instance, ADDA with an
+immediate mode operand takes a single clock cycle, <em>P</em>, while ADDA with an accumulator D indexed indirect mode operand takes 6 clock cycles,
+fIfrPf.</p>
+
+<p>However, it is also important to know what memory accesses are taking place during an instruction. Accessing the internal EEPROM or Flash
+memory as a word reference on an odd address takes an additional memory reference because it must be accomplished as two byte memory
+references.  Accessing external RAM or ROM can take additional time. An external word reference that is not at an even address takes an additional
+memory reference for the same reason as the internal reference. If the external memory is 8 bits wide then all word references take the additional
+memory reference since all references must be done as two byte references. In addition, most memory cannot run at the speed required for quickest
+access by the processor. For this reason, the clock is often
+"stretched" to allow additional time. In the Dragon12-Plus board, the microcontroller uses only
+on-chip memory, so no additional time is taken. Details of memory referencing will be described in the section on <a href="part021.html">External Memory/Peripheral
+Interfacing</a>.</p>
+
+<p>Instructions are always fetched as words from even memory locations. The access detail character <em>P</em> indicates the fetch of an instruction word. The
+letter <em>O</em> indicates an optional fetch. Instructions that are three bytes long have one cycle of <em>P</em> and one of <em>O</em>. The optional fetch is necessary to fill the
+instruction queue on average half the time, namely when the first byte of the instruction is not at an even address. The letter <em>f</em> indicates a free clock
+cycle where there is no memory reference. <em>r</em> and <em>R </em>are 8 and 16 bit data reads, while <em>w </em>and <em>W</em> are 8 and 16 bit data writes.<em> I</em> is an indirect pointer
+fetch, which behaves like a 16 bit data read. The Users Guide lists other access detail characters that exist, but these are the primary ones. Instruction
+timing can be calculated by using this information, and knowing the memory being accessed. For example, the instruction <em>ADDA 100,X</em> is a 9 bit
+constant index operand instruction, the 5<sup>th</sup> line in the chart. It shows three clock cycles of types rPO. Assuming a one clock "stretch" for all external
+memory references, we have eight possible conditions:</p>
+
+<div class="minor"><ul>
+  <li>Instruction in internal memory
+  <ul>
+    <li>Instruction starts at even memory location (no memory reference in <em>O</em> cycle)
+    <ul>
+      <li>Data in interna lmemory - No additional clocks, total time is 3 clock cycles.</li>
+      <li>Data in external memory - <em>r</em> cycle takes 1 additional clock, total time is 4 clock cycles</li>
+    </ul>
+    </li>
+    <li>Instruction starts at odd memory location
+    <ul>
+      <li>Data in internal memory - No additional clocks, total time is 3 clock cycles.</li>
+      <li>Data in external memory - <em>r </em>cycle takes 1 additional clock, total time is 4 clock cycles.</li>
+    </ul>
+    </li>
+  </ul>
+  </li>
+  <li>Instruction in external memory (assuming 16 bit wide memory)
+  <ul>
+    <li>Instruction starts at even memory location (no memory reference in <em>O</em> cycle)
+    <ul>
+      <li>Data in internal memory - <em>P</em> cycle takes one additional clock, total time is 4 clock cycles.</li>
+      <li>Data in external memory - <em>P</em> and <em>r</em> cycles each take one additional clock, total time is 5 clocks.</li>
+    </ul>
+    </li>
+    <li>Instruction starts at odd memory location
+    <ul>
+      <li>Data in internal memory - <em>P</em> and <em>O</em> cycles each take one additional clock, total is 5 clocks.</li>
+      <li>Data in external memory - all cycles take one additional clock, total is 6 clocks.</li>
+    </ul>
+    </li>
+  </ul>
+  </li>
+</ul></div>
+
+<p>If the external memory is 8 bit, then there will be additional time for instruction fetches in external memory, two extra clocks for each one that takes
+place, so in the worst case the instruction would take 10 clocks. The best case time is 3 clocks.</p>
+
+<p>Continue with <a href="part006.html"><em>Load, Store, and Move Instructions</em></a>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

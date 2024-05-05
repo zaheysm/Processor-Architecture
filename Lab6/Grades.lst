@@ -1,0 +1,67 @@
+
+as12, an absolute assembler for Motorola MCU's, version 1.2h
+
+                        ; Author:               Zahi Masarwa
+                        ; Student Number:       040985420
+                        ; Date:                 02 Nov 2021
+                        
+                        ;constants for the if statements
+005a                    NINETY  equ      90
+0050                    EIGHTY  equ      80
+0046                    SEVENTY equ      70
+003c                    SIXTY   equ      60
+                        
+                        
+                        
+1000                            org $1000       ; memory origin
+1000                    Marks                   ; define the array name marks
+                        #include Marks.txt      ; load the file marks.txt
+1000 41 4a 4e 4d        		db	65, 74, 78, 77
+1004 38 3a 31 63        		db	56, 58, 49, 99
+1008 46 61 4c 54        		db	70, 97, 76, 84
+100c 60 56 62 3b        		db	96, 86, 98, 59
+                        #endinclude
+
+1010                    End_Marks               ; end of the array
+1030                    	org     $1030   ; memory origing
+1030                    Grades  ds      $20     ; store grades in the memory with size $20
+                        ;Expected Result
+                        ;                   D C C C F F F A C A C B A B A F
+                        ; as shown in the sumilator
+                        
+2000                            org     $2000   ; memory origin
+2000 ce 10 00                   ldx     #Marks
+2003 cd 10 30                   ldy     #Grades
+2006 a6 30              loop    ldaa    1,x+
+2008 81 5a                      cmpa    #NINETY
+200a 24 12                      bhs     AssignA
+200c 81 50                      cmpa    #EIGHTY
+200e 24 12                      bhs     AssignB
+2010 81 46                      cmpa    #SEVENTY
+2012 24 12                      bhs     AssignC
+2014 81 3c                      cmpa    #SIXTY
+2016 24 12                      bhs     AssignD
+2018 81 3c                      cmpa    #SIXTY
+201a 25 12                      blo     AssignF
+201c 20 14                      bra     cont
+201e c6 41              AssignA ldab    #'A'
+2020 20 10                      bra     cont
+2022 c6 42              AssignB ldab    #'B'
+2024 20 0c                      bra     cont
+2026 c6 43              AssignC ldab    #'C'
+2028 20 08                      bra     cont
+202a c6 44              AssignD ldab    #'D'
+202c 20 04                      bra     cont
+202e c6 46              AssignF ldab    #'F'
+2030 20 00                      bra     cont
+2032 6b 70              cont    stab    1,y+
+2034 8e 10 10              	cpx     #End_Marks
+2037 26 cd                      bne     loop
+2039 3f                         swi
+                                end
+                        
+                                
+
+Executed: Wed Nov 03 19:44:38 2021
+Total cycles: 75, Total bytes: 74
+Total errors: 0, Total warnings: 0

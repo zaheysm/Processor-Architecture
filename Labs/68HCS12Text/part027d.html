@@ -1,0 +1,109 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Putting an Application in EEPROM/ROM</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table BORDER="1" WIDTH="100%">
+<tr><td><a href="part027c.html">Previous Appendix</a></td>
+<td><a href="part027e.html">Next Appendix</a></td>
+<td><a href="index.html">Index</a></td><td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>Putting an Application in EEPROM/ROM</h1>
+
+<p>The following guide is for making standalone applications which run on
+the Dragon12-plus board; however the information applies in general. When doing
+development work, the program code is typically stored in RAM when it can
+be easily modified. However in the final application, the code needs to
+be in non-volatile memory. In addition, during development the program
+relies on system initialization via D-Bug12. The final application code
+is run directly after power-up so must handle all system initialization.</p>
+
+<table border="0" width="100%"><tr><td>
+<p>The MC9S12DG256B in the Dragon12-Plus has the memory map shown
+   on the right. On the right side is the memory usage when D-Bug12 is
+   installed. Interrupts are handled by the boot loader, which jumps
+   to the corresponding interrupt routine in the interrupt table at
+   $EF80-$EFFF. This table is maintained by D-Bug12, which in turn
+   jumps to the corresponding interrupt routine provided in a
+   RAM-based table, allowing developer applications to provide
+   interrupt routines without reprogramming the flash memory. The
+   developer has available RAM from $1000 to $3C00 and EEPROM from
+   $400 to $FFF.</p></td>
+<td><img src="fig27d-1.gif" width="450"
+height="347"></td></tr></table>
+
+<p>The file <em>registers.inc</em> provides definitions for program
+   code and data areas in a program. The map on the left, below, shows
+   how the RAM is divided for program, data variables, and stack when
+   an application is loaded in RAM and executed using D-Bug12.</p>
+
+<p><img src="fig27d-2.gif" width="572" height=356"></p>
+
+
+<p>In a standalone application all program code and constants must be in ROM or other
+   non-volatile memory. In the Dragon12-plus board, this means the on-chip EEPROM memory or Flash ROM memory. It is
+easier to use the EEPROM memory using the memory map on the right in
+the figure above. EEPROM is available from location $400 through
+$FFF. EEPROM from $000 to $3FF is hidden by the register
+block, which could be moved if necessary to increase the amount of
+available EEPROM.  When the board is set to boot to the EEPROM, the
+boot loader will jump to location $400 and the
+D-Bug12 debugger program will be ignored. Available RAM memory
+locations are $1000
+through $3DFF.</p>
+
+<p>Because the interrupt vectors are still in flash ROM, they are "revectored" to location $3E00-$3E7F. Any application interrupt vectors must be stored in this array during initialization,
+just like they are in a D-Bug12 based program.</p>
+
+<p>Normally the D-Bug12 program initializes the evaluation board, however in a standalone application, the application code must do any necessary initialization. Consider the following:</p>
+<div class="minor">
+<ul>
+  <li>Make a copy of the file <a href="registers.inc">registers.inc</a> and edit it, changing "DBUG12MAP equ 0" to "EEPROMMAP equ 0". This will change the memory map address constants to be appropriate
+for an EEPROM based program.</li>
+  <li>Be sure to initialize the stack pointer if interrupts are to be used (D-Bug12 actually did this for you!</li>
+  <li>Initialize RAM variables - you cannot rely on any specific initial values.</li>
+  <li>You will need to configure the PLL to run at full speed. The
+     crystal is 8 MHz and the desired clock speed is 24 MHz, which
+     means you need to multiply the frequency by 3. The code
+to accomplish this is:
+<pre>    movb    #2 SYNR      ; Set multiplier to 3x
+xx: brclr   CRGFLG #$8 xx ; wait for PLL to lock
+    movb    #$80 CLKSEL   ; Enable the PLL.</pre>
+For systems with 4 MHz crystals, the multiplication factor is 6,
+and the value of SYNR would be 5.
+</li>
+  <li>None of the peripheral interfaces are configured.
+     You will need to configure all that your application uses.
+     You still cannot use SCI0 with interrupts because the interrupt
+     vector table in RAM is managed by D-Bug12 code. The interrupt vector table
+must still be initialized at runtime, as already mentioned..</li>
+</ul>
+</div>
+<p>When the program is assembled, it will want to load into the EEPROM $400-$FFF address. The D-Bug12 LOAD command is capable of loading EEPROM directly in most systems,
+including the Dragon12-plus. <strong>WARNING: DO NOT WRITE TO THE ENTIRE EEPROM, BUT ONLY TO THE LOCATIONS YOU USE.</strong> Byte location $FFD is a "protection"
+byte and writing to it may make it impossible to write to the EEPROM again (without a recovery procedure which requires two boards and use of BDM mode). Once the EEPROM is
+programmed, the application can be run by changing the dip switches so
+the boot loader jumps to EEPROM rather than starting D-BUG12.</p>
+
+<table border="0" width="100%"><tr><td>
+<p>If the application is to be run from the flash memory (because, for instance, it requires more than 4K of ROM) then the vector table must be set up in the flash ROM at $FFF80 to
+$FFFFF, or at $FEF80 to $FEFFF if the boot loader is still present. The (16 bit) start address is specified in the vector table. Programming the flash memory will remove D-Bug12.
+The <a href="registers.inc">registers.inc</a> file has memory map definitions for operation with the 68HCS12 boot loader present. The definition "DBUG12MAP equ 0" must be changed to "FLASHMAP equ
+0". In this case the interrupt vectors are stored in a table in flash memory starting at EF80 and must be initialized using DW assembler directives. The reset vector at $EFFE must also
+be set to the start of the program execution. Additional consideration must be given to the memory bank switching. In general, applications that are intended to be loaded in flash
+memory should be created using a commercial assembler or compiler tools that can handle the bank switching.</p>
+</td><td>
+   <img src="fig27d-3.gif" width="276" height="328"></td></tr></table>
+
+<p>Continue with <a href="part027e.html"><em>Frequency Meter Example</em></a></p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

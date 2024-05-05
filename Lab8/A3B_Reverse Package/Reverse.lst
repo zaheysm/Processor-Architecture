@@ -1,0 +1,86 @@
+
+as12, an absolute assembler for Motorola MCU's, version 1.2h
+
+                        ; Reverse.asm
+                        
+                        ; Author:               D. Haley, Professor, for CST8216
+                        ; Modified by:          <place your Name(s) here>
+                        ; Student Number(s):    <place your Student Number(s) here>
+                        ; Lab Section(s):       <place your Lab Section Number(s) here>
+                        ; Course:               CST8216 Fall 2021
+                        ; Date:                 <include the code completion date here>
+                        
+                        ; Purpose       To copy and reverse an array using the supplied
+                        ;               Flowchart while performing the following:
+                        ;               additional operations to decrypt the Secret Message.
+                        ;               After reading in an 8-bit value from the Source Array,
+                        ;               we decrypt the value by
+                        ;               a. dividing the value by 2
+                        ;               b. then adding 32 to the value
+                        ;               c. then storing the value in the Destination Array
+                        ;
+                        ; Decryption Constants
+0002                    DIVISOR         equ     2        ; Values in supplied array will be divided by
+                                                        ; this value
+0020                    ADDED_VALUE     equ     32      ; Dividend value will have 32 added to it
+                        
+1000                                    org     $1000
+1000                    Source_Array
+                        #include A3B_Array.txt
+1000 46 4a 48 00 2a 22  	db	$46,$4A,$48,$0,$2A,$22,$0,$66,$52,$0,$5A,$42,$70,$4A
+     00 66 52 00 5a 42
+     70 4a
+                        
+                        
+                        #endinclude
+
+100e                    End_Source_Array
+1020                                    org    $1020    ; Secret Message will appear
+                                                        ; starting here
+1020                    Destination_Array
+1020                                    ds      End_Source_Array-Source_Array   ; auto calculate Array Size
+102e                    End_Destination_Array
+                        
+                        
+                        ;expected output
+                                  ;input $46,$4A,$48,$0,$2A,$22,$0,$66,$52,$0,$5A,$42,$70,$4A
+                                  ;output $4A,$70,$42....   $46
+                                  
+                        ;
+                        
+2000                                    org     $2000
+2000 cf 20 00                           lds     #$2000        ; Initialize Stack
+2003 79 10 2e                           clr     $102E
+2006 87                                 clra
+2007 c7                                 clrb
+2008 ce 10 0d                           ldx     #End_Source_Array-1
+200b cd 10 20                           ldy     #Destination_Array
+                        
+                        
+                                        
+200e e6 3f                              ldab    1,x-
+2010 34                 loop            pshx
+2011 ce 00 02                       	ldx     #DIVISOR
+2014 18 10                      	idiv
+2016 b7 54                              tfr     x,d
+2018 37                                 pshb
+2019 20 05                              bra     SubRoutine
+201b 30                 loop1           pulx
+201c e6 3f                              ldab    1,x-
+201e 20 f0                              bra     loop
+                        
+                        
+2020 33                 SubRoutine      pulb
+2021 cb 20                              addb    #ADDED_VALUE
+2023 6b 40                              stab    0,y
+2025 02                                 iny
+2026 8d 10 2e                           cpy     #End_Destination_Array
+2029 27 02                              beq     goToENd
+202b 20 ee                              bra     loop1
+                                        
+202d 3f                 goToENd         swi
+                                        end
+
+Executed: Wed Nov 24 18:52:08 2021
+Total cycles: 72, Total bytes: 60
+Total errors: 0, Total warnings: 0

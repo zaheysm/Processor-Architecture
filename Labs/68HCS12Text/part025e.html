@@ -1,0 +1,101 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Floating Point Arithmetic</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table BORDER="1" WIDTH="100%">
+<tr><td><a href="part024.html">Previous Section</a></td>
+<td><a href="part026.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part025" target="q">Questions</a></td>
+<td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>Floating Point Arithmetic</h1>
+
+<ul>
+  <li><a href="part025.html">Overview</a></li>
+  <li><a href="part025a.html">IEEE Floating Point Format </a></li>
+  <li><a href="part025b.html">Converting Between Integer and Floating Point</a></li>
+  <li><a href="part025c.html">Floating Point Multiplication</a></li>
+  <li><a href="part025d.html">Floating Point Addition</a></li>
+  <li><span class="selected">Floating Point Comparison and Section
+     Conclusion</span></li>
+</ul>
+
+<p>When we wanted to compare two integers we subtracted one from the other. We could compare two floating
+point values the same way, but that would be more time consuming than necessary. Instead the code does the
+comparison by taking the following steps:</p>
+
+<div class="minor"><ol>
+  <li>If the two values differ in sign and are not both zero, then the positive value is greater. If they are both zero
+they are equal (+0 = -0).</li>
+  <li>If the two values are positive, then compare them as integers. The result of the comparison is correct for the
+floating point values.</li>
+  <li>If the two values are negative, then compare them as integers after clearing the sign bits. The result of the
+comparison is correct for the floating point values exchanged. In other words, if as integers A &gt; B, then the
+floating point A is less than the floating point B.</li>
+</ol></div>
+
+<h2>Conclusion</h2>
+
+<p>While using floating point can aid in calculations, especially when the dynamic range of values is large, there are
+two negative factors - size and speed. The floating point library occupies roughly 1000 bytes of memory. It is
+also very slow. An addition takes 51 microseconds, under the best conditions of no shifting. Microcontrollers
+with floating point instructions in hardware overcome these problems. In such processors there is often little or
+no reason not to make extensive use of floating point values in
+calculations.</p>
+<p>We will finish with a floating point algorithm which finds the
+square root of a floating point number, using Newton's method.
+<em>val</em> is the floating point value for which we wish to calculate the
+square root, and <em>sqrt</em> is the calculated square root value.
+The algorithm is iterative in that each new estimate for the square
+root is (val/sqrt + sqrt)/2. We will start with the initial estimate
+being val itself:</p>
+<pre>        movw    val sqrt ; first estimate
+        movw    val+2 sqrt+2
+</pre>
+<p>We will repeat the algorithm calculation seven times. To do this,
+the algorithm is enclosed in a loop:</p>
+<pre>        ldaa    #7              ; 7 iterations
+loop:   psha                    ; save iteration count
+<strong><em>Algorithm Goes Here</em></strong>
+        pula                    ; iteration count
+        dbne    a loop
+        swi			; finished - return to the debugger
+</pre>
+<p>Finally we have the algorithm calculation. Instead of dividing by
+two, we multiply by 0.5, and use a floating point constant value.</p>
+<pre>        movw    val+2 2,-sp     ; calculate val/sqrt
+        movw    val 2,-sp
+        movw    sqrt+2 2,-sp
+        movw    sqrt 2,-sp
+        jsr     fpDivide
+        movw    sqrt+2 2,-sp    ; val/sqrt + sqrt
+        movw    sqrt 2,-sp
+        jsr     fpAdd
+        movw    #0 2,-sp        ; 0.5
+        movw    #$3f00 2,-sp
+        jsr     fpMultiply
+        movw    2,sp+ sqrt      ; new sqrt = (val/sqrt + sqrt)*0.5
+        movw    2,sp+ sqrt+2
+</pre>
+<p>The source code for the program is <a href="newton.asm">here</a> and
+can be run <a href="part025ex.html">here</a>. The value of <em>val</em>
+must be stored in memory before starting the program. If the value is
+set to 10.0 ($41200000), the result is calculated in 312.25 microseconds
+to be $404a62c1, which is 3.1622775. The closest floating point value
+to the square root of ten is $404a62c2, so the algorithm is providing
+an answer as exact as the floating point package can provide.</p>
+
+<p>Continue with <em><a href="part026.html">Fuzzy Logic</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

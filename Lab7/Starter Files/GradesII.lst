@@ -1,0 +1,90 @@
+
+as12, an absolute assembler for Motorola MCU's, version 1.2h
+
+                        ; GradesII.asm
+                        ;
+                        ; Author: Zahi Masarwa
+                        ; Course: CST8216
+                        ; Student Number: 040985420
+                        ; Date: 2021-11-15
+                        ;
+                        ; Purpose:              To Tally up the number of As, Bs, Cs, Ds and Fs
+                        ;                       from a Grades Array as per 21F Flowchart for GradesII
+                        ;                       which uses a Nested-IF structure
+                        
+0000                    STACK   ds      $2000   ;constant to load stack
+0041                    A       equ     'A'     ;contant of char A
+0042                    B       equ     'B'     ;contant of char B
+0043                    C       equ     'C'     ;contant of char C
+0044                    D       equ     'D'     ;contant of char D
+0046                    F       equ     'F'     ;contant of char F
+                        
+1020                            org     $1020   ;org to use as the assignment
+1020 00                 IF_F    db      0       ;to store the count of each letter
+1021 00                 IF_D    db      0
+1022 00                 IF_C    db      0
+1023 00                 IF_B    db      0
+1024 00                 IF_A    db      0
+                        
+                        
+1000                            org        $1000            ; as per assignment instructions
+1000                    Grades
+                        #include Grades.txt     ; Grades file supplied for assignment
+1000 41 46 43 44 46     	db	'A, 'F, 'C, 'D, 'F
+1005 41 42 46 41 41     	db	'A, 'B, 'F, 'A, 'A
+100a 42 43 42           	db	'B, 'C, 'B
+100d 43 42 46           	db	'C, 'B, 'F
+                        
+                        
+                        
+                        #endinclude
+
+1010                    End_Grades              ;the end of the array
+                        
+                        
+                        
+                        
+                        
+                        ; Expected Result
+                                ;1020   1021    1022    1023    1024
+                                ;04     01      03      04      04
+                        ;
+                        
+2000                            org     $2000   ;org to start code
+2000 cf 00 00                   lds     #STACK  ;load the stack
+2003 79 10 20                   clr     IF_F
+2006 79 10 21           	clr	IF_D
+2009 79 10 22           	clr	IF_C
+200c 79 10 23           	clr	IF_B
+200f 79 10 24           	clr	IF_A
+2012 ce 10 00                   ldx     #Grades ;load the array to x
+2015 a6 30              loop    ldaa    1,x+    ;load the first element of array to A
+2017 81 46                      cmpa    #F      ;if accumulator A = to F
+2019 27 12                      beq     GotoF   ;branch to GotoF
+201b 81 44                      cmpa    #D      ;if accumulator A = to D
+201d 27 13                      beq     GotoD   ;branch to GotoD
+201f 81 43                      cmpa    #C      ;if accumulator A = to C
+2021 27 14                      beq     GotoC   ;branch to GotoC
+2023 81 42                      cmpa    #B      ;if accumulator A = to B
+2025 27 15                      beq     GotoB   ;branch to GotoB
+2027 81 41                      cmpa    #A      ;if accumulator A = to A
+2029 27 16                      beq     GotoA   ;branch to GotoA
+202b 20 19                      bra     check   ;if no match branch to check
+202d 72 10 20           GotoF   inc     IF_F    ;incrament IF_F by 1
+2030 20 14                      bra     check   ;branch to check
+2032 72 10 21           GotoD   inc     IF_D    ;incrament IF_D by 1
+2035 20 0f                      bra     check   ;branch to check
+2037 72 10 22           GotoC   inc     IF_C    ;incrament IF_C by 1
+203a 20 0a                      bra     check   ;branch to check
+203c 72 10 23           GotoB   inc     IF_B    ;incrament IF_B by 1
+203f 20 05                      bra     check   ;branch to check
+2041 72 10 24           GotoA   inc     IF_A    ;incrament IF_A by 1
+2044 20 00                      bra     check   ;branch to check
+2046 8e 10 10           check   cpx     #End_Grades     ;compare x to end of array
+2049 26 ca                      bne     loop    ;branch to loop if not equal to x
+204b 3f                         swi             ; forces program to quit executing in memory
+                                end
+
+Executed: Fri Nov 19 20:43:15 2021
+Total cycles: 93, Total bytes: 97
+Total errors: 0, Total warnings: 0

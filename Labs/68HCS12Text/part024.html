@@ -1,0 +1,333 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Scaled Integer Arithmetic</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table BORDER="1" WIDTH="100%">
+<tr><td><a href="part020.html">Previous Section</a></td>
+<td><a href="part025.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part024" target="q">Questions</a></td>
+<td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>Scaled Integer Arithmetic</h1>
+
+<ul>
+  <li><a href="#Binary Scaling">Binary Scaling</a></li>
+  <li><a href="#Fractional Scaling">Fractional Scaling</a></li>
+  <li><a href="#Instructions Supporting Fractions">Instructions Supporting Fractions</a></li>
+</ul>
+
+<p>A byte in memory is a collection of bits. Each of the eight bits has two (binary) values, so 256 different values can be
+represented. Most of the time we represent integer values, either 0 through 255 or -128 through 127 if we are doing signed
+arithmetic, however we can represent <em>any</em> 256 values.</p>
+
+<p>When the value represents a physical measurement, such as in the
+   analog to digital converter where a count of 1 represents about
+   0.0012 volts, the value is considered to have a <em>scale
+      factor</em>. The stored value is multiplied by the scale factor
+   to get the physical value that is being represented. For instance,
+   in the converter case, the scale factor is 0.0012 volts, so if the
+   converter returns 100, that represents 0.12 volts.</p>
+
+<p>Quite often we want to represent numbers that don't fit well within bytes or words. For instance, if we want to represent a
+measurement that ranges from 0 to 10, this fits well within a byte, but we can't differentiate between, say, 5.0 and 5.1
+because they both would be stored as 5. The problem is that integers have a <em>precision</em> of 1. They cannot represent values any
+more precisely than that. Suppose that the value ranges from 0 to 1000. This value cannot be stored in a byte at all, even
+though we might not need a precision of 1. To solve this problem, we
+an use a scale factor.</p>
+
+<h2><a name="Binary Scaling">Binary Scaling</a></h2>
+
+<p>We can imagine a binary point, analogous to the decimal point in decimal numbers. Normally when dealing with integer
+values, the binary point is at the far right of the number, and our bits have values:</p>
+
+<table BORDER="1" WIDTH="100%" CELLPADDING="1" CELLSPACING="1">
+<tr><td>2<sup>7</sup></td>
+<td>2<sup>6</sup></td>
+<td>2<sup>5</sup></td>
+<td>2<sup>4</sup></td>
+<td>2<sup>3</sup></td>
+<td>2<sup>2</sup></td>
+<td>2<sup>1</sup></td>
+<td>2<sup>0</sup> .</td></tr></table>
+
+<p>If we were to consider the binary point one bit toward the left, we would have the following:</p>
+
+<table BORDER="1" WIDTH="100%" CELLPADDING="1" CELLSPACING="1">
+<tr><td>2<sup>6</sup></td>
+<td>2<sup>5</sup></td>
+<td>2<sup>4</sup></td>
+<td>2<sup>3</sup></td>
+<td>2<sup>2</sup></td>
+<td>2<sup>1</sup></td>
+<td>2<sup>0</sup> .</td>
+<td>2<sup>-1</sup></td></tr></table>
+
+<p>Now the least significant bit has the decimal value 0.5, and the range of values we can represent are 0 through 127.5 with a
+precision of 0.5. </p>
+
+<p>If the binary point is moved to the far left end of the number, we get:</p>
+
+<table BORDER="1" WIDTH="100%" CELLPADDING="1" CELLSPACING="1">
+<tr><td>.  2<sup>-1</sup></td>
+<td>2<sup>-2</sup></td>
+<td>2<sup>-3</sup></td>
+<td>2<sup>-4</sup></td>
+<td>2<sup>-5</sup></td>
+<td>2<sup>-6</sup></td>
+<td>2<sup>-7</sup></td>
+<td>2<sup>-8</sup></td></tr></table>
+
+<p>where the least significant bit has the decimal value of 0.00390625, and the range of values we can represent are 0 through
+0.99609375, with a precision of 0.0039065. This is the <em>binary fraction</em> representation.</p>
+
+<p>How about the problem where we want to represent a value in the range 0 to 1000? Well we can move the binary point two
+bits beyond the right edge of the number, and have implicit 0's:</p>
+
+<table BORDER="1" WIDTH="100%" CELLPADDING="1" CELLSPACING="1">
+<tr><td>2<sup>9</sup></td>
+<td>2<sup>8</sup></td>
+<td>2<sup>7</sup></td>
+<td>2<sup>6</sup></td>
+<td>2<sup>5</sup></td>
+<td>2<sup>4</sup></td>
+<td>2<sup>3</sup></td>
+<td>2<sup>2</sup></td>
+<td>(0)</td>
+<td>(0) .</td></tr></table>
+
+<p>Now our eight bits can represent values in the range 0 to 1020, with a precision of 2<sup>2</sup> or 4.</p>
+
+<p>The processor does not directly support calculations of other than integer
+values (there are a few exceptions, <a href="#Instructions Supporting Fractions">listed below</a>).
+The programmer must keep track of the binary point by hand, while writing the code. Since the values to the processor
+appear as integers, we can most easily represent real values in the form N2<sup>E</sup>, where N is the integer seen by the processor
+and E represents the position of the binary point with positive
+values to the right of the right most bit. The scale factor is
+2<sup>E</sup>.</p>
+
+<p>To add or subtract two scaled values, the scale factors must be identical. This means that the larger scale factor can be
+lowered by shifting corresponding integer N to the left, each left shift multiplies N by two and reduces the exponent by
+1. Doing this risks overflow if there are insufficient bits to hold the larger N. It is also possible to match the scale factors
+by increasing the lesser scale factor, shifting the corresponding integer N to the right. Each shift divides N by two and
+increases its exponent by 1. Of course this eliminates some significant digits, reducing the accuracy of the result.</p>
+
+<p>If we multiply two scaled values, we add the exponents to get the value
+of E of the product. If we divide two scaled values, we subtract the exponents
+to get the value of E of the quotient. Let's assume we have that byte value
+in the range 0-1000, with the scale factor of 2<sup>2</sup> (or E=2). We wish to divide the value by 4.5 and produce an integer result. 4.5 can be
+represented as 9(2<sup>-1</sup>). Let's look at the code:</p>
+<pre>            ; Start with value in B, A cleared to 0
+    ldx    #9
+    idiv    ; quotient in X, scale factor is 2^(2 - -1) or 23
+    tfr    X D</pre>
+<p>Now the quotient is in D, but it is scaled by 2<sup>3</sup> - the LSB has a value of 8. We can convert to an integer by shifting left
+three bit positions. Each left shift multiplies N by 2, and reduces E by 1.</p>
+<pre>    asld
+    asld
+    asld</pre>
+
+<p>Now we have our result, which would be in the range of 0 to 1000/4.5 or 222, which fits well in a byte. The precision of
+the value is, of course, 1, since it is not scaled. But what is our accuracy? Is our result accurate to the last bit? Certainly
+not! We lost accuracy when we did the division because any remainder was discarded. Consider the case where the value
+is 1000. This value, scaled, is 250. When we divide by 9 we get 27, with a remainder of 7 which we ignore. Shifting left
+three times yields the result 216. Our answer is off by 6! In the next section we will see a solution to the problem.</p>
+
+<p>When we shift to the right (to increase the scale factor), we lose
+   precision, but also introduce an error because the value is always
+   truncated (rounded down). We can correct for this by incrementing
+   the value before the final shift, which effectively adds 0.5 to the
+   result. To convert from a scale factor of E=-3 to E=0 in an
+   unsigned value we would execute:</p>
+<pre>    lsrd
+    lsrd
+    lsrd
+    addd    #1
+    lsrd</pre>
+
+<p>Binary fractions are useful when we want to represent parts of a whole. Consider a signal generator application where a
+cycle of a waveform is represented by a 256 byte table of amplitudes. The byte index into the table can be viewed as a
+binary fraction of the cycle. The application uses a timer channel configured to interrupt every 10 microseconds, and the
+interrupt routine contains the following code segment:</p>
+<pre>    ldaa    cnt     ; cnt is fraction of cycle
+    inca            ; advance 1/256 of cycle
+    staa    cnt
+    ldx     #table
+    ldab    a,x     ; fetch byte in table at index cnt
+    stab    DAC     ; store byte into digital to analog converter</pre>
+
+<p>This code segment will cause the waveform to be generated such that a full cycle will take 256 * 10 microseconds, or
+2.56 milliseconds. We could change the waveform frequency by adjusting the interrupt time, however we get better
+control by adjusting the portion of the cycle advanced with each interrupt. For instance, if we added 2 to <em>cnt</em> instead of 1,
+the frequency would double. We can get finer control by adding more bits of precision. If <em>cnt</em> were 16 bits and we used
+the upper 8 bits to index the table then an increment of 256 would give us the same frequency as before but we could
+now fine adjust the frequency by less than 0.5% by changing the increment to 255 or 257. The minimum frequency
+drops to nearly 1 Hz. The code segment becomes:</p>
+<pre>    ldd     cnt     ; cnt is fraction of cycle
+    addd    increment ; Incrementing value, controls frequency
+    std     cnt
+    ldx     #table
+    ldab    a,x     ; fetch byte in table at index cnt
+    stab    DAC     ; store byte into digital to analog converter</pre>
+
+<p>Binary scaling can be done in C by using the shift operators,
+   <em>&lt;&lt;</em> and <em>&gt;&gt;</em>. The type of shift
+   performed, arithmetic or logical, depends on the sign-ness of the
+   value being shifted.</p>
+
+<h2><a name="Fractional Scaling">Fractional Scaling</a></h2>
+<p>A better technique has been promoted by the Forth programming language,
+which has been popular with embedded processors for control applications.
+Instead of scaling by powers of 2, a fraction is used. Thus the number
+is represented as N(A/B), where N is the value stored in memory and A/B
+is the fractional scale factor. A and B must both be integers in a range
+that can be handled by the multiply and divide instructions of the processor.
+Let's return to the problem of representing the value in the range 0 to
+1000. If we use a scale factor of (1000/255), then a value N=255 would
+represent 255x(1000/255) or 1000. The scale factor also represents the
+precision of measurements, 3.9, which is slightly better than the 4 we
+got for the binary scaling.</p>
+
+<p>How would we convert the value back to an integer quantity? Well with the binary scaling, we would only have to shift
+twice. With fractional scaling, we have to do a multiply-divide sequence:</p>
+<pre>                ; Value is in D
+    ldy    #1000 ; multiply by A
+    emul        ; 32 bit product is in Y:D
+    ldx    #255 ; divide by B
+    ediv        ; quotient is in Y</pre>
+
+<p>We always do the multiply before the divide - this maintains maximum accuracy.</p>
+
+<p>Now suppose instead we want to divide the value by 4.5 and represent as an integer. Dividing by 4.5 is the same as
+multiplying by 2 and dividing by 9. So we get the answer N(1000/255)x(2/9). Combining numerators and denominators:
+N(2000/2295). This gives us the code:</p>
+<pre>               ; value in D
+   ldy    #2000 ; multiply by 2000
+   emul         ; 32 bit product is in Y:D
+   ldx    #2295 ; divide by 2295
+   ediv         ; quotient is in Y.</pre>
+
+<p>Now how accurate is our calculation? The precision of N determines the accuracy since the calculations themselves are accurate to the LSB (this wasn't the case with binary scaling). With N being precise to 3.9, and with the division by 4, our answer should be accurate to slightly better than 1, basically a &quot;perfect&quot; result. Again let's take the case of our original value being 1000. To store it as N requires multiplying by the inverse of the scale factor, or 255/1000. This gives the value N=255, as we have already seen. Now we multiply by 2000 and divide by 2295, obtaining the answer 222! It is correct!</p>
+
+<p>Often we want rounded results. This way cumulative error averages to 0 because half the time one rounds up and the
+other half one rounds down. We can easily add rounding to the multiply-divide sequence:</p>
+<pre>              ; value in D
+   ldx    #2000 ; multiply by 2000
+   emul         ; 32 bit product is in Y:D
+   addd   #1147  ; add half of divisor to dividend
+   bcc    L1    ; if there is a carry, increment Y
+   iny
+L1:
+   ldx    #2295 ; divide by 2295
+   ediv         ; quotient is in Y</pre>
+
+<p>Adding half of the divisor to the dividend effectively adds 0.5 to the quotient. This provides the rounding. If we were
+doing signed calculations (these examples are all unsigned) then we would have to add half of the divisor if the
+dividend were positive and subtract half of the divisor if the dividend were negative.</p>
+
+<p>The Analog to Digital Converter values are best thought of as binary fractions of full scale reading. When left justified
+converter modes are used, it doesn't matter how many bits are involved in the conversion (typically switchable between 8
+and 10 in most 68HC12 versions) as all values, <em>N</em>, can be considered as 5N volts. Let's consider storing an ADC value in
+a word memory location, <em>MV</em>, scaled to be a voltage in millivolts. The scale factor of the ADC register is 5*2<sup>-16</sup> volts.
+The scale factor location MV is 10<sup>-3</sup> volts. In order to store the value in the ADC register into MV, we must scale the
+value to have the same scale factor. This means we must multiply the value by 5*2<sup>-16</sup> then divide by 10<sup>-3</sup>. Expressed as a
+fraction, this is 5000/65536. Division by 65536 is easy - it means we use the upper 16 bits of the product. The code will
+be:</p>
+<pre>   ldd    ADR0H ; ADC value in D
+   ldy    #5000 ; multiply by 5000
+   emul         ; 32 bit product is in Y:D
+   sty    MV    ; store product/65536 in MV</pre>
+
+<p>If an 8 bit Digital to Analog Converter is built using a resistor ladder and a parallel port, the output voltage will be
+10M/768 volts, where <em>M</em> is the value stored in the DAC (this is a typical lab experiment, taken for granted here in this
+text!). If an application is to drive the DAC from ADC values such as the output voltage is one half of the input voltage
+(note that it can't be the same since the DAC won't output 5 volts), then we have DACVoltage = ADCVoltage/2.
+Knowing the relationships between the digital values and voltages of the converters, we get 10M/768 = 5*2<sup>-16</sup>N/2.
+Solving for M, M=(768*5*N)/(10*2*65536) = 192N/65536, keeping the convenient denominator. The code will be (this
+time rounding the result):</p>
+<pre>   ldd    ADR0H    ; ADC value in D
+   ldy    #192     ; multiply by 5000
+   emul            ; 32 bit product is in Y:D
+   addd   #65536/2 ; round result to nearest integer
+   bcc    L2       ; increment Y if there is a carry
+   iny
+L2:
+   sty    MV       ; store product/65536 in MV</pre>
+
+<p>Another useful technique combines binary and fractional scaling to
+   perform a division by using only a multiplication. This is
+   particularly useful for microcontrollers which have either very
+   slow or no division instructions in their CPU. Instead of
+   performing a division, one multiplies by the reciprocal. We
+   represent the reciprocal as a binary fraction. The binary fraction
+   reciprocal of <em>N</em> is 65536/N, since the scale factor is
+   2<sup>16</sup> or 65536. Performing the
+   multiplication (using the <em>emul</em> or <em>emuls</em>
+   instruction) gives a 32 bit product with the binary point between
+   the two 16 bit words. We then use the upper 16 bit word as the
+   result, or we can round the value first if we want. For example,
+   say we want to divide by 7. We can use the following code:</p>
+<pre>    ldd     value
+    ldy     #65536/7
+    emul                ; 32 bit product in Y:D
+    addd    #65536/2    ; add 0.5 to product
+    bcc     L3          ; increment Y if there is a carry
+    iny
+L3: sty     result</pre>
+
+<p>Performing fractional scaling in C presents a small problem.
+   For instance, if p and q are declared to be (16 bit) unsigned
+   integers <em>q = p*1000/255;</em> won't give the same result as the
+   first example in this section. The problem is that the first
+   multiply will not give a 32 bit product. Instead we must force the
+   multiplication to give a 32 bit product, <em>q =
+      p*1000UL/255;</em>.</p>
+
+<h2><a name="Instructions Supporting Fractions">Instructions Supporting Fractions</a></h2>
+<p>The 68HC12 has several instructions that work on unsigned binary fractions. A binary fraction is a value for which the
+binary point is at the far left end of the value, in other words a scale factor of 2<sup>-8</sup> for bytes or 2<sup>-16</sup> for 16 bit words. A
+binary fraction represents values from 0 to slightly less than 1.</p>
+
+<p>The <em>fdiv</em> instruction divides two unsigned 16 bit values and produces the fractional result. It requires that the dividend be
+smaller than the divisor since the quotient must be less than one. A division can be carried out to any number of bits by
+using <em>fdiv</em> on the remainder of the previous division (either <em>idiv</em> or <em>fdiv</em>) to produce the next 16 bits of quotient. While
+obtaining more than 16 bits to the right of the binary point does not increase the accuracy of the quotient (the quotient
+cannot be more accurate than the dividend or divisor) it can be useful to use <em>idiv</em> and <em>fdiv</em> as a pair. Consider this code
+sequence:</p>
+<pre>    ldd     n1       ; divide 16 bit unsigned variables, n1 by n2
+    ldx     n2
+    idiv             ; integer quotient in X, remainder in D
+    stx     q1       ; save integer quotient in upper half of 32 bit variable q1
+    ldx     n2       ; now divide remainder by n2.
+    fdiv
+    stx     q1+2     ; save fractional quotient in lower half of 
+                     ; 32 bit variable q1</pre>
+
+<p>The result of dividing <em>n1</em> by <em>n2</em> is stored in the 32 bit variable <em>q1.</em> <em>q1</em> has a scale factor of 2<sup>-16</sup>, since the binary point is between the two 16 bit halves. Let's say <em>n2</em> is known to never be less than 8. This means that the quotient cannot be
+larger than 65535/8 or 8191. We can safely scale the quotient into a 16 bit variable with scale factor of 2<sup>-3</sup> by shifting left
+three times and using the upper word. This value will be accurate in all 16 bits.</p>
+
+<p>The Fuzzy membership function, <em>mem</em>, has membership rules that are binary fractions. The <em>tbl</em> and <em>etbl </em>instructions
+perform an interpolation based on a binary fraction. For an example of the use of the <em>tbl</em> instruction, refer back to <em><a href="part009.html#Table Interpolation">Using
+Tables and Arrays -- Table Interpolation</a>.</em> We can use the <em>tbl</em> instruction in the waveform generator example, given
+earlier, to interpolate the table and give more accurate output by making a small change to the program:</p>
+<pre>    ldd     cnt     ; cnt is fraction of cycle
+    addd    increment ; Incrementing value, controls frequency
+    std     cnt
+    ldx     #table
+    tbl     a,x     ; fetch byte in table at index cnt
+    staa    DAC     ; store byte into digital to analog converter</pre>
+
+<p>Continue with <em><a href="part025.html">Floating Point Arithmetic</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

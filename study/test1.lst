@@ -1,0 +1,28 @@
+
+as12, an absolute assembler for Motorola MCU's, version 1.2h
+
+                        ; Author:               Zahi Masarwa
+                        ; Student Number:       040985420
+                        ; Date:                 15 Oct 2021
+                        
+2000                    Stack	equ        $2000
+                        
+1000                            org     $1000
+1000 01 55 22 fe 08     Numbers db      $01, $55, $22, $fe, $08
+1005                    Result  ds            1
+1006 0f                 HST     db      15
+                        
+2000                            org     $2000
+2000 cf 20 00                   lds     #Stack
+2003 ce 10 00                   ldx     #Numbers
+2006 b6 10 06                   ldaa    HST
+2009 a6 03                      ldaa    3,x
+200b e6 32                      ldab    3,x+
+200d 7c 10 05                   std     Result
+2010 3f                         swi
+                                end
+                                
+
+Executed: Tue Nov 02 14:01:25 2021
+Total cycles: 30, Total bytes: 23
+Total errors: 0, Total warnings: 0

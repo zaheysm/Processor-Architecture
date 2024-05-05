@@ -1,0 +1,30 @@
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>An Answwer for Designing with Microcontrollers -- The 68HCS12</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+<!--Version 4. Contents copyright 2007, Thomas Almy-->
+<h2>Question</h2>
+
+<p>>It is desired to use the timer module to measure the period of
+   a signal applied to pin 0 of port T using polling rather than an
+   interrupt. The period could be as long as
+   0.1 seconds and we don't want to handle TCNT overflow. The system clock is 24 MHz. The timer module is not
+   used for any other purpose. What code sequence will configure
+   channel 0 for operation?</p>
+
+<h2>Answer</h2>
+
+<p>This will require the prescaler to divide by 64 to get the maximum
+   resolution. 65535*64*(1/24MHz) = 0.17476 seconds.</p><pre>
+   movb  #$80 TSCR1  ; TEN=1
+   movb  #6 TSCR2    ; set PR=6 (divide by 64)
+   movb  #1 TCTL4    ; Capture time on rising edges for channel 0
+   clr   TIOS        ; Optional since default is 0. IOS0=0</pre>
+
+</body> </html>

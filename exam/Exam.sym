@@ -1,0 +1,15 @@
+array      1000
+array_len  0010
+continue   2028
+counter    1030
+divisor    0010
+end_array  1010
+end_index_number_array 1020
+index      0000
+index_number_array 1010
+loop       2008
+non_zero   00ff
+offset     000f
+orig_zero  00cc
+store      2024
+storer     201d

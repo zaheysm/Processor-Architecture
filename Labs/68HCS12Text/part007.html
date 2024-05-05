@@ -1,0 +1,320 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title> Arithmetic Instructions</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table border="1" width="100%">
+<tr><td><a href="part006.html">Previous Section</a></td>
+<td><a href="part008.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part007" target="q">Questions</a></td>
+<td><a href="search.htm" target="search">Search the
+   Text</a></td></tr></table>
+
+ <h1>Arithmetic Instructions</h1>
+<p><em>This section is split among several pages because of its
+   length. The start of split sections have a table of contents
+   showing each page and the contents of the current page. The current
+   page is emphasized in <span class="selected">bold</span>.</em></p>
+
+<ul>
+  <li><span class="selected">Addition and Subtraction</span>
+  <ul>
+    <li><a href="#8 Bit Addition">8 Bit Addition</a></li>
+    <li><a href="#8 Bit Subtraction">8 Bit Subtraction</a></li>
+    <li><a href="#16 bit Addition and Subtraction">16 bit Addition and Subtraction</a></li>
+    <li><a href="#Increments and Decrements">Increments and Decrements</a></li>
+    <li><a href="#Negate">Negate</a></li>
+    <li><a href="#BCD Addition">BCD Addition</a></li>
+  </ul>
+  </li>
+  <li><a href="part007a.html">Multiplication and Division</a></li>
+  <li><a href="part007b.html">Shifting</a></li>
+  <li><a href="part007c.html">Test and Compare</a></li>
+</ul>
+
+<p>This section covers the integer arithmetic functions of the 68HC12. It is important to keep in mind that there are two major representations of integers
+that the 68HC12 supports, unsigned and signed (two's complement). Most instructions will function properly with either signed or unsigned arguments, however it is up to the programmer to keep
+track of which data represents signed and which unsigned values. As was discussed <a href="part002.html">earlier</a>, numeric overflow is indicated from different conditions depending on the values being signed or
+undersigned, and it will also matter when comparing values and performing multiplications and divisions.</p>
+
+<p><a name="mixed"></a>What happens if, for instance, one needs to add an unsigned value to a signed value? One must discover what the actual range of values will be (rather than the <em>possible</em> range of values), and then
+calculate the possible range of sums. If the range of sums is such that it is in the range of unsigned values, the result can be considered an unsigned value. If it is in the range of signed values, then the
+result can be considered a signed value. If it is in both ranges, then it can be considered as either signed or unsigned - you get to decide. The unlucky situation is when the range would be outside of
+either the signed or unsigned ranges - then the values must be <em>extended</em> in length before adding.</p>
+
+<p>Example 1:  Byte value P is unsigned in the range of 10 to 50, byte value Q is signed in the range -10 to 50. The sum can be in the range of  0 to 100, so the sum can be considered as either signed or
+unsigned.</p>
+
+<p>Example 2: Byte value P is unsigned in the range of 10 to 50, byte value Q is signed in the range -20 to 50. The sum can be in the range -10 to 100, so it must be considered to be signed.</p>
+
+<p>Example 3: Byte value P is unsigned in the range 0 to 200, byte value Q is signed in the range -20 to 20. The sum is in the range -20 to 220, which cannot be represented as either a signed or
+unsigned byte. Both values need to be extended to 16 bit words and then added. The sum will be a signed word.</p>
+
+<p><strong>It is important to note</strong> that when using the assembler, the programmer is responsible for knowing the size of data, and which values are signed and unsigned. The assembler (and the processor) will
+not realize any mistake has been made. This is a particular advantage of using a compiler, such as a C language compiler, for which data can be declared to be signed or unsigned, and all arithmetic
+instructions generated correctly for the data types.</p>
+<h2><a name="8 Bit Addition">8 Bit Addition</a></h2>
+
+<p>The 8 bit addition instructions are:</p>
+
+<div class="boxed"><ul>
+  <li><em><a name="aba">aba</a> </em>- Add accumulator B to accumulator A</li>
+  <li><em><a name="adda">adda</a></em> - Add memory to accumulator A</li>
+  <li><em><a name="addb">addb</a></em> - Add memory to accumulator B</li>
+  <li><em><a name="adca">adca</a></em> - Add memory with carry to accumulator A</li>
+  <li><em><a name="adcb">adcb</a></em> - Add memory with carry to accumulator B</li>
+</ul></div>
+
+<p>All of these instructions alter the condition code register based on the result of the addition. It is possible to conditionally branch based on the result being positive, negative, or zero (or combination
+of these), or overflow, either signed or unsigned. The carry condition code flag is set based on the carry out of the addition and is used for multi-byte addition as well as the unsigned overflow
+indication.</p>
+
+<p>The <em>aba</em> instruction adds the contents of accumulator B to A. There is no instruction to add A to B, however if this is needed, it can be done using exchange instructions with the <em>aba</em> instruction. </p>
+
+<p>The <em>adda</em> and <em>addb</em> instructions add the contents of a memory location to the accumulator A or B. Valid addressing modes are immediate (which allows adding a constant value to the accumulator),
+direct, extended, or indexed. Examples:</p>
+<pre>    adda    $1100    ; add byte at memory location $1100 to accumulator A
+    addb    #4       ; add 4 to accumulator B
+    aba              ; add contents of accumulator B to accumulator A
+    adda    #-10     ; Add -10 to accumulator A. NOTE THAT THIS IS NOT THE
+                     ; SAME AS SUBTRACTING 10 if the value in accumulator A
+                     ; is unsigned, since this operation mixes signed and
+                     ; unsigned operands (<a href="#mixed">see comments at top of this page</a>).</pre>
+
+<p>The <em>adca</em> and <em>adcb</em> instructions are identical to <em>adda</em> and <em>addb</em> except the contents of the carry condition code flag is also added to
+the sum. This allows adding two numbers that are any number of bytes long,
+a byte at a time. Operations on multiple byte values are called <em>multiple-precision calculations. </em>This code segment adds the two 16 bit numbers starting at word locations $1000 and $1002
+together, placing the sum at word location $1004:</p>
+<pre>    ldaa    $1001   ; Least significant byte of word at $1000 loaded into A
+    adda    $1003   ; Add the least significant byte of word at $1002 into A
+    staa    $1005   ; Store sum in least significant byte of word at $1004
+                    ; Carry flag, set by the adda instruction, is not altered
+                    ; by execution of the staa or the ldaa that follows.
+    ldaa    $1000   ; Most significant byte of word at $1000 loaded into A
+    adca    $1002   ; Add most sigificant byte of word at $1002, and the carry
+                    ; out of the first addition into A. 
+    staa    $1004   ; Store sum in most significant byte of word at $1004</pre>
+
+<p>It is also possible to add two numbers of differing lengths. The approach below works when the shorter number is unsigned. The problem is to add the unsigned byte at location V1 to the 24 bit
+value starting at location V2. The sum value is, of course, three bytes long, and is to be stored at V3:</p>
+<pre>    ldaa    V1      ; load 8 bit value
+    adda    V2+2    ; add least significant byte of 24 bit value
+    staa    V3+2    ; store the sum into result least significant byte
+    ldaa    V2+1    ; load middle byte of 24 bit value
+    adca    #0      ; add carry to the middle byte (immediate 0 value adds
+                    ; zero - no effect!)
+    staa    V3+1    ; store sum
+    ldaa    V2      ; load most significant byte of 24 bit value
+    adca    #0      ; add carry to the most significant byte
+    staa    V3      ; store most significant byte of sum</pre>
+
+<p>If we wanted to add a signed 8 bit value to the 24 bit value, the 8 bit value would need to be sign extended. That means if it were negative, the operands for both the <em>adca</em> instructions would need to
+be #$ff. If we don't know in advance whether the value is positive or negative, then the program gets more complicated. We will look at this again later.</p>
+<h2><a name="8 Bit Subtraction"></a>8 Bit Subtraction</h2>
+
+<p>The 8 bit subtraction instructions are:</p>
+
+<div class="boxed"><ul>
+  <li><em><a name="sba">sba</a> </em>- Subtract accumulator B from accumulator A</li>
+  <li><em><a name="suba">suba</a></em> - Subtract memory from accumulator A</li>
+  <li><em><a name="subb">subb</a></em> - Subtract memory from accumulator B</li>
+  <li><em><a name="sbca">sbca</a></em> - Subtract memory with carry from accumulator A</li>
+  <li><em><a name="sbcb">sbcb</a></em> - Subtract memory with carry from accumulator B</li>
+</ul></div>
+
+<p>These instructions work analogously to the 8 bit addition instructions.  One important thing to note is that the carry flag set by the subtract instructions represents a borrow and not a carry. The <em>sbca</em>
+and <em>sbcb</em> instructions subtract the carry flag value from the result. In other words, <em>suba</em> and <em>sbca</em> produce the same result if the carry flag is zero, and <em>sbca</em> produces a result that is one less if the
+carry flag is one. While <em>adda #0</em> added the carry flag to accumulator A, <em>sbca #0</em> subtracts the carry flag from accumulator A.</p>
+
+<p>The condition code register is set according to the result of the subtraction. Additional branch conditions are available over what we had with addition, namely we can branch based on how the two
+operand values compare - greater, less than, equal, greater or equal, less than or equal, or not equal.  Examples:</p>
+<pre>    suba    $1100    ; subtract byte at location $1100 from accumulator A
+    subb    #4       ; subtract 4 from accumulator B. This will validly set
+                     ; the condition codes for unsigned integers.
+    sba              ; subtract contents of accumulator B from accumulator A
+    suba    #-10     ; Subtract -10 from accumulator A. NOTE THAT THIS IS 
+                     ; NOT THE SAME AS ADDING 10 if the value in 
+                     ; accumulator A is unsigned, since this operation 
+                     ; mixes signed and unsigned operands.
+                     ; (<a href="#mixed">see comments at top of this page</a>)</pre>
+
+<p>The <em>sbca </em>and <em>sbcb</em> instructions can be used for multiple-precision subtraction in the same manner as <em>abca</em> and <em>abcb</em> were used above. This is left as an exercise for the student.</p>
+<h2><a name="16 bit Addition and Subtraction"></a>16 bit Addition and Subtraction</h2>
+
+<p>The following instructions perform 16 bit addition and subtraction:</p>
+
+<div class="boxed"><ul>
+  <li><em><a name="addd">addd</a></em> - Add memory to accumulator D</li>
+  <li><em><a name="subd">subd</a></em> - Subtract memory from accumulator D</li>
+  <li><em><a name="abx">abx</a> - </em>Add unsigned accumulator B to index register X</li>
+  <li><em><a name="aby">aby</a></em> - Add unsigned accumulator B to index register Y</li>
+</ul></div>
+
+<p>The instruction <em>addd</em> adds a word in memory to accumulator D. Allowed addressing modes are immediate, direct, extended, and all index modes. Immediate mode allows adding a constant. The
+instruction <em>subd</em> subtracts a word in memory from accumulator D. The same addressing modes are allowed. Both addd and subd affect the condition code registers.</p>
+
+<p>It is more efficient to add and subtract 16 bit values using these instructions than adding and subtracting 8 bits at a time. However there are are no 16 bit instructions "with carry" so adding two 32
+bit values, for example, must be done with four 8 bit additions, or two 8 bit and one 16 bit,  rather than two 16 bit additions. </p>
+
+<p>Examples:</p>
+<pre>    addd    #23       ; add 23 to accumulator D
+    addd    #-13      ; add -13 to accumulator D. This might not be a 
+                      ; good idea if the value is unsigned, as mentioned
+                      ; earlier
+    subd    #13       ; The better choice - subtract 13 from accumulator D
+    addd    $1002     ; Add the contents of word location 1002 to D
+    addb    $1003     ;  preceding instruction equivalent to these two
+    adca    $1002</pre>
+
+<p>The <em>abx</em> and <em>aby</em> instructions are really <em>leax B,X</em> and <em>leay B,Y</em> instructions, respectively, and are mainly provided to be upward compatible from the 68HC11 microcontroller. The<em> </em>load effective address instructions provide limited arithmetic capability
+for the index registers and the stack pointer. The condition codes are
+not affected by these instructions The available index modes provide the
+following calculations with any of X, Y, or SP as the source (I1) register
+and as the destination register (I2):</p>
+
+<div class="minor"><ul>
+  <li>I2 = I1 + Constant (constant can be negative)</li>
+  <li>I2 = A + I1 (A is considered unsigned)</li>
+  <li>I2 = B + I1 (B is considered unsigned)</li>
+  <li>I2 = D + I1</li>
+</ul></div>
+
+<p>Examples:</p>
+<pre>    leax    D,X      ; Add accumulator D to index register X
+    abx              ; Add unsigned accumulator B to index register X
+    leay    2,X      ; Add contents of X and 2, store sum in register Y
+    exg     D Y      ; These three instructions add Y to D, leaving Y with
+    leay    D,Y      ;    its original contents
+    exg     D Y</pre>
+
+<p>We have seen how the load effective address instructions can be used to add an 8 bit unsigned value to a 16 bit value. This instruction can be used to extend an 8 bit value to a 16 bit value. However
+we also need a way to add an 8 bit signed value to a 16 bit value.  This is done using the sign extension when the <em>tfr</em> instruction is used to copy from an 8 bit to a 16 bit register. The <em>sex</em> mnemonic
+can be used to emphasize that the instruction is being executed specifically for  the sign extension effect:</p>
+<pre>    sex    A D       ; Add signed byte value in accumulator A to register X
+    leax   D,X       ;   (Takes two instructions to accomplish)
+
+    ldaa  $1000       ; Add signed bytes in locations $1000 and $1001 together,
+    sex   A X        ; producing a 16 bit sum that cannot overflow!
+    ldaa  $1001       ; (Takes five instructions to accomplish)
+    sex   A D
+    leax  D,X
+        </pre>
+<p>The example program with source code <a
+href="part007.asm">part007.asm</a>
+and runnable from <a href="part007x.html">here</a> demonstrates adding
+signed and unsigned 8 bit byte values to 16 bit word values. The
+program has two byte values, the unsigned byte C1 at location $1000
+and the signed byte C2 at location $1001. There are three signed word
+variables, I1 (location $1002), I2 ($1004), and I3 ($1006). The
+program calculates C1+I1, storing the result in I2, and C2+I1, storing
+the result in I3. Three sets of data are used, and the program stops
+executing after each set of calculations to allow viewing the results.
+This table shows the input values and the results of running the
+program. Note that the unsigned byte value 240 and the signed byte
+value -16 have the same representation ($F0); this shows the
+importance of knowing whether the values are signed or unsigned!</p>
+<table border="1" cellpadding="1" cellspacing="1">
+<tr><th>C1</th><th>C2</th><th>I1</th><th>I2 (C1+I1)</th><th>I3
+   (C2+I1)</th></tr>
+<tr><td>16</td><td>16</td><td>4096</td><td>4112</td><td>4112</td></tr>
+<tr><td>240</td><td>-16</td><td>4096</td><td>4336</td><td>4080</td></tr>
+<tr><td>240</td><td>-16</td><td>-16</td><td>224</td><td>-32</td></tr></table>
+
+<p>If we were using the C programming language, the variable
+declarations tell the compiler what code to generate. The following
+program segment shows the C language equivalent to the program
+part007.asm:</p>
+<pre>unsigned char C1;
+signed char C2;
+int I1, I2, I3;
+...
+I2 = I1+C1;
+I3 = I1+C2;
+</pre>
+<h2><a name="Increments and Decrements"></a>Increments and Decrements</h2>
+
+<p>Adding or subtracting one is such a common operation that the 68HC12 provides instructions specifically for that purpose for most registers as well as memory bytes:</p>
+
+<div class="boxed"><ul>
+  <li><em><a name="inc">inc</a></em> - increment (add one to) memory byte</li>
+  <li><em><a name="inca">inca</a> - </em>increment accumulator A</li>
+  <li><em><a name="incb">incb</a></em> - increment accumulator B</li>
+  <li><em><a name="ins">ins</a></em> - increment stack pointer</li>
+  <li><em><a name="inx">inx</a></em> - increment index register X</li>
+  <li><em><a name="iny">iny</a></em> - increment index register Y</li>
+  <li><em><a name="dec">dec</a></em> - decrement (subtract one from) memory byte</li>
+  <li><em><a name="deca">deca</a> - </em>decrement accumulator A</li>
+  <li><em><a name="decb">decb</a></em> - decrement accumulator B</li>
+  <li><em><a name="des">des</a></em> - decrement stack pointer</li>
+  <li><em><a name="dex">dex</a></em> - decrement index register X</li>
+  <li><em><a name="dey">dey</a></em> - decrement index register Y</li>
+</ul></div>
+
+<p><em>inc</em> and <em>dec</em> increment and decrement a memory byte. There are no instructions for memory words. These instructions as well as the 8 bit accumulator increment/decrement instructions affect the
+conditions codes except for the carry condition code. This allows using these instructions as loop counters for doing multiple-precision arithmetic, but makes it impossible to use them for
+implementing multiple-precision increments or decrements. (How would you perform an increment of a 24 bit value?) Conditional branching is possible for less than, equal to, or greater than zero, or
+any combination thereof.</p>
+
+<p>The <em>inx, iny</em>, <em>dex</em>, and <em>dey</em> operations
+could be performed using the <em>leax</em> or <em>leay</em> instructions, however the former instructions take a single byte instead of two bytes and affect the Z condition code
+allowing branching if the result is zero or nonzero. The <em>ins</em> and <em>des</em> instructions are, however, synonyms for the <em>leas 1,SP</em> and <em>leas -1,SP</em> instructions, respectively.</p>
+
+<p>There are no instructions to increment or decrement accumulator D, but the <em>addd</em> and <em>subd</em> instructions can be used.</p>
+<h2><a name="Negate"></a>Negate</h2>
+
+<p>There are three instructions that negate (two's complement) a value:</p>
+
+<div class="boxed"><ul>
+  <li><em><a name="neg">neg</a> -- </em>negate a memory byte</li>
+  <li><em><a name="nega">nega</a></em> - negate accumulator A</li>
+  <li><em><a name="negb">negb</a></em> - negate accumulator B</li>
+</ul></div>
+
+<p>These instructions set the condition codes based on the result of the operation. Note that overflow is possible since the value -128 negated is -128. There is no instruction which negates a 16
+bit word, however it is possible using an instruction sequence:</p>
+<pre>    negb            ; These three instructions negate accumulator D
+    adca    #0
+    nega
+
+    clra            ; These four instructions negate memory word at V1
+    clrb            ;   (Clears D)
+    subd    V1      ;   subtract word at V1 from D
+    std     V1      ;   Store the result back into memory word at V1
+</pre>
+<h2><a name="BCD Addition"></a>BCD Addition</h2>
+
+<p>The instruction <a name="daa"><em>daa</em></a> is used in implementing <a href="part002.html#Hexadecimal Numbers">BCD addition</a>. This instruction is executed immediately after the 8 bit addition instruction used to add each byte of the BCD value. The <em>daa</em> instruction uses the value in accumulator A and the condition codes to
+correct the value in accumulator A and in the condition codes as though
+a BCD addition has taken place. Note that this instruction will not correct
+after a subtraction. For an example, let's return to the multiple-precision
+addition solution, now modified for BCD values. This code will add the
+4 digit (2 byte) BCD value at location $1000 to the 4 digit value at $1002,
+placing the sum in $1004.</p>
+<pre>    ldaa    $1001    ; Least significant byte of word at $1000 loaded into A
+    adda    $1003    ; Add the least significant byte of word at $1002 into A
+    daa              ; Adjust the sum and condition codes
+    staa    $1005    ; Store sum in least significant byte of word at $1004
+                     ; Carry flag, set by the adda instruction, is not altered
+                     ; by execution of the staa or the ldaa that follows.
+    ldaa    $1000    ; Most significant byte of word at $1000 loaded into A
+    adca    $1002    ; Add most sigificant byte of word at $1002, and the carry
+                     ; out of the first addition into A.
+    daa              ; adjust the sum and condition codes 
+    staa    $1004    ; Store sum in most significant byte of word at $1004</pre>
+
+<p> An overflow has occurred if the carry condition code flag is set at the end of the calculation.</p>
+
+<p>Continue with <em><a href="part007a.html">Multiplication and Division</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

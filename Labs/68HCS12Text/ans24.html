@@ -1,0 +1,32 @@
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>An Answwer for Designing with Microcontrollers -- The 68HCS12</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+<!--Version 4. Contents copyright 2007, Thomas Almy-->
+<h2>Question</h2>
+
+<p>Assuming a 25 MHz system clock using the
+   PLL and a 5 MHz crystal, what pulse width modulator settings will
+   create a period of 5.4 microseconds with a positive going pulse
+   width of 2.4 microseconds on channel 2?</p>
+
+<h2>Answer</h2>
+
+<p>Based on the 25 MHz system clock, without using the prescaler or
+   divider we get a 40 ns clock period for Clock B. The maximum
+   setting of PWMPER2, 255, would give a period of 10.2 uS, so there
+   is sufficient range for this problem. Register settings would
+   be:<br />
+   PWME = $04 (PWME2=1)<br />
+   PWMPOL = $04 (PPOL2=1)<br />
+   PWMPER2 = 135 (5.4/.04)<br />
+   PWMDTY2 = 60  (2.4/.04)<br />
+with other PWM registers being 0.</p>
+
+</body> </html>

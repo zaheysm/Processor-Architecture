@@ -1,0 +1,225 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title> Arithmetic Instructions</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table border="1" width="100%">
+<tr valign="top"><td><a href="part006.html">Previous Section</a></td>
+<td><a href="part008.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part007" target="q">Questions</a></td>
+<td><a href="search.htm" target="search">Search the Text</a></td></tr></table>
+ <h1>Arithmetic Instructions</h1>
+
+<ul>
+  <li><a href="part007.html">Addition and Subtraction</a></li>
+  <li><span class="selected">Multiplication and Division</span>
+  <ul>
+    <li><a href="#8 Bit Multiplication">8 Bit Multiplication</a></li>
+    <li><a href="#16 Bit Multiplication">16 Bit Multiplication</a></li>
+    <li><a href="#16 Bit Division">16 Bit Division</a></li>
+    <li><a href="#32 Bit Division">32 Bit Division</a></li>
+    <li><a href="#Example Program">Example Program to Convert Celsius to Fahrenheit</a></li>
+  </ul>
+  </li>
+  <li><a href="part007b.html">Shifting</a></li>
+  <li><a href="part007c.html">Test and Compare</a></li>
+</ul>
+
+<p>Multiplication and division in early microcontrollers was done with successive addition and subtraction algorithms. This wasn't such a
+bad thing since most microcontroller programs rarely needed to multiply or divide. However modern microcontrollers have hardware
+multiplies and divides that can be performed quickly. The power of the arithmetic operations keeps improving. The predecessor to the
+68HC12, the 68HC11, had only the 8 bit multiplication and 16 bit division instructions we will see here, and it did them much more
+slowly.</p>
+
+<p>Multiplication, especially, is very important for modern microcontroller applications involving digital filtering and fuzzy logic.</p>
+<h2><a name="8 Bit Multiplication"></a>8 Bit Multiplication</h2>
+
+<p>A single instruction is provided, <em><a name="mul">mul</a></em>, which multiplies two 8 bit unsigned values in accumulator A and B and puts the product in
+accumulator D. <a href="part002.html#Multiplication of Integers">It is important to note that this instruction does not work properly for signed values</a>. This instruction is about as fast as
+an addition, so there is no real reason to avoid doing multiplications in a program because of execution time. The <em>mul</em> instruction loads
+the carry condition code bit only, with the value of the msb of the resulting accumulator B. This allows performing a fractional multiply
+as described in the section  <a href="part024.html">Scaled Arithmetic</a>.</p>
+
+<p>Multiple-precision multiplication can be done by breaking the multiplication down into steps where each each byte of the multiplicand is
+separately multiplied each byte of the multiplier. This is the same method one does long multiplication by hand. Multiplying 16 bit value
+AB (each letter represents a byte of the value) by 16 bit value CD to create the 32 bit product EFGH proceeds as follows.</p>
+<pre>             A   B
+          x  C   D
+___________________
+            (B * D)        Each of these is a two byte product
++       (A * D)
++       (B * C)
++   (A * C)
+___________________
+     E   F   G   H</pre>
+
+<p>So H = lsb(B*D)        (Least significant byte of B * D)</p>
+
+<p>G = msb(B*D) + lsb(A*D) + lsb(B*C)    Any carry out gets added into F   </p>
+
+<p>F = msb(A*D) + msb(B*C) + lsb(A*C)      Any carry out gets added into E</p>
+
+<p>E = msb(A*C)</p>
+
+<p>Implementing the algorithm in 68HC12 assembler we change the order of the multiplications to get a gain in efficiency by being able to
+use 16 bit additions with minimum overhead:</p>
+
+<pre>        org     $1000   ; DATA RAM
+A1:     ds      1       ; Word Variable A1 is A B 
+B1:     ds      1
+C1:     ds      1       ; Word Variable C1 is C D
+D1:     ds      1
+E1:     ds      1       ; 32 bit Variable E1 is E F G H
+F1:     ds      1
+G1:     ds      1
+H1:     ds      1
+        org     $2000   ; PROGRAM RAM
+        ldaa    B1      ; Multiply B by D
+        ldab    D1
+        mul
+        std     G1      ; Product goes in GH
+        ldaa    A1      ; Multiply A by C
+        ldab    C1
+        mul
+        std     E1      ; product goes in EF
+        ldaa    B1      ; Multiply B by C
+        ldab    C1      
+        mul
+        addd    F1      ; Product added to FG
+        std     F1
+        ldaa    E1      ; Add carry into E
+        adca    #0
+        staa    E1
+        ldaa    A1      ; Multiply A by D
+        ldab    D1
+        mul
+        addd    F1      ; Product added to FG
+        std     F1
+        ldaa    E1      ; Add carry into E
+        adca    #0
+        staa    E1
+        swi             ; End of program
+</pre>
+
+<p>The source code for this program is <a href="part007a.asm">here</a>. You can start the simulator to run the program <a href="part007ax.html">here</a> . Don't forget to set memory locations
+$1000 through $1003 with the values you wish to multiply. After the program executes, it will stop with an error complaining about an
+uninitialized interrupt. Ignore this error message.</p>
+<h2><a name="16 Bit Multiplication"></a>16 Bit Multiplication</h2>
+
+<p>There are two 16 bit by 16 bit multiplication instructions:</p>
+
+<div class="boxed"><ul>
+  <li><em><a name="emul">emul</a></em> - Unsigned multiply of D by Y, with product in Y:D</li>
+  <li><em><a name="emuls">emuls</a> - </em>Signed multiply of D by Y with product in Y:D</li>
+</ul></div>
+
+<p>Both instructions generate a 32 bit product where the upper 16 bits are in register Y and the lower 16 bits are in register D. It is
+important to pick the right instruction depending on the arguments being signed or unsigned. </p>
+
+<p>The <em>emul</em> instruction replaces all the code for the multi-precision multiplication shown above, yet <em>emul</em> executes in the same length of
+time as the <em>mul</em> instruction. Both of these instructions alter the condition codes to indicate the result being negative, zero, or positive.
+They also load the carry condition code bit with the msb of the resulting register D allowing fractional multiplication as described in the
+section  <a href="part024.html">Scaled Arithmetic</a>. The preceding example using <em>emul</em>:</p>
+<pre>        org     $1000   ; DATA RAM
+A1:     ds      2       ; Word Variable A1 
+C1:     ds      2       ; Word Variable C1
+E1:     ds      4       ; 32 bit Variable E1
+        org     $2000   ; PROGRAM RAM
+        ldy     A1      ; E1 &lt;- A1 * C1
+        ldd     C1
+        emul
+        sty     E1      ; Most Significant Word of product
+        std     E1+2    ; Least Significant Word of product
+</pre>
+<h2><a name="16 Bit Division"></a>16 Bit Division</h2>
+
+<p>There are three 16 bit divide instructions:</p>
+
+<div class="boxed"><ul>
+  <li><em><a name="idiv">idiv</a></em> - Unsigned integer divide contents of D by contents of X, putting quotient in X and remainder in D.</li>
+  <li><em><a name="idivs">idivs</a></em> - Signed integer divide contents of D by contents of X, putting quotient in X and remainder in D.</li>
+  <li><em><a name="fdiv">fdiv</a></em> - Unsigned fractional integer divide contents of D by contents of X, putting quotient in X and remainder in D.</li>
+</ul></div>
+
+<p>The <em>idiv </em>instruction divides a 16 bit value by a 16 bit value, producing a 16 bit quotient and a 16 bit remainder. Overflow is not possible
+since with the minimum divisor of one the quotient equals the dividend. Division by zero gives a quotient of $FFFF and sets the C
+condition code bit. The IDIV instruction sets the Z condition code bit to indicate if the quotient is zero.</p>
+
+<p>The <em>idivs</em> instruction was added since the 68HC11 to handle the common need for a division of signed values. It is possible to have
+overflow in the case -32768/-1 which would give a quotient of 32768, a value larger than the maximum allowed of 32767. The condition
+code is set to indicate overflow, or a negative, zero, or positive quotient.</p>
+
+<p>It is important to pick the correct instruction of <em>idiv</em> or <em>idivs</em> depending on the arguments being signed or unsigned.</p>
+<pre>    ldd     V1        ; Calculate the average of contents of word
+    addd    V2        ;     locations V1, V2, and V3 (assume no overflow)
+    addd    V3        ;     Store the average in word location AVERAGE
+    ldx     #3
+    idiv              ; Use IDIVS if V1, V2, and V3 are signed values
+    stx     AVERAGE</pre>
+
+<p>The <em>fdiv</em> instruction is unusual. It performs a division like <em>idiv</em> as though the dividend were first multiplied by 2^16. It can be used to
+extend the precision of a division operation. Overflow is possible and is indicated in the condition code register. Use of this instruction
+will be demonstrated in the section  <a href="part024.html">Scaled Arithmetic</a>. </p>
+<h2><a name="32 Bit Division"></a>32 Bit Division</h2>
+
+<p>There are two 32 bit dividend division instructions:</p>
+
+<div class="boxed"><ul>
+  <li><em><a name="ediv">ediv</a></em> - Unsigned divide Y:D by X, placing quotient in Y and remainder in D.</li>
+  <li><em><a name="edivs">edivs</a></em> - Signed divide Y:D by X, placing quotient in Y and remainder in D.</li>
+</ul></div>
+
+<p>The correct instruction must be used depending on the arguments being signed or unsigned. If division by zero is attempted, the C
+condition code bit is set. Overflow is possible with these instructions, and is indicated in the condition code register. The condition code
+register is also set to indicate the quotient being positive, negative, or zero.</p>
+
+<p>As in the other multiply and divide instructions, examples of their use will be given in the section  <a href="part024.html">Scaled Arithmetic</a>. </p>
+<pre>    ldd     V1        ; Calculate the average of unsigned contents of word 
+                      ;   locations V1, V2, and V3, storing result at AVERAGE
+    ldy     #0        ; Clear high order word of sum (in Y).
+    addd    V2        ; Calculate low order word of sum V1+V2
+    exg     Y D       ; Exchange high and low order words
+    adcb    #0        ; add carry to high order.
+    exg     Y D       ; Exchange high and low order words
+    addd    V3        ; Add in V3 to low order
+    exg     Y D       ; Exchange high and low order words
+    adcb    #0        ; Add carry to high order
+    exg     Y D       ; High order sum in Y, low order in D
+    ldx     #3        ; Divide by X
+    ediv              ; 
+    sty     AVERAGE</pre>
+<h2><a name="Example Program"></a>Example Program to Convert Celsius to Fahrenheit</h2>
+<p>The following program converts Celsius temperatures to Fahrenheit based
+on the formula <em>F= C*9/5 + 32</em>. We will assume the Celsius temperature is in a signed byte memory location
+named <em>celsius</em>. Because the converted temperature value can extend beyond the range of
+a signed byte, we will do all calculations using 16 bit values and store
+the converted temperature in word memory location named <em>fahrenheit</em>.</p>
+<pre>    ldab    celsius    ; load the temperature into accumulator B
+    sex     B D        ; sign extend to convert to 16 bit value in D
+    ldy     #9
+    emuls              ; signed multiplication by 9, 32 bit product in Y:D
+    ldx     #5
+    edivs              ; signed division by 5, quotient in Y
+    leay    32,Y       ; adds 32 to Y
+    sty     fahrenheit ; store the result</pre>
+
+<p>Note that the order of evaluation in the expression <em>C*9/5</em> is important. We must do the division by 5 last in order to get the most
+accurate result. The worst approach would be to divide 9 by 5 and then
+multiply the quotient by C. In that case the division 9/5 gives the quotient
+1 (it is an integer division) so the value of the expression would be C.
+For the same reason we can't simply multiply C by the constant 9/5, for
+that again would be 1.</p>
+<p>Continue with <em><a href="part007b.html">Shifting</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

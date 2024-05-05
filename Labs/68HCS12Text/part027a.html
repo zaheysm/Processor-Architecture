@@ -1,0 +1,164 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Assembler Program Template</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table border="1" width="100%">
+<tr valign="top"><td>Previous Appendix</td>
+<td><a href="part027b.html"></a><a href="part017b.html">Next Appendix</a></td>
+<td><a href="index.html">Index</a></td><td><a href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>Assembler Program Template</h1>
+
+<p>I've often been asked how to arrange the code in a program. It's really a matter of personal taste or corporate standard. However what follows works well for small programs typically written by
+students and using the free Freescale 68HC12 assembler (or similar
+"absolute" assembler). Here's the program template:</p>
+<pre>* Comment describing the program
+* Include definitions of registers and memory map
+#include registers.inc
+* Data (RAM) allocation
+	org     DATASTART
+v1:     ds      1               ; byte variable
+v2:     ds      2               ; word variable
+v3:     ds      2*10            ; word array (10 elements)
+* ...
+* Program (usually ROM)
+	org     PRSTART
+	bra     initialize      ; code starts here
+t1:     db      1,2,3,4         ; byte table
+t2:     dw      10,20,30,40     ; word table
+s1:     fcc     "A string"      ; ASCII string (array of characters)
+* ...
+initialize:     ; Program initialization code
+	movb    #0 v1           ; initialize variables
+	movw    #0 v2
+* ... (initialize stack, initialize I/O devices, interrupt vectors)
+loop:   ; Main routine -- runs forever in loop
+* ... (whatever we need to do goes here)
+	bra     loop
+* Subroutines and interrupt service routines go here
+* ...
+	end</pre>
+
+<p>The general structure is </p>
+
+<div class="boxed"><ul>
+  <li>General comments</li>
+  <li>Include files</li>
+  <li>RAM - Data Declaration</li>
+  <li>ROM
+  <ul>
+    <li>Tables</li>
+    <li>Initialization</li>
+    <li>Main process/routine</li>
+    <li>Subroutines and interrupt service routines</li>
+  </ul>
+  </li>
+</ul></div>
+
+<p>Lets look at the template a line or two at a time.</p>
+
+<pre>* Comment describing the program</pre>
+
+<p>The first things you see when you look at a file are the first lines, so
+this is the best place to put a description of the program. The date, author,
+and any copyright notice should go here as well.</p>
+
+<pre>* Include definitions of registers and memory map
+#include registers.inc</pre>
+
+<p>Files that define system constants need to be included at this point. <em>Registers.inc</em> defines the I/O registers and the memory map, and also the entry points into D-Bug12.</p>
+
+<pre>* Data (RAM) allocation
+	org     DATASTART
+v1:     ds      1               ; byte variable
+v2:     ds      2               ; word variable
+v3:     ds      2*10            ; word array (10 elements)
+* ...</pre>
+
+<p>Advanced assemblers as well as compiled languages use linker programs which allow spreading data declarations throughout the program. The simple absolute assembler makes this difficult, so all
+data needs to be declared in one location. <em>DATASTART</em> is defined in registers.inc. This way if the memory map changes, it would only be necessary to modify the registers.inc file. Variables are
+always allocated space using <em>ds</em> and never <em>db</em> or <em>dw</em> because when power is applied the contents of RAM is undefined and won't be any value given in a db or dw directive.</p>
+
+<p>The data RAM is allocated starting at the lowest address and goes upwards. The stack is set at the highest address of RAM (or at least the highest address of RAM we are using as RAM) and goes
+downward. It is important that there be sufficient memory so that the two don't meet!</p>
+
+
+<pre>* Program (usually ROM)
+	org     PRSTART
+	bra     initialize      ; code starts here</pre>
+
+<p>The program starts by convention at the lowest address in ROM or at a place in RAM just above the initial stack pointer which allows us to alter the program for debugging purposes. We can consider
+this a virtual ROM. In order to keep data declarations close together, we will actually put all tables at the beginning, and add a <em>bra</em> or <em>jmp</em> instruction to jump around the tables. This instruction is not
+necessary if there are no tables.</p>
+
+
+<pre>t1:     db      1,2,3,4         ; byte table
+t2:     dw      10,20,30,40     ; word table
+s1:     fcc     "A string"      ; ASCII string (array of characters)
+* ...</pre>
+
+<p>Tables or other constants appear next. Now we can use <em>db</em> for bytes, <em>dw</em> for words, and <em>fcc</em> for strings.</p>
+<pre>
+initialize:     ; Program initialization code
+	movb    #0 v1           ; initialize variables
+	movw    #0 v2
+* ... (initialize stack, initialize I/O devices, interrupt vectors)</pre>
+
+<p>All of the initialization code goes next. When the initialization code finishes, we fall into --</p>
+<pre>
+loop:   ; Main routine -- runs forever in loop
+* ... (whatever we need to do goes here)
+	bra     loop</pre>
+
+<p>The main routine either does nothing (in a pure interrupt driven application) or does some "background" execution. In simple program, this might actually do all the work.</p>
+
+
+<pre>* Subroutines and interrupt service routines go here
+* ...</pre>
+
+<p>Subroutines and interrupt service routines can come in any order.</p>
+
+
+<pre>	end</pre>
+
+<p>The program ends with the <em>end</em> directive.</p>
+<h2>Relocating Assemblers and Linkers</h2>
+
+<p>A step up in tool complexity allows having multiple source files for a project, which is convenient for organizing and also sharing code segments between different projects. In a relocating (as
+opposed to absolute) assembler the <em>org</em> directive which sets the physical address to place code and data goes away and is replaced by a segment statement. Programs can have multiple segments each
+of which gets mapped (by the linker/relocator program) to a physical address range. When a segment is selected, code or data is appended to the existing code or data that has been placed in the
+segment. The linker/relocator also resolves references to code or data from other source files.</p>
+
+<p>The assembler or compiler (for this is also how high level languages like C work) generates an "object" file which contains the code and the segments names into which they will be placed. In
+addition the object file has a list of labels with where the reference and also the locations that need the label values. The linker/relocator fills in the missing values allowing code in one object file to
+reference code or data declared in another object file.</p>
+
+<p>A mapping file tells the linker/relocator what addresses correspond to each segment. This is a section of the map file for the 68HCS12 using the Gnu C tool set:</p>
+<pre>MEMORY
+{
+  ioports (!x)  : org = 0x0000, l = 0x400
+  eeprom  (!i)  : org = 0x400, l = 0xc00
+  data    (rwx) : org = 0x1000, l = 0x1000
+  text    (rx)  : org = 0x2000, l = 0x2000
+}
+
+PROVIDE (_stack = 0x2000);</pre>
+
+<p>Code is placed in the <em>text</em> segment starting at $2000 and of length $2000. This segment is readable and executable (can contain code) but not writeable - it is RAM but we may want to make the text
+segment ROM later and this prevents problems. Variables go in the <em>data</em> segment from $1000 and of length $1000. This segment is also writeable. Also note that the stack is initialized to $2000, the
+end of the data segment. The <em>eeprom</em> segment starts at $400 and is $C00 long, while the <em>ioports</em> segment starts at $0000 and is $400 long. In a C program these two segments must be explicitly
+referenced.</p>
+
+<p>Continue with <a href="part017b.html"><em>Time Multiplexed Displays</em></a></p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

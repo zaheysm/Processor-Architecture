@@ -1,0 +1,18 @@
+again      201b
+changetohex 2015
+config_hex_displays 2117
+count_mode 1000
+delay_ms   211f
+digit0_pp3 0007
+digit1_pp2 000b
+dvalue     0064
+end_count  0015
+extract_lsb 2149
+extract_msb 2144
+ff         00ff
+hex_display 2139
+one        0001
+reboot     2006
+stack      2000
+start      2019
+start_count 0000

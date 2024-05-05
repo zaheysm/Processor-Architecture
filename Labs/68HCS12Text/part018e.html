@@ -1,0 +1,235 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Pulse Width Modulation</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table border="1" width="100%">
+<tr><td><a href="part018.html">Previous Section</a></td>
+<td><a href="part019.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part018e" target="q">Questions</a></td>
+<td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>Pulse Width Modulation</h1>
+
+<ul>
+  <li><a href="#Pulse Width and Pulse Density Modulation">Pulse Width and Pulse Density Modulation</a></li>
+  <li><a href="#PWM Features of the 68HC12">PWM Features of the 68HCS12</a></li>
+</ul>
+
+<p>This section discusses a data transmission technique which is analog, single wire, and clock free. Pulse Width Modulation and it's
+close relation, Pulse Density Modulation, are commonly used for positional servo control, audio communication (cellular phones),
+and for providing low cost digital to analog conversion for such things as telephone tone generation. </p>
+<h2><a name="Pulse Width and Pulse Density Modulation">Pulse Width and Pulse Density Modulation</a></h2>
+<p>With Pulse Width Modulation, <em>PWM</em>, pulses are continuously generated which have different widths but the same time between
+leading edges. The pulse width is proportional to the duty cycle of the signal, and can be viewed as representing an analog level. We
+have already seen how the timing module can be used to generate a pulse width modulated signal.</p>
+
+<p><img src="fig18e-1.gif" width="316" height="104" align=bottom /></p>
+
+<p>Analog signals can be easily used to pulse width modulate by using a sawtooth generator for the carrier and an analog comparator
+between the analog input and the sawtooth generator to generate the PWM output.</p>
+
+<p><img src="fig18e-5.gif" width="198" height="58" align=bottom /></p>
+
+<p>The digital approach to PWM involves having a counter and two registers,
+one to set the pulse width and the second to set the period, the time between
+pulses. At the start of the period, the counter is reset to zero and the
+output goes high. The counter is incremented by a clock. When the first
+when the value in the counter equals the value in the first register, the
+output goes low and when the counter value reaches that of the second register
+the cycle repeats. The value in the first register must be less than that
+of the second register and the duty cycle is pulse_width/period. To modulate,
+the first register value is varied.</p>
+
+<p> A variation of PWM is Pulse Density Modulation, or <em>PDM</em>. In this case the pulse width remains constant while the period between
+pulses varies and represents the input level. The duty cycle changes as well. The same digital generator for PWM can be used for
+PDM by varying the value of the period register.</p>
+
+<p><img src="fig18e-2.gif" width="318" height="107" align=bottom /></p>
+
+<h2><a name="PWM Features of the 68HC12">PWM Features of the 68HCS12</a></h2>
+
+<p>The Pulse Width Modulator module of the 68HCS12 is fully discussed in the <a href="../motorola/S12PWM_8B8CV1.pdf"><em>PWM_8B8C Block Users Guide</em></a>, but we will cover the
+basics of operation here. The PWM basically consists of two parts, a PWM generating counter circuit, as described above, and a
+clock divider which sets the rate that the counter is incremented. There are eight generators, four for each of two clock divider
+circuits. The generators have 8-bit counters/registers, however they can be paired to create up to 4 PWM generators each with 16-bit counters/registers.</p>
+
+<p>The PWM channels connect via the Port P pins. These pins are also used for two of the three <a href="part023.html">Serial Peripheral Interfaces</a> (SPIs).
+Any pin can only be used by either a PWM channel or SPI at any time. If the pins are not being used by the PWM or SPI, they
+revert to <a href="part013.html">general purpose I/O pins</a>.</p>
+<h3>Clock Dividers</h3>
+
+<p>The period and pulse width are multiples of the clock period, so for finest resolution in duty cycle or period the clock should be as
+fast as possible. However the 8-bit counters and registers limit the period to 255 times the clock period, so a slower clock may be
+necessary to create slower periods. For maximum resolution of the duty cycle, the period register value needs to be as large as
+possible for the given operating period. To aid in obtaining the best possible value, a clock divider with a large number of possible
+dividers is provided. </p>
+
+<p><img src="fig18e-4.gif" width="630" height="270" align=bottom /></p>
+
+<p>There are two dividers, <em>A</em> and <em>B</em>. Divider A is used by PWM channels 0, 1, 4, and 5, while divider B is used by PWM channels 2, 3,
+6, and 7.  The dividers have two cascaded sections, the first being a prescaler which divides by a power of 2, from 2<sup>0</sup> to 2<sup>7</sup>. The
+second is a divide by N which provides an addition division by N*2, for N=1 through 256. The second divider is optional. When
+not used, the division factor is 2<sup>M</sup>, for M=0 through 7. If the second divider is used, the division factor is 2<sup>M+1</sup>*N.</p>
+
+<p>The following registers are used to enable the PWM channels and initialize the clock dividers:</p>
+
+<table border="1" width="100%" cellpadding="1" cellspacing="1">
+<tr><th>Register</th>
+<th>Bit 7</th>
+<th>Bit 6</th>
+<th>Bit 5</th>
+<th>Bit 4</th>
+<th>Bit 3</th>
+<th>Bit 2</th>
+<th>Bit 1</th>
+<th>Bit 0</th></tr>
+<tr><td>PWME</td>
+<td>PWME7</td>
+<td>PWME6</td>
+<td>PWME5</td>
+<td>PWME4</td>
+<td>PWME3</td>
+<td>PWME2</td>
+<td>PWME1</td>
+<td>PWME0</td></tr>
+<tr><td>PWMPOL</td>
+<td>PPOL7</td>
+<td>PPOL6</td>
+<td>PPOL5</td>
+<td>PPOL4</td>
+<td>PPOL3</td>
+<td>PPOL2</td>
+<td>PPOL1</td>
+<td>PPOL0</td></tr>
+<tr><td>PWMCAE</td>
+<td>CAE7</td>
+<td>CAE6</td>
+<td>CAE5</td>
+<td>CAE4</td>
+<td>CAE3</td>
+<td>CAE2</td>
+<td>CAE1</td>
+<td>CAE0</td></tr>
+<tr><td>PWMCLK</td>
+<td>PCLK7</td>
+<td>PCLK6</td>
+<td>PCLK5</td>
+<td>PCLK4</td>
+<td>PCLK3</td>
+<td>PCLK2</td>
+<td>PCLK1</td>
+<td>PCLK0</td></tr>
+<tr><td>PWMPRCLK</td>
+<td>0</td>
+<td>PCKB2</td>
+<td>PCKB1</td>
+<td>PCKB0</td>
+<td>0</td>
+<td>PCKA2</td>
+<td>PCKA1</td>
+<td>PCKA0</td></tr>
+<tr><td>PWMCTL</td>
+<td>CON67</td>
+<td>CON45</td>
+<td>CON23</td>
+<td>CON01</td>
+<td>PSWAI</td>
+<td>PFRZ</td>
+<td>0</td>
+<td>0</td></tr>
+<tr><td>PWMSCLA</td>
+<td>Bit 7</td>
+<td>Bit 6</td>
+<td>Bit 5</td>
+<td>Bit 4</td>
+<td>Bit 3</td>
+<td>Bit 2</td>
+<td>Bit 1</td>
+<td>Bit 0</td></tr>
+<tr><td>PWMSCLB</td>
+<td>Bit 7</td>
+<td>Bit 6</td>
+<td>Bit 5</td>
+<td>Bit 4</td>
+<td>Bit 3</td>
+<td>Bit 2</td>
+<td>Bit 1</td>
+<td>Bit 0</td></tr></table>
+
+<p>A PWM channel is enabled for operation by storing a 1 in PWME<em>n</em> where <em>n</em> is the channel number (0 through 7). The polarity of the
+channel is controlled by the corresponding PPOL<em>n</em> bit such that a high pulse (as shown above) requires a PPOL bit of one and a low
+going pulse requires a PPOL bit of zero. See the figure below. Each channel can select between its clock with or without the second
+divider. To use the second divider (clocks SA or SB) the PCLK<em>n</em> bit is one, otherwise (clocks A or B) the bit is zero.</p>
+
+<p>The prescaler dividers are configured using the PWMPRCLK register. The
+field of bits 6 through 4 set the prescaler for channel B while the field
+of bits 2 through 0 set the prescaler for channel A. The divide by N for
+channel A (clock SA) is configured using register PWMSCLA, while that for
+channel B (clock SB) is configured using register PWMSCLB. The values in
+these registers are 1 through 255 to divide by 1 through 255, and the value
+0 divides by 256.</p>
+
+<p>The PSWAI and PFRZ bits in the PWMCTL register will cause the PWM channels to stop during WAI and STOP instructions. For
+most applications, these bits should remain in their default, non-stopping value, zero. The remaining bits in PWMCTL are used to
+configure 16 bit channels, described <a href="#Connecting Channels for 16-Bit Counters">below</a>.</p>
+<h3>Setting the Duty Cycle and Period</h3>
+
+<p><img src="fig18e-3.gif" width="248" height="112" align=bottom /></p>
+
+<p>Each channel has a counter register, PWMCNT<em>n </em>(where <em>n</em> is the channel number, 0 through 7), and two comparison registers,
+PWMDTY<em>n</em> for the pulse width (duty cycle) and PWMPER<em>n</em> for the period between pulses. Reading the counter is not particularly
+useful, however writing to the counter starts a new period (resets the counter to zero). The percent duty cycle is
+100*PWMDTY<em>n</em>/PWMPER<em>n </em>when PPOL<em>n</em>=1, or 100*(PWMPER<em>n-</em>PWMDTY<em>n</em>)/PWMPER<em>n</em> when PPOL<em>n</em>=0.</p>
+
+<p>Let's say an application requires a pulse 1 microsecond wide with a period between pulses of 10 microseconds. The system clock is
+24MHz. To get a resolution of 1 microsecond, we use the cascaded clock dividers, with M=0 and N=12. Then the period register
+gets a value of 10 (10 times 1 microsecond) while the duty cycle register gets a value 1. We could use the following code for
+channel 0, using pin 0 of Port P:</p>
+<pre>    movb    #12 PWMSCLA    ; clock rate 1usec
+    movb    #1 PWMCLK      ; select clock SA (PWMPRCLK default is 0)
+    movb    #1 PWMPOL      ; positive going pulse
+    movb    #1 PWMDTY0     ; pulse width 1*1usec
+    movb    #10 PWMPER0    ; period is 10*1usec
+    movb    #1 PWME        ; enable channel 0</pre>
+
+<p>The PWM channels have another operating mode where the pulse is centered rather than being left-aligned. This mode is set with
+the CAE<em>n</em> bit in the PWMCAE register. In this case the counter register is an up-down counter, and the period and pulse width times are doubled. However the duty cycle will remain the same. Note that the period starts and ends in the middle of the pulse; any changes to the duty cycle will occur over two pulses.</p>
+
+<p><img src="fig18e-6.gif" width="229" height="140" align=bottom /></p>
+<h3><a name="Connecting Channels for 16-Bit Counters">Connecting Channels for 16-Bit Counters</a></h3>
+
+<p>Adjacent even-odd channels (0&amp;1, 2&amp;3, 4&amp;5, and 6&amp;7) can be combined for 16 bit counters and registers. This allows finer
+adjustment of pulse width and period as the values can range from 0 to 65535. The CONnn bits in PWMCTL enable 16 bit
+operation for each of the four pairs. The PWME, PPOL, PCLK, and CAE bits used are those for the odd numbered channel while
+the 16 bit period and duty cycle registers are referenced using the even numbered channel.</p>
+
+<p>Lets say an application requires a pulse 1 to 10 microseconds wide in units of 1 microsecond and that the period between pulses is 1
+millisecond. The 1000 to 1 ratio between pulse width and period would mean that the 8 bit counters could not be used. Instead we
+will use channels 0 and 1 paired to make a 16-bit counter channel. The output will be pin 1 of Port P. We can set the clock rate as
+before.</p>
+<pre>    movb    #12 PWMSCLA    ; clock rate 1usec
+    movb    #2 PWMCLK      ; select clock SA (PWMPRCLK default is 0)
+    movb    #2 PWMPOL      ; positive going pulse
+    movw    #1 PWMDTY0     ; pulse width 1*1usec through 10*1usec
+    movw    #1000 PWMPER0  ; period is 1000*1usec = 1msec
+    movb    #$10 PWMCTL    ; CON01=1 to configure 16 bit channel
+    movb    #2 PWME        ; enable channel
+</pre>
+
+<p>References: The Freescale Application notes <a href="../motorola/AN1771.pdf"><em>Precision Sine-Wave Tone Synthesis using 8-Bit MCUs</em></a> and <a href="../motorola/AN2250.pdf"><em>Audio Reproduction on the
+HCS12 Microcontrollers</em></a>. </p>
+
+<p>Continue with <em><a href="part019.html">The Analog to Digital Converter</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Floating Point Arithmetic</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table border="1" width="100%">
+<tr><td><a href="part024.html">Previous Section</a></td>
+<td><a href="part026.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part025" target="q">Questions</a></td>
+<td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>Floating Point Arithmetic</h1>
+
+<ul>
+  <li><a href="part025.html">Overview</a></li>
+  <li><span class="selected">IEEE Floating Point Format</span>
+  <ul>
+    <li><a href="#Digression">Digression</a></li>
+    <li><a href="#Utility Routines">Utility Routines</a></li>
+  </ul>
+  </li>
+  <li><a href="part025b.html">Converting Between Integer and Floating Point</a></li>
+  <li><a href="part025c.html">Floating Point Multiplication</a></li>
+  <li><a href="part025d.html">Floating Point Addition</a></li>
+  <li><a href="part025e.html">Floating Point Comparison and Section Conclusion</a></li>
+</ul>
+
+<p>In the 1970's every processor manufacturer had their own floating point format. In order to have a consistent format for embedded applications, the IEEE developed a floating point format using
+sound mathematical principles. The result is that calculations can be made on almost any processor and identical results will be obtained. And the results will be carried out to the maximum accuracy
+possible. The standard specifies three different formats, of various lengths. The one we will be concerned with is the Short format, which is 32 bits in length:</p>
+
+<p><img src="fig25a-1.gif" width="341" height="130" align=bottom /></p>
+
+<p>This format has the following characteristics:</p>
+
+<div class="minor"><ul>
+  <li>With one exception other than zero, all values are normalized. Since the bit is always a 1, it is not actually stored. This gives an extra bit of precision since one more fraction bit can be stored. The
+hidden 1 bit is to the left of the binary point, all fraction bits are to the right, so fractions are in the range 1 &lt;= fraction &lt; 2.</li>
+  <li>The value is represented as ((-1)<sup>S</sup>)(2<sup>(E-127)</sup>)(1.fraction). </li>
+  <li>The exponent bias (127) allows the exponent field to be treated as an unsigned number. The smallest exponent value is reserved for 0 or small "unnormalized" values. These values do not have the
+hidden 1 bit and behave as though the exponent field was 1. This allows very small values to gradually get smaller instead of suddenly becoming zero, a condition known as <em>underflow</em>. The
+maximum exponent, 255, is reserved for infinity and NANs ("Not A Numbers").</li>
+</ul></div>
+
+<p>In our implementation, we will not be implementing the full standard, mainly to keep the examples as simple as possible. In particular, the following shortcomings exist:</p>
+
+<div class="minor"><ul>
+  <li>Calculations are not accurate to the least significant bit, but can be in error in the last bit.</li>
+  <li>The algorithms have not been optimized to minimize execution time.</li>
+  <li>NANs are not completely supported. Only positive and negative infinities are supported. </li>
+</ul></div>
+
+<h2><a name="Digression"></a>Digression</h2>
+
+<p>My son, when he was a Computer Science undergraduate at another college, took a course much like this one (but using the Intel 8051 microcontroller). He had said that they had to write a floating
+point addition algorithm in assembly language. I was impressed. However while writing this chapter I asked him about it. The paraphrased discussion follows:</p>
+
+<div class="boxed">
+<p>Son: <em>You are only going to have your students use a floating point package in the lab? <strong>WE</strong> wrote an IEEE Floating point addition routine.</em></p>
+
+<p>I: <em>That's quite a task, considering it involves subtraction when the signs are different.</em></p>
+
+<p>Son: <em>Well, we only considered positive numbers.</em></p>
+
+<p>I:<em> OK, but it's still difficult because you have to handle the gradual underflow.</em></p>
+
+<p>Son: <em>He</em> [the instructor] <em>didn't talk about that.</em></p>
+
+<p>I: <em>Did you at least handle overflow?</em></p>
+
+<p>Son:<em> No.</em></p>
+</div>
+<p>That is why we will look at the basic algorithms and the code but not write the code! We will see that writing the addition function takes about 200 lines (machine instructions) of code, most of
+which is in subroutines that get called from at least two places. The complete package is about 700 lines of code and took me, with 30 years experience, a week of evenings to write and test. I'm
+sure there are still errors. The source code is <a href="fplib.asm">here</a>.</p>
+<h2><a name="Utility Routines">Utility Routines</a></h2>
+<p>All of the floating point calculation algorithms require manipulation of the sign, exponent, and fraction fields separately. To aid in their implementation, we will use utility routines to unpack a
+floating point number into separate fields, and another routine to pack the fields back up. When unpacked, the value will occupy six bytes, one byte for the sign (only the most significant bit is used),
+one byte for the exponent, and four bytes for the fraction, with the binary point between bits 22 and 23. The most significant one bit is explicit, not implied.</p>
+<pre>FSIGN:  equ     0       ; Offset to byte with sign bit
+FEXPO:  equ     1       ; Offset to byte with exponent
+FHIGH:  equ     2       ; offset to high word of fraction
+FLOW:   equ     4       ; offset to low word of fraction
+FPSIZE: equ     6       ; Size of an unpacked floating point value</pre>
+
+<p>When we do the extraction, we will need to handle the case of zero exponents.
+The algorithm is:</p>
+
+<p><img src="fig25a-2.gif" width="303" height="369" align=bottom /></p>
+
+<p>This becomes the following routine:</p>
+<pre>fpExtract:      ; Extract IEEEFP fields.
+                ; X - address of IEEE FP value
+                ; Y - address of Unpacked value 
+        ldd     0,X     ; MSW of IEEE value
+        asld            ; Shift to left, A has exponent
+        ldab    #0
+        rorb            ; Shift sign bit into b
+        stab    FSIGN,Y ; Save sign and exponent
+        staa    FEXPO,Y
+        beq     fpExZer ; Exponent is zero -- branch
+        ldd     0,X     ; Get MSW again
+        clra
+        orab    #$80    ; Set hidden msb of fraction
+        bra     fpExZerJoin
+fpExZer:
+        inc     FEXPO,Y ; Exponent=1
+        ldd     0,X     ; Get MSW again
+        clra            ; clear exponent and sign bits
+        andb    #~$80
+fpExZerJoin:
+        std     FHIGH,Y ; Store high order fraction
+        movw    2,X FLOW,Y ; Move low order 
+        rts</pre>
+
+<p>The routine is passed the address of the IEEE FP value as well as the location to store the unpacked value. Indexed addressing mode is used extensively here, and in the later routines. Another useful
+utility sets the condition codes based on an IEEE FP value, and is used to analyze arguments for special cases. For instance, 0 divided by any value is zero, so there is no reason to actually perform a
+division.</p>
+<pre>fpSetCC:        ; Set condition codes based on fp number
+                ; pointed to by X register
+        ldd     0,X     ; get MSW of value
+        beq     fpSetMaybeZero
+        cpd     #$8000  ; perhaps negative zero?
+        beq     fpSetMaybeZeroN
+        asld            ; get exponent
+        cmpa    #255    ; check for overflow
+        beq     fpSetOV
+        ldd     0,X     ; Set N=sign, V=0, Z=0
+        rts
+fpSetMaybeZero:
+        ldd     2,X     ; set or clear Z
+        andcc   #~$8    ; clear N
+        rts
+fpSetMaybeZeroN:
+        ldd     2,X     ; set or clear Z
+        orcc    #$8     ; set N (V is clear)
+        rts
+fpSetOV:
+        ldd     0,x     ; set or clear N, clear Z
+        sev             ; set V
+        rts</pre>
+
+<p>The algorithm for packing a floating point value back into IEEE format is somewhat more involved than the extraction because it needs to normalize the fraction, possibly causing overflow or the
+gradual underflow. This routine assumes that E is in the range 1 to 255, where 255 indicates pre-existing overflow.</p>
+
+<p><img src="fig25a-3.gif" width="533" height="642" align=bottom /></p>
+
+<p>This routine is not shown here, but <a href="fplib.asm">appears in the source listing at label <em>fpPack</em></a>.</p>
+
+<p>Continue with <em><a href="part025b.html">Converting Between Integer and Floating Point</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

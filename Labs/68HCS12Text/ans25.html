@@ -1,0 +1,28 @@
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>An Answwer for Designing with Microcontrollers -- The 68HCS12</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+<!--Version 4. Contents copyright 2007, Thomas Almy-->
+<h2>Question</h2>
+
+<p>With the high reference voltage set to 4.5 volts and the low
+reference voltage set to 0.5 volts, and 2 volts applied to the ATD
+input, what measurement code is expected assuming a 10 bit,
+right-justified conversion?</p>
+
+<h2>Answer</h2>
+
+<p>The equation given in the text is
+   round((V-V<sub>RL</sub>)*2<sup>bits</sup>/(V<sub>RH</sub>-V<sub>RL</sub>)).
+   Substituting the values for V, V<sub>RL</sub>, V<sub>RH</sub>, and
+   bits, we get, round((2-0.5)*1024/(4.5-0.5)) = round(384) = 384.</p>
+
+</p>
+
+</body> </html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Development Tools</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table BORDER="1" WIDTH="100%" CELLPADDING="1" CELLSPACING="1">
+<tr><td><a href="part003.html">Previous Section</a></td>
+<td><a href="part005.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part004" target="q">Questions</a></td>
+<td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>Development Tools</h1>
+
+<ul>
+  <li><a href="part004.html">Assemblers and Compilers</a></li>
+  <li><span class="selected">Debuggers and Interpreters</span>
+  <ul>
+    <li><a href="#Freescale D-BUG12">Freescale D-Bug12</a></li>
+    <li><a href="#Forth Language Interpreter">Forth Language Interpreter</a></li>
+  </ul>
+  </li>
+  <li><a href="part004b.html">Simulators, Evaluation Boards, and In-circuit Emulation</a></li>
+  <li><a href="part004c.html">Flowcharts and Pseudocode</a></li>
+</ul>
+
+<p>It is virtually impossible to write a program that is error-free. One software
+aid in program testing and <em>debugging</em> is a debugger, or monitor, program which allows stepping execution and viewing and altering memory. The Freescale 68HC12 comes with a debugger called D-Bug12. Another aid is in taking a different design approach, using an interactive interpreter &quot;environment&quot; in the target system. Two common interpreters are BASIC and Forth.</p>
+<h2><a name="Freescale D-BUG12"></a>Freescale D-Bug12</h2>
+
+<p>The D-Bug12 program requires one of the 68HC12 serial communication interfaces (serial ports) be connected to a terminal, typically a personal computer. In
+addition, when used in the HCS12, the debugger occupies 48k bytes of address space in a ROM, and uses 1024 bytes of the internal RAM. In return, the D-Bug12 has the following major features:</p>
+
+<div class="minor"><ul>
+  <li>Ability to download programs assembled on the personal computer into the microcontroller's memory.</li>
+  <li>Interactive commands to read and write CPU registers, RAM and EEPROM memory, and to assemble and disassemble (convert from machine code to
+assembler statements) code.</li>
+  <li>Interactive commands to start program execution, stop at selected locations (called <em>breakpoints</em>), and <em>trace</em> execution by listing each instruction executed
+along with register contents.</li>
+  <li>A <em>library</em> of functions that can be used in programs to
+     save programming time, providing D-Bug12 is always installed in the system.</li>
+</ul></div>
+
+<p>For further information, see , the <em><A
+HREF="../motorola/DB12RG4.pdf">Reference Guide for D-Bug12</a></em>.</p>
+<h2><a name="Forth Language Interpreter"></a>Forth Language Interpreter</h2>
+
+<p>An interpreter combines the functionality of a debugger with that of an
+assembler or compiler. Programs can be written and tested on the target
+microcontroller and delivered as an application by moving the program from
+RAM to EEPROM or ROM.  A common interpretive language found in microcontrollers
+is Forth. Forth's interpreter models a stack machine like the classic HP
+scientific calculators or the PostScript page composition language. The
+Forth commands can be issued directly from the keyboard, or compiled into
+functions called <em>words</em>. An initial set of words cover primitive operations such as arithmetic, memory
+accessing, and printing. The original program example could be done in Forth this way:</p>
+<pre>VARIABLE p VARIABLE q VARIABLE r<em></em></pre>
+
+<p>This defines three variables.</p>
+<pre>p C@ q C@ + 1 - r C!</pre>
+
+<p>This fetches the byte at <em>p</em>, fetches the byte at <em>q</em>, adds them together, subtracts 1, and stores the result in byte <em>r</em>. If we wanted to compile the code to run at any
+time, we could execute this definition:</p>
+<pre>: test p C@ q C@ + 1 - r C! ;</pre>
+
+<p>and then execute <em>test</em> to perform the calculation. Being an interactive environment, we could store values in p and q, and then print the value in r after execution
+(the period word prints the value on the top of the stack):</p>
+<pre>12 p C!  21 q C!  test  r C@ .</pre>
+
+<p>This will print the 32, being (12+21-1).</p>
+
+<p>Continue with <a href="part004b.html"><em>Simulators, Evaluation Boards, and In-circuit Emulation</em></a>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

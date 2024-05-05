@@ -1,0 +1,290 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>68HC12 Instruction Set Overview</title>
+<link rel="shortcut icon" href="icon.ico">
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table border="1" width="100%" cellpadding="1" cellspacing="1">
+<tr valign="top"><td><a href="part004.html">Previous Section</a></td>
+<td><a href="part006.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part005" target="q">Questions</a></td>
+<td><a href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>68HC12 Instruction Set Overview</h1>
+
+<ul>
+  <li><a href="part005.html">Classes of Instructions</a></li>
+  <li><span class="selected">Addressing Modes</span>
+  <ul>
+    <li><a href="#Inherent Addressing Mode">Inherent Addressing Mode</a></li>
+    <li><a href="#Immediate Addressing Mode">Immediate Addressing Mode</a></li>
+    <li><a href="#Direct and Extended Addressing Modes">Direct and Extended Addressing Modes</a></li>
+    <li><a href="#Relative Addressing Mode">Relative Addressing Mode</a></li>
+    <li><a href="#Indexed Addressing Modes">Indexed Addressing Modes</a>
+    <ul>
+      <li><a href="#Constant Offset Indexed">Constant Offset Indexed</a></li>
+      <li><a href="#Constant Indirect Indexed">Constant Indirect Indexed</a></li>
+      <li><a href="#Auto Pre/Post Decrement/Increment Indexed">Auto Pre/Post Decrement/Increment Indexed</a></li>
+      <li><a href="#Accumulator Offset Indexed">Accumulator Offset Indexed</a></li>
+      <li><a href="#Accumulator D Indirect Indexed">Accumulator D Indirect Indexed</a></li>
+    </ul>
+    </li>
+    <li><a href="#Addressing Modes in the Reference Manual">Addressing Modes in the Reference Manual</a></li>
+  </ul>
+  </li>
+  <li><a href="part005b.html">Instruction Timing</a></li>
+</ul>
+
+<p><TT></TT><TT></TT>Instruction operands can be obtained in many ways. These various ways are called <em>addressing modes</em>.</p>
+
+<p>Instructions that involve memory locations typically specify the address with an instruction operand. The address of the memory location is called the <em>effective
+address</em>. Sometimes the effective address is specified explicitly, other times it is specified to be the result of an address calculation. In one addressing mode
+(immediate) the effective address itself is treated as though it were the contents of the memory location.</p>
+<h2><a name="Inherent Addressing Mode"></a>Inherent Addressing Mode</h2>
+
+<p>The inherent mode means that the location of the operand is specified implicitly by the instruction. In our original example program, the <em>DECA</em> instruction uses
+inherent addressing mode. Its operand is in accumulator A. For most instructions that use registers the register is inherent in the instruction.</p>
+<h2><a name="Immediate Addressing Mode"></a>Immediate Addressing Mode</h2>
+
+<p>For immediate mode, the operand is used as the value for the operation rather than the memory location containing the value for the operation. Immediate mode is
+available for most instructions for which the data source is in memory, such as the load, move, and arithmetic instructions. Immediate mode is signified by the use
+of a leading <em># </em>character in the operand. </p>
+
+<p><img src="fig5a-2.gif" width="246" height="65" align=bottom /></p>
+
+<p>These are instructions using immediate mode:</p>
+<pre>XYZ: ds     1          ; variable XYZ
+...
+    ldaa    #4        ; load accumulator A with the value 4
+    ldx     #XYZ      ; load register X with the address of variable XYZ
+    subb    #1        ; subtract 1 from accumulator B (decrements B)
+    movb    #25 XYZ   ; Move the value 25 into variable XYZ.
+    movb    #$25 XYZ  ; Move the hexadecimal value 25 (37 decimal) into XYZ</pre>
+
+<p>The size of the operand is either one or two bytes, depending on the size of the destination.</p>
+<h2><a name="Direct and Extended Addressing Modes"></a>Direct and Extended Addressing Modes</h2>
+
+<p>The Direct and Extended addressing modes are the default modes. The address of the memory location is specified explicitly by the operand. The size of an
+extended mode operand is two bytes. If the memory location is in the range 0 to $ff, then if the Direct mode is available it is used automatically. The size of a
+direct mode operand is one byte. </p>
+
+<p><img src="fig5a-3.gif" width="297" height="203" align=bottom /></p>
+
+<p>Extended mode was used in the example program. It also appears as the destination operand in the last two examples of the immediate addressing mode, above.
+Some other examples:</p>
+<pre>XYZ: ds     1          ; Byte variable XYZ
+PRS: ds     2          ; Word (16 bit) variable PRS
+...
+     ldaa    XYZ        ; Load accumulator A from byte variable XYZ
+     addd    PRS        ; Add contents of word variable PRS to accumulator D</pre>
+<p>The difference between Immediate addressing mode and Direct/Extended addressing
+modes can be confusing. In general, if we want a constant value or the
+addess of a variable we use immediate mode, while for the contents of a
+variable we use direct or extended modes. Here are some examples, with
+the C language equivalents. If we have a word variable PQR we would define
+it:</p>
+<pre>PQR: ds     2</pre>
+<p>In C this would be <em>&quot;int PQR;&quot; </em>To obtain the value stored in PQR, we would execute:</p>
+<pre>     ldd    PQR </pre>
+<p>In C this would just be <em>&quot;PQR&quot;</em> in an expression. To obtain the address of PQR, we would execute:</p>
+<pre>     ldd    #PQR</pre>
+<p>In C this would be <em>&quot;@PQR&quot;</em>. Note that this is something that we would not often want to do. To obtain
+the constant value <em>123</em>, we would execute:</p>
+<pre>     ldd   #123</pre>
+<p>In C this would be <em>&quot;123&quot;. </em>We should access memory locations by symbolic names, but if we wanted the
+contents of the memory word starting at location 123 we would execute:</p>
+<pre>     ldd   123</pre>
+<p>This does <strong>not</strong> load the constant value. In C this would be <em>&quot;*((int*)123)&quot;</em>.</p>
+<h2><a name="Relative Addressing Mode"></a>Relative Addressing Mode</h2>
+
+<p>Relative addressing mode is used by branch instructions. The effective address is calculated by adding the single byte operand, as a signed value, to the value of
+the program counter. This allows the branch instructions to have target addresses from -128 to +127 bytes from the start of the next instruction. NOTE: In branch
+and jump instructions, the effective address <em>is</em> the target location of the branch/jump.</p>
+
+<p>The Increment/Decrement/Test and branch if equal/not-equal to zero instructions have a 9 bit relative offset allowing target addresses from -256 to +255 bytes
+from the start of the next instruction.</p>
+
+<p>When relative addressing mode is used in the assembler, the actual target address is given and the assembler calculates the relative address automatically. If the
+address is out of range, an error message is given.</p>
+
+<p><img src="fig5a-4.gif" width="352" height="127" align=bottom /></p>
+<h2><a name="Indexed Addressing Modes"></a>Indexed Addressing Modes</h2>
+
+<p>The Indexed Addressing modes calculate the effective address based on the contents of registers and constants that are encoded into the operand fields.</p>
+<h3><a name="Constant Offset Indexed"></a>Constant Offset Indexed</h3>
+
+<p>In this indexed mode, a constant value is added to the contents of one of the 16 bit registers X, Y, SP, or PC, to create the effective address. This is the most
+commonly used index mode. Any constant value can be given and the assembler picks the mode giving the smallest instruction. The 5 bit constant offset gives a
+range of -16 through +15 and takes one operand byte. The 9 bit offset gives a range of -256 through 255 and takes two operand bytes. The 16 bit offset takes three
+operand bytes.</p>
+<p><img src="fig5a-5.gif" width="527" height="129" align=bottom /></p>
+<p>To specify constant offset indexed mode, the operand consists of a constant value and a register name separated by a comma:</p>
+<pre>XYZ: ds     10          ; 10 bytes of data (an array)
+....
+    ldx     #XYZ        ; Address of array loaded into index register X
+    ldaa    1,X         ; load accumulator A with data one byte into array
+    adda    0,X         ; add data byte at first location in array
+    ldx     #9          ; index into array (may be result of calculation)
+    adda    XYZ,X       ; add data byte at index 9 of array XYZ to A</pre>
+
+
+
+<p>Indexing with the X or Y registers is commonly used to access data in tables
+or arrays. The example above would be equivalent to the C language expression
+<em>&quot;XYZ[1] + XYZ[0]+XYZ[9]&quot;</em>.</p>
+<h3><a name="Constant Indirect Indexed"></a>Constant Indirect Indexed</h3>
+
+<p>This indexed mode differs from the constant offset indexed mode in that the sum of the constant and the register contents is the address of a word in memory that
+contains the effective address of the data. This addressing mode is used to index into a table of addresses. The constant offset is 16 bits, and this operand takes
+three bytes.</p>
+
+<p>To specify constant indirect indexed mode, the operand consists of a constant
+value and a register name separated by a comma and enclosed within square
+brackets.</p>
+
+<p><img src="fig5a-6.gif" width="551" height="213" align=bottom /></p>
+
+<p>Another example of use:</p>
+<pre>     org     $3000     ; data starts at location $3000
+ABC: db      20        ; target data
+DEF: db      30        ; more target data
+GHI: dw      ABC,DEF   ; table of data addresses 
+...
+     ldy     #GHI      ; table address loaded into index register Y
+     ldaa    [0,Y]     ; Accumulator A is loaded with 20, the contents of ABC
+     ldab    [2,Y]     ; Accumulator B is loaded with 30, the contents of DEF</pre>
+<p>Note that in the above example, the constant 2 is used to access the table
+entry containing the address of location DEF. The reason for this is the
+table contains words which are two bytes long, so the second entry in the
+table is at address offset 2 rather than 1. In the C language, this example
+would be:</p>
+<pre>char ABC, DEF;
+char *GHI[] = {&amp;ABC, &amp;DEF};
+char a,b; /* representing accumulators A and B */
+
+a = *GHI[0];
+b = *GHI[1];</pre>
+<h3><a name="Auto Pre/Post Decrement/Increment Indexed"></a>Auto Pre/Post Decrement/Increment Indexed</h3>
+
+<p>This mode behaves as the constant indexed mode with a constant offset of zero and register of X, Y, or SP, but with a very useful addition. A value of 1 through 8
+can be added or subtracted from the index register before or after the effective address calculation. This addressing mode uses a single byte operand.</p>
+
+<p>This mode is specified in the assembler as follows. <em>n </em>is a constant from 1 through 8, and <em>R </em>is the register X, Y, or SP.</p>
+
+<table BORDER="1" WIDTH="935" CELLPADDING="1" CELLSPACING="1">
+<tr><TD WIDTH="291"><strong>n,+R</strong> pre-increment, R is incremented by n
+before the address calculation</td>
+<TD WIDTH="644"><img src="fig5a-7.gif" width="577" height="124"
+align=bottom /></td></tr>
+<tr><td><strong>n,R+ </strong>post-increment, R is incremented by n
+after the address calculation</td>
+<td><img src="fig5a-8.gif" width="548" height="122" align=bottom /></td></tr>
+<tr><td><strong>n,-R</strong> pre-decrement, R is decremented by n
+before the address calculation</td>
+<td><img src="fig5a-9.gif" width="548" height="123" align=bottom /></td></tr>
+<tr><td><strong>n,R-</strong> post-decrement, R is decremented by n
+after the address calculation</td>
+<td><img src="fig5a-10.gif" width="548" height="124" align=bottom /></td></tr></table>
+
+<p>It is important to realize that the <em>n</em> value is not a constant offset but is the increment/decrement value. The constant value is always zero in this indexed mode. The
++ or - sign is necessary to distinguish this mode from the constant indexed mode. </p>
+
+<p>These modes are commonly used for algorithms that advance through memory. For instance, to move the 8 bytes starting at location AB1 to location BC7, we can
+execute:</p>
+<pre>    ldx     #AB1
+    ldy     #BC7
+    movw    2,X+ 2,Y+    ; move first two bytes
+    movw    2,X+ 2,Y+    ; move second two bytes
+    movw    2,X+ 2,Y+    ; move third two bytes
+    movw    2,X+ 2,Y+    ; move last two bytes</pre>
+<p>In the C language this would be:</p>
+<pre>int *x, *y;
+
+x = &AB1;
+y = &BC7;
+*y++ = *x++;
+*y++ = *x++;
+*y++ = *x++;
+*y++ = *x++;</pre>
+
+<h3><a name="Accumulator Offset Indexed"></a>Accumulator Offset Indexed</h3>
+
+<p>This mode calculates the effective address as the sum of an index register (X, Y, SP, or PC) and an accumulator (A, B, or D). If an 8 bit accumulator is specified, then
+its value is taken as unsigned.</p>
+
+<p>This mode is specified in the assembler as the accumulator name and the index register name separated by a comma. This mode uses a single operand byte. </p>
+
+<p><img src="fig5a-11.gif" width="527" height="136" align=bottom /></p>
+
+<p>Accumulator Offset Indexed addressing mode is useful for addressing elements of tables and arrays where the start of the table is kept in an index register and the
+offset into the table is calculated in an accumulator:</p>
+<pre>ABC:    ds      20        ; 20 byte array
+INDX:   db      3         ; index into array
+...
+        ldx     #ABC      ; address of start of array
+        ldaa    INDX      ; index into array
+        ldaa    A,X       ; Accumulator A is loaded with the contents of the
+                          ; 4th byte of ABC</pre>
+<h3><a name="Accumulator D Indirect Indexed"></a>Accumulator D Indirect Indexed</h3>
+
+<p>In this addressing mode, the contents of the D accumulator are added to
+the contents of X, Y, SP, or PC to obtain the address of a word containing
+the effective address of the instruction. This mode is specified in the
+assembler with the operand <em>[D,R]</em> where R is the register X, Y, SP, or PC. This is a single byte operand. </p>
+
+<p><img src="fig5a-12.gif" width="561" height="222" align=bottom /></p>
+
+<p>The most common use of this addressing mode is in jump tables. Suppose one wants the program to branch to one of locations L1, L2, or L3 depending on a value
+in accumulator D being 0, 2, or 4, respectively. This can be accomplished with the following instruction followed immediately by the jump table:</p>
+<pre>    jmp     [D,PC]
+    dw      L1
+    dw      L2
+    dw      L3</pre>
+
+<p>Let's say the value in accumulator D is 2. The jump instruction operand
+says to add the contents of D to the contents of the PC. The PC points
+to the following instruction, which is the dw data declaration. 2 bytes
+past that is the dw that contains the value L2. The contents of that location
+are fetched and becomes the effective address. The jump instruction goes
+to the effective address, L2.</p>
+<h2><a name="Addressing Modes in the Reference Manual">Addressing Modes in the Reference Manual</a></h2>
+
+<p>The <a href="../motorola/S12CPUV2.pdf"><em>S12CPUV2
+Reference Manual</em></a> lists all instructions, describing their function and applicable addressing modes. The table describing the ADDA instruction is
+(figure copied from the reference manual):</p>
+
+<p><img src="fig5b-1.gif" width="454" height="168" align=bottom /></p>
+
+<p>The Address Mode column has the abbreviation for the type of addressing mode that applies to the row. Note that the distinction between IDX, IDX1, and IDX2
+is the length of the object code - IDX1 adds one byte and IDX2 adds two bytes, while IDX adds no additional bytes to the basic instruction length. The format of
+the assembler instruction is in the first column, Source Form. The precise type of operands allowed is shown there in a fairly cryptic form that is best understood
+by reading the guide at the start of Appendix A in the guide. For instance, <em>oprx9,xysppc</em> shown under the IDX1 address mode is described, "Any integer from -256
+to 255," and "Register designator for X or Y or SP or PC." From this we see that IDX1 in this case is the 9 bit <strong>Constant Offset Indexed </strong>mode. </p>
+
+<p>The Machine Code column shows the code needed to implement the instruction.
+In this case, depending on address mode, the first byte is $8B, $9B, $AB,
+or $BB. The meaning of the other bytes is given in table A-5 of the Appendix.
+For the IDX1 address mode, the bytes show as <em>xb</em> and <em>ff</em>, which are described as "indexed
+addressing post-byte" and "Low-order eight bits of a 9 bit signed constant offset in indexed addressing...". The mysterious <em>xb</em> byte, which is used in all indexed
+modes, determines the type of indexing used. It is described in an earlier manual as shown here, and in the Users Guide in a more verbose fashion in table 4-2:</p>
+
+<p><img src="fig5a-1.gif" width="619" height="432" align=bottom /></p>
+
+<p>From this we see that for the 9 bit Constant Offset Indexed Mode has three leading 1 bits, two bits indicating the register (X, Y, SP, or PC), two 0 bits, and the
+sign bit of the 9 bit offset. Other index bytes can be similarly encoded or decoded.</p>
+
+<p>References: See Section 3 in the  <a href="../motorola/S12CPUV2.pdf"><em>S12CPUV2
+Reference Manual</em></a>.</p>
+
+<p>Continue with <a href="part005b.html"><em>Instruction Timing</em></a>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

@@ -1,0 +1,220 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Decision Trees and Logic Instructions</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table border="1" width="100%">
+<tr><td><a href="part009.html">Previous Section</a></td>
+<td><a href="part011.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part010" target="q">Questions</a></td>
+<td><a href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>Decision Trees and Logic Instructions</h1>
+
+<ul>
+  <li><a href="part010.html">Boolean Logic Review</a></li>
+  <li><span class="selected">Selection Control Structure</span>
+  <ul>
+    <li><a href="#The " If Then" Structure">The "If Then" Structure</a></li>
+    <li><a href="#The " If Then Else" Structure">The "If Then Else" Structure</a></li>
+    <li><a href="#Handling AND and OR Conditions">Handling AND and OR Conditions</a></li>
+    <li><a href="#Decision Trees">Decision Trees</a></li>
+  </ul>
+  </li>
+  <li><a href="part010b.html">Bitwise Boolean Operations</a></li>
+  <li><a href="part010c.html">Advanced Bit Instructions</a></li>
+  <li><a href="part010d.html">Bitwise Boolean Summary</a></li>
+</ul>
+
+<p>Handling alternatives is an important part of most microcontrollers. Selection
+control structures allow handling these alternative execution paths.</p>
+<h2><a name="The " If Then" Structure"></a>The "If Then" Structure</h2>
+
+<p>The simplest selection structure implements "if the condition is true, then do this operation." Consider a system with a
+variable named <em>temp</em> which holds the most recent Celsius temperature measurement of a system. We wish to turn on an alarm
+if the temperature goes above 100 degrees. This can be represented by the flowchart:</p>
+
+<p><img src="fig10a-1.gif" width="189" height="249" align=bottom /></p>
+
+<p>and by the C pseudo-code:</p>
+<pre>if (temp &gt; 100) {
+    <em>Turn on alarm
+</em>}</pre>
+
+<p>In a microcontroller's machine language, the selection structure is implemented using a conditional branch instruction. The conditional
+expression (<em>temp &gt; 100</em> in this case) is typically implemented via a compare or test instruction which sets the condition codes. Then the
+conditional branch instruction used branches on the FALSE of our test to branch around the following action code:</p>
+<pre>    ldaa    temp        ; Get temperature value
+    cmpa    #100        ; Is it greater than 100?
+    bls     good        ; Branch if NOT greater than 100
+    <em>Turn on Alarm</em>
+good:                   ; program continues...</pre>
+<h2><a name="The " If Then Else" Structure"></a>The "If Then Else" Structure</h2>
+
+<p>Often the control structure needed is "if the condition is true then do this operation, else do that operation." There are two alternative blocks
+of code that can be executed. Considering our previous example involving a temperature sensor, lets say we have a cooling fan. We wish to
+turn on the cooling fan if the temperature rises above 70 degrees, and turn off the fan if the temperature is not above 70 degrees. This can be
+expressed in the flowchart:</p>
+
+<p><img src="fig10a-2.gif" width="189" height="252" align=bottom /></p>
+
+<p>or in C pseudo-code:</p>
+<pre>if (temp &gt; 70) {
+    <em>Turn on Fan
+</em>}
+else {
+    <em>Turn off Fan
+</em>}</pre>
+
+<p>In machine code, we can still use a conditional branch to branch around the temp&gt;70 code, targeting the temp&lt;=70 code. We need to add an
+unconditional branch after the temp&gt;70 code to branch around the temp&lt;=70 code:</p>
+<pre>    ldaa    temp        ; Test the temperature
+    cmpa    #70         ; Is it &gt;70?
+    bls     cool        ; Branch if NOT greater than 70.
+    <em>Turn on Fan</em>
+    bra     resume
+cool:
+    <em>Turn off Fan
+</em>resume:</pre>
+<h2><a name="Handling AND and OR Conditions"></a>Handling AND and OR Conditions</h2>
+
+<p>Sometimes the conditions are not simple, but involve Boolean expressions. These can be broken down into multiple decision blocks. Consider
+the problem "if the temperature is greater than 80 and the coolant pressure is greater than 25 then turn on circulating pump." We can
+represent this problem with two decision blocks:</p>
+
+<p><img src="fig10a-3.gif" width="287" height="296" align=bottom /></p>
+
+<p>First we check the temperature. If it is not greater than 80, there is no reason to go any further and we are finished. If the temperature is
+greater than 80, then we check the pressure. If the pressure is greater than 25, then we turn on the pump and are finished. In C pseudo-code
+we have:</p>
+<pre>if (temp &gt; 80 &amp;&amp; pres &gt; 25) {
+    <em>Turn on Pump</em>
+}</pre>
+
+<p>In C, the <em>&amp;&amp; </em>operator is a logical AND operator, as opposed to the bitwise AND function <em>&amp;</em> discussed earlier. Just like the flowchart, the C
+code does not check the pressure if the temperature is not greater than 80. </p>
+
+<p>The assembly code is:</p>
+<pre>    ldaa    temp        ; Check the temperature
+    cmpa    #80
+    bls     good        ; Branch if NOT greater than 80
+    ldaa    pres        ; Check the pressure
+    cmpa    #25
+    bls     good        ; Branch if not greater than 25
+    <em>Turn on pump
+</em>good:                   ; finished</pre>
+
+<p>Handing OR conditions is a bit more challenging. Consider a new alarm if the temperature goes above 100 degrees or goes below 50 degrees.
+Again, there are two decision blocks, and we can represent the algorithm with this flowchart:</p>
+
+<p><img src="fig10a-4.gif" width="203" height="310" align=bottom /></p>
+
+<p>Either one of the two conditions will cause the alarm to go on. If the first condition is true, we can turn on the alarm without even checking
+the second condition. In C pseudocode we get:</p>
+<pre>if (temp &gt; 100 || temp &lt; 50) {
+    <em>Turn on Alarm</em>
+}</pre>
+
+<p>In C, the <em>|| </em>operator is a logical OR operator, as opposed to the bitwise OR function <em>|</em> discussed earlier. Just like the flowchart, the C code
+only does one comparison if the temperature is greater than 100.</p>
+
+<p>When we write the assembler code, the conditional branch after the first test takes the branch if the condition is true. This is to skip the
+second test. The code:</p>
+<pre>    ldaa    temp        ; Get the temperature
+    cmpa    #100
+    bhi     bad         ; branch if &gt;100 (and turn on alarm)
+    cmpa    #50         ; compare temperature to 50
+    bhs     good        ; branch if temperature not less than 50
+bad:                    ; temperature out of range
+    <em>Turn on Alarm</em>
+good:                   ; finished</pre>
+
+<p>Of course one problem with this alarm code is there is nothing to turn the alarm off if the temperature goes back in range. For that we need
+the If..Then..Else type of structure. The flowchart is very similar:</p>
+
+<p><img src="fig10a-5gif.gif" width="198" height="339" align=bottom /> </p>
+
+<p>and the implementation takes only additional code to turn off the alarm, and an unconditional branch, shown in <FONT COLOR="#ff0000">RED</FONT>:</p>
+<pre>    ldaa    temp        ; Get the temperature
+    cmpa    #100
+    bhi     bad         ; branch if &gt;100 (and turn on alarm)
+    cmpa    #50         ; compare temperature to 50
+    bhs     good        ; branch if temperature not less than 50
+bad:                    ; temperature out of range
+    <em>Turn on Alarm</em>
+<font color="#ff0000">    bra     finish</font>
+good:
+<font color="#ff0000">    <em>Turn off Alarm</em>
+finish:                 </font>; finished</pre>
+<h2><a name="Decision Trees"></a>Decision Trees</h2>
+
+<p>Sometimes there are more than two alternatives. In this case a <em>decision tree</em> is used. The name comes from the tree-like shape of the
+flowchart implementing it. Consider the following flowchart:</p>
+
+<p><img src="fig10a-6.gif" width="460" height="414" align=bottom /></p>
+
+<p>In this case we have four different outcomes based on three conditions. In C, this would be implemented using nested if statements. However
+tree structures are much easier to comprehend as flowcharts. The important points to consider when writing the assembler code are:</p>
+
+
+<ul>
+  <li>Each decision block becomes a conditional branch</li>
+  <li>Use unconditional branches at the end of the processing blocks to branch around other code blocks that should not be executed.</li>
+  <li>There is a single point in the code where execution resumes no matter what the outcome.</li>
+</ul>
+
+<p>Implementing the algorithm:</p>
+<pre>    ldaa    temp          ; get the temperature
+    cmpa    #20
+    blo     heater        ; turn on heater if temp &lt; 20
+    cmpa    #70
+    bls     good          ; flash green if not temp &gt; 70
+    cmpa    #100
+    bls     fan           ; turn on fan if not temp &gt; 100
+    <em>Signal Alarm</em>
+    bra     resume
+heater:
+    <em>Turn on Heater</em>
+    bra     resume
+good:
+    <em>Flash Green Indicator</em>
+    bra     resume
+fan:
+    <em>Turn on Fan</em>
+resume:                   ; finished </pre>
+
+<p>Sometimes the flowchart resembles a ladder rather than a tree. In fact the preceding example can be redrawn as a ladder. This is not true for
+the general case! In the ladder structure, the tests are performed consecutively until one is successful. </p>
+
+<p><img src="fig10a-7.gif" width="287" height="517" align=bottom /></p>
+
+<p>This is easiest written as consecutive If-Then-Else type constructs. Keep in mind that this is functionally identical with the preceding code:</p>
+<pre>    ldaa    temp         ; check temperature
+    cmpa    #20          ; Temp &lt; 20?
+    bhs     L1           ; branch if not
+    <em>Turn on Heater
+</em>    bra     resume
+L1: cmpa    #70          ; Temp &lt;= 70?
+    bhi     L2           ; branch if not
+    <em>Flash Green Indicator</em>
+    bra     resume
+L2: cmpa    #100         ; Temp &lt;= 100?
+    bhi     L3           ; branch if not
+    <em>Turn on Fan</em>
+    bra     resume
+L3: <em>Signal Alarm
+</em>resume:                  ; finished</pre>
+
+<p>Continue with <em><a href="part010b.html">Bitwise Boolean Operations</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

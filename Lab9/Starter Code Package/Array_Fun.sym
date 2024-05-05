@@ -1,0 +1,24 @@
+array      1000
+config_hex_displays 2117
+continue   202c
+continue1  204a
+countmax   2042
+countmin   2047
+delay_ms   211f
+digit0_pp3 0007
+digit1_pp2 000b
+display    2065
+divisor    0002
+dvalue     00fa
+endarray   1030
+hex_display 2139
+loop       2014
+loop1      2034
+max        1030
+maximum    2029
+midrange   1051
+min        1031
+minimum    2024
+nummax     1040
+nummin     1041
+range      1050

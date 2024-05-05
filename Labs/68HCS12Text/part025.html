@@ -1,0 +1,150 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Floating Point Arithmetic</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table BORDER="1" WIDTH="100%">
+<tr><td><a href="part024.html">Previous Section</a></td>
+<td><a href="part026.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part025" target="q">Questions</a></td>
+<td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>Floating Point Arithmetic</h1>
+<p><em>This section is split among several pages because of its
+   length. The start of split sections have a table of contents
+   showing each page and the contents of the current page. The current
+   page is emphasized in <span class="selected">bold</span>.</em></p>
+<ul>
+  <li><span class="selected">Overview</span></li>
+  <li><a href="part025a.html">IEEE Floating Point Format </a></li>
+  <li><a href="part025b.html">Converting Between Integer and Floating Point</a></li>
+  <li><a href="part025c.html">Floating Point Multiplication</a></li>
+  <li><a href="part025d.html">Floating Point Addition</a></li>
+  <li><a href="part025e.html">Floating Point Comparison and Section Conclusion</a></li>
+</ul>
+
+<p>We have seen that by moving the binary point in an integer we can
+trade off range versus precision in our arithmetic. Ideally, we want
+all the bits of our integer to be significant to obtain the greatest
+precision, however in practice not all bits will be significant
+(leading zeroes are not significant) so that we can represent a range
+of values. In this section we will consider another tradeoff which
+will give us much increased range and in most cases greater precision
+than scaled integer arithmetic. We will give up some of the bits in
+our representation to be used to hold the binary scale factor. Since
+the scale factor is associated with the value rather than being fixed,
+the range of a value can be dynamically adjusted. Here is the format
+of a "generic floating point" value:</p>
+
+<p><img src="fig25-1.gif" width="432" height="126" align=bottom /></p>
+
+<p>The sign field is a single bit, which is 1 to indicate negative
+values. Almost all floating point formats are sign-magnitude
+representation. The binary scale factor exponent is the second field,
+while the scaled value in the last field is called the
+<em>fraction</em>. Occasionally the fraction is called the
+<em>mantissa</em>, however that is a misuse of the term.</p>
+
+<p>If the fraction has a most significant bit of 1, the greatest
+precision can be represented, and the value is called
+<em>normalized</em>. Most floating point operations will finish by
+normalizing the value - shifting the fraction and adjusting the
+exponent as necessary. For convenience, floating point formats are
+designed so that a floating point zero value is represented with the
+same bit pattern as an integer 0. We see that is the case here if we
+state that a zero value must have a zero exponent. </p>
+
+<p>In this section we will develop a floating point function
+<em>library</em>, a collection of subroutines which handle our
+commonly needed arithmetic functions.  Most microcontroller users will
+have these libraries as part of their program development system. In
+some very advanced microcontrollers, and in most modern advanced
+microprocessors, floating point arithmetic is built into the hardware
+as additional CPU instructions.</p>
+
+<p>Developing a floating point library is a tedious task, with many
+chances for introducing obscure errors. For this reason, it is a task
+best left for experts.  Having said that, and saying that I am no
+expert, we will forge ahead and develop the library anyway. This text
+does not cover the fine points of floating point calculations. For a
+thorough study, especially recommended if you intend to write a
+floating point library, I recommend Donald E.  Knuth's <em>The Art of
+Computer Programming</em>, Volume 2.</p>
+
+<p>To use the library, one assembles it with the application program,
+and calls the various functions contained within.  Here are the
+functions:</p>
+
+<div class="minor"><dl>
+  <dt>fpFloat</dt><dd>  convert a 32 bit signed integer into a
+     floating point value</dd>
+  <dt>fpFix</dt><dd> convert a floating point value into a 32 bit signed integer. Set  V condition code flag on overflow, because floating point value might be too
+large to convert.</dd>
+  <dt>fpTest</dt><dd> sets the N V and Z CCR flag bits based on the
+     floating point value</dd>
+  <dt>fpNegate</dt><dd> negate a floating point value</dd>
+  <dt>fpAdd</dt><dd> add two floating point values</dd>
+  <dt>fpMultiply</dt><dd> multiply two floating point values</dd>
+  <dt>fpDivide</dt><dd> divide two floating point values</dd>
+  <dt>fpCompare</dt><dd> compare two floating point values, setting Z
+     and N condition code flags for conditional branch.</dd>
+</dl></div>
+
+<p>We will use 32 bit floating point values. The 68HC12 has no intrinsic 32 bit data format, so we will claim the format is an extension of the existing big-endian format in that the most significant word of the 32 bit "double word" is stored first, followed by the least significant word. Because there are no
+32 bit registers, we will pass function parameters and results on the stack. To add two 32 bit floating point values at (double word locations) v1 and v2
+together, storing the sum at double word location v3, we would execute:</p>
+<pre>    movw    v1+2 2,-sp   ; push least significant word of v1 on stack
+    movw    v1 2,-sp     ;  followed by most significant (in stack at lower address)
+    movw    v2+2 2,-sp   ; repeat for v2
+    movw    v2 2,-sp
+    jsr     fpAdd        ; Perform floating point addition
+    movw    2,sp+ v3     ; pull sum from stack, storing at v3
+    movw    2,sp+ v3+2</pre>
+
+<p>We can perform chain calculations keeping the values on the stack, much like a RPN calculator. For instance, the following code will convert a floating
+point Celsius temperature to Fahrenheit using the floating point formula <em>F= C*9/5 + 32</em>:</p>
+<pre>    movw    celsius+2 2,-sp  ; push C on stack
+    movw    celsius 2,-sp
+    movw    #9 2,-sp         ; push integer 9 on stack
+    movw    #0 2,-sp
+    jsr     fpFloat          ; convert 9 to floating point
+    jsr     fpMultiply       ; multiplies C by floating point 9
+    movw    #5 2,-sp         ; push integer 5 on stack
+    movw    #0 2,-sp
+    jsr     fpFloat          ; convert 5 to floating point
+    jsr     fpDivide         ; divide (C*9) by floating point 5
+    movw    #32 2,-sp        ; push integer 32 on stack
+    movw    #0 2,-sp
+    jsr     fpFloat          ; convert to floating point
+    jsr     fpAdd            ; add 32
+    movw    2,sp+ fahrenheit ; and store
+    movw    2,sp+ fahrenheit+2</pre>
+
+<p>We can save execution time as well as code by calculating the constant floating point values in advance. Lets say C1p8 is a double word containing the
+constant 1.8 (9/5), and C32 is a double word containing the floating point value 32. The program becomes:</p>
+<pre>    movw    celsius+2 2,-sp  ; push C on stack
+    movw    celsius 2,-sp
+    movw    C1p8+2 2,-sp     ; push C1p8 on stack
+    movw    C1p8 2,-sp
+    jsr     fpMultiply       ; multiplies C by 1.8
+    movw    C32+2 2,-sp      ; push C32 on stack
+    movw    C32 2,-sp
+    jsr     fpAdd            ; add 32
+    movw    2,sp+ fahrenheit ; and store
+    movw    2,sp+ fahrenheit+2</pre>
+
+<p>What are the details of the floating point format? Well instead of making one up, let's use the industry standard.</p>
+
+<p>Continue with <em><a href="part025a.html">IEEE Floating Point Format</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

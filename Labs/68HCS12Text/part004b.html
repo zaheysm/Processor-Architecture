@@ -1,0 +1,108 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Development Tools</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table BORDER="1" WIDTH="100%" CELLPADDING="1" CELLSPACING="1">
+<tr><td><a href="part003.html">Previous Section</a></td>
+<td><a href="part005.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part004" target="q">Questions</a></td>
+<td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>Development Tools</h1>
+
+<ul>
+  <li><a href="part004.html">Assemblers and Compilers</a></li>
+  <li><a href="part004a.html">Debuggers and Interpreters</a></li>
+  <li><span class="selected">Simulators, Evaluation Boards, and
+     In-circuit Emulation</span>
+  <ul>
+    <li><a href="#The 68HC12 Simulator">The 68HCS12 Simulator</a></li>
+    <li><a href="#DRAGON12">Dragon12-Plus Evaluation Board</a></li>
+    <li><a href="#In-circuit Emulation">In-circuit emulation</a></li>
+  </ul>
+  </li>
+  <li><a href="part004c.html">Flowcharts and Pseudocode</a></li>
+</ul>
+
+<p>Most of the time it is not possible to debug a program in the target system. Sometimes the hardware is not available. Other times there is no room for the
+debugger program or no serial port is available. This page will cover several solutions to the problem. The first, simulation, is a software solution. A
+program run on a personal computer or workstation simulates the operation of the processor, memory, and often peripheral hardware as well. The second
+solution is an evaluation board. The evaluation board contains a microcontroller, a debugger program, and typically additional memory and a serial port
+connector for a personal computer. The pins on the microcontroller are brought out to connectors and often a breadboard area is provided so the engineer
+can add additional circuits. The final solution is in-circuit emulation where the microcontroller in the actual target system is replaced with a connector to
+the emulator which drives the actual hardware like the microcontroller but allows monitoring execution like a debugger program.</p>
+<h2><a name="The 68HC12 Simulator"></a>The 68HCS12 Simulator</h2>
+
+<p>A simulator is a computer program that models the behavior of an actual microcontroller. It simulates the CPU, memory, and peripheral interfaces. While
+a simulator typically does not run as fast as the microcontroller (referred to as <em>real-time</em>), it keeps track of the simulation time so that accurate timing
+measurements can be made. Of course, the simulator cannot be connected to any physical devices and run real-time. If connection to physical devices is
+necessary, one of the other alternatives must be used.</p>
+
+<p>An advantage of the simulator is that it is not real hardware. It is possible to stop time, making it easier to debug time-critical routines. Debugging with a
+simulator can be more sophisticated than with real hardware since more of the system can be monitored.</p>
+
+<p>The simulator supplied on the CD is configured to simulate the evaluation board described below. This makes it easy to develop and test software on the
+simulator and then do final testing on the evaluation board in the lab. Besides the RAM and ROM, the simulator also models the analog to digital
+converter, timers, and serial port. On a 400 MHz Pentium II processor, the simulation speed is roughly 1/8 to 1/10 real-time.</p>
+
+<p>Documentation for the simulator is available when running the simulator
+or from the <em>start</em> menu once the simulator is installed.</p>
+<h2><a name="DRAGON12">Dragon12-Plus</a> Evaluation Board</h2>
+
+<p>There are many manufacturers of circuit boards for evaluating and
+   breadboarding microcontroller systems. Usually the microcontroller
+   manufacturer designs and sells evaluation boards to promote their products, but
+   there are third-party manufacturers who have boards with
+   additional features or who offer lower prices. The board referred to in
+   this text is the Dragon12-Plus
+Board from Wytec. It has the following features:</p>
+
+<div class="boxed"><ul>
+   <li>MC9S12DG256 microcontroller</li>
+  <li>D-Bug12 debugger/monitor program in Flash EEPROM.</li>
+  <li>Two serial ports.</li>
+  <li>2x16 character LCD display</li>
+  <li>4 digit LED 7 segment display</li>
+  <li>Speaker</li>
+  <li>Pushbuttons and DIP switches for input.</li>
+  <li>IR transmitter and receiver.</li>
+  <li>BDM interfaces.</li>
+  <li>Power Supply regulator.</li>
+  <li>All controller pins brought out on headers.</li>
+  <li>Breadboarding area.</li>
+  <li>(and many other features)</li>
+</ul></div>
+
+<p>Programs and hardware interfaces can be developed on the evaluation board.
+The evaluation board can be used for product delivery; however it is typically
+too expensive except for very low volume, custom projects.</p>
+
+<h2><a name="In-circuit Emulation"></a>In-circuit Emulation</h2>
+
+<p>In-circuit Emulators allow debugging microcontroller programs in the target application system. In the traditional approach, the microcontroller is
+removed from the circuit board and an adapter is plugged in its socket. The microcontroller (or a special version of the microcontroller) plugs into a
+socket on the adapter. This allows monitoring the signals on the microcontroller's pins. However the adapter can intervene to examine the processor state
+(register and memory contents) and probe the system. In-circuit emulation is a powerful tool, however it usually has a high purchase cost.</p>
+
+<p>The Freescale BDM (<em>Background Debug Mode</em>) feature provides a low cost approach to In-circuit Emulation. Physically, it is a single wire interface to
+the microcontroller from a BDM "pod" that connects to personal computer. The microcontroller is installed in the target system. The BDM interface
+provides typical debugger features, yet allows the processor to run
+at-speed in its target environment. The BDM is discussed in the text
+section <a href="part023b.html#Background Debug Mode"><i>Other Serial
+   Interfaces</i></a>. Details of the BDM hardware interface can be found
+in section 14 of the <em><a href="../motorola/S12CPU15UG.pdf">HCS12 Core Users Guide</a></em>. The DRAGON12 board can be used as a BDM pod, providing a debugging interface like D-Bug12 for another 68HCS12, for instance a second DRAGON12. Instructions for this use are provided with the DRAGON12.</p>
+
+<p>Continue with <a href="part004c.html"><em>Flowcharts and Pseudocode</em></a>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

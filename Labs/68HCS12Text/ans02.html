@@ -1,0 +1,24 @@
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>An Answwer for Designing with Microcontrollers -- The 68HCS12</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+<!--Version 4. Contents copyright 2007, Thomas Almy-->
+<h2>Question</h2>
+<p>The 16 bit value $8002 represents what unsigned integer?
+     ...represents what two's complement signed integer? ...represents what
+one's complement signed integer?</p>
+<h2>Answer</h2>
+<p>$8002 is 32,770 (unsigned). As a signed value, it is negative (most
+   significant bit is 1). To get the two's complement value, we
+   complement all bits to get $7FFD and add one to get $7FFE. This is
+   32,766, but since it is negative, the value is -32766. To get the
+   one's complement value, we complement all bits and don't add one.
+   This is 32,765, so the value is -32,765.</p> 
+</body>
+</html>

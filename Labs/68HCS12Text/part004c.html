@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Development Tools</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table BORDER="1" WIDTH="100%" CELLPADDING="1" CELLSPACING="1">
+<tr><td><a href="part003.html">Previous Section</a></td>
+<td><a href="part005.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part004" target="q">Questions</a></td>
+<td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>Development Tools</h1>
+
+<ul>
+  <li><a href="part004.html">Assemblers and Compilers</a></li>
+  <li><a href="part004a.html">Debuggers and Interpreters</a></li>
+  <li><a href="part004b.html">Simulators, Evaluation Boards, and In-circuit Emulation</a></li>
+  <li><span class="selected">Flowcharts and Pseudocode</span></li>
+  <ul>
+    <li><a href="#Using Flowcharts">Using Flowcharts</a></li>
+    <li><a href="#Using Pseudocode">Using Pseudocode</a></li>
+  </ul>
+</ul>
+
+<p>Developing programs, especially using an assembler, can be
+   difficult. And the difficulty increases as the program becomes
+   more complex. This section is a basic overview of two techniques to aid program
+development, flowcharts and pseudocode. Not only do these techniques help conceptualize a program design, but they also can be used to document the design.</p>
+
+<p><a name="Using Flowcharts"><h2>Using Flowcharts</a></h2>
+
+<p>The following flowchart is the algorithm for value to digit conversion we have seen earlier:</p>
+
+<p><img src="fig4c-1.gif" width="123" height="409" align=bottom /></p>
+
+<p>A flowchart shows the flow of execution through the algorithm, which can be a full program or a single routine or algorithm. Each symbol represents an operation, while arrows are used to indicate
+program flow from one operation to another. The shape of the symbol has significance. We will only use four basic shapes.</p>
+
+<div class="minor"><ul>
+  <li>The oval symbol is used to mark the beginning and end of the flowchart. A flowchart for a program that does not end will only have a single oval symbol, that for its start.</li>
+  <li>The rectangular symbols are used to indicate processing. In the processing blocks, an equals sign denotes assignment. A processing step can be complicated, in which case it is often a reference to
+a separate flowchart.</li>
+  <li>The parallelogram symbol is used for input/output operations.</li>
+  <li>The diamond symbol is used for decisions. A decision symbol has one entry path and two exit paths. The exit path taken depends on the decision, which is the true/false or yes/no answer to the
+question posed in the symbol.</li>
+</ul></div>
+
+<p>We will use flowcharts in this text to illustrate algorithms which have conditional or iterative features.</p>
+
+<p><a name="Using Pseudocode"><h2>Using Pseudocode</a></h2>
+
+<p>If you are familiar with a high level language, such as C, you might want to develop and document algorithms using <em>pseudocode</em>. A program in pseudocode looks like a program in a high level
+language, however it does not have to be capable of being compiled as it is just written for human use. The algorithm is written in pseudocode and then manually converted to assembly code.</p>
+
+<p>We will occasionally use C pseudocode in the text. For instance, the value to digit conversion algorithm could be represented as:</p>
+<pre>    unsigned int n, r, x, q;
+    n = valueToConvert;
+    r = 10; /* the radix */
+    do {
+        q = n / r;
+        x = n % r;
+        Output(x);
+        n = q;
+    } while (n != 0);</pre>
+
+<p>Continue with <a href="part005.html">68HC12 Instruction Set Overview</a>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

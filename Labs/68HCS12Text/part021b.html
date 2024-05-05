@@ -1,0 +1,109 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>External Memory/Peripheral Interfacing</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table BORDER="1" WIDTH="100%">
+<tr><td><a href="part020.html">Previous Section</a></td>
+<td><a href="part022.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part021" target="q">Questions</a></td>
+<td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>External Memory/Peripheral Interfacing</h1>
+
+<ul>
+  <li><a href="part021.html">Memory Timing</a></li>
+  <li><a href="part021a.html">Operation in Normal Expanded Narrow Mode</a></li>
+  <li><span class="selected">Operation in Normal Expanded Wide
+     Mode</span></li>
+  <li><a href="part021c.html">Multiplexed Address and Data Busses</a></li>
+  <li><a href="part021d.html">Using Chip Selects</a></li>
+  <li><a href="part021e.html">Memory Expansion</a></li>
+</ul>
+
+<p><strong>This section applies only to the 68HC12 component. The next section describes the 68HCS12.</strong></p>
+
+<p>Normal Expanded Wide mode configures the microcontroller so that ports C and D are used as a 16 bit word data bus, greatly increasing the performance
+over the 8 bit data bus in Normal Expanded Narrow mode. Because 8 bit data is supported, the interface is capable of handling 8 bit as well as 16 bit
+transfers, and this capability requires the interfacing to be more complicated than the Narrow mode for any device than can be written to, such as RAM or
+external registers on peripherals.</p>
+
+<p>Memory devices are typically 8 bits wide, so are used in pairs, one contains the even addresses and connects to the high order 8 bits of the data bus (port
+C), while the other contains the odd addresses and connects to the low order 8 bits of the data bus (port D). The least significant line of the address bus,
+ADDR0, is not used to address within the individual part. Reads and writes of 16 bit words, which are always <em>aligned</em> (the word address evenly divisible
+by two) simply access both devices simultaneously. Attempts to read and write 16 bit words at non-aligned (odd) addresses will cause the processor to
+split the access into two separate byte reads or writes. This operation increases the access time noticeably and should be avoided if possible by always
+placing word data at aligned addresses.</p>
+
+<p>To perform an 8 bit memory access, the microcontroller uses the high order 8 lines of the data bus if the address is even, and the low order 8 lines if the
+address is odd. This will correctly match with 16 bit wide memory banks. On a memory read, it does not matter if the other half of the memory bank is
+read, so interfacing ROM is straight forward:</p>
+
+<p><img src="fig21b-1.gif" width="452" height="342" align=bottom /></p>
+
+<p>For RAM devices, it is important to not write to the byte which is not involved with the memory cycle. To accomplish this, the least significant address
+line and an additional control line *LSTRB are used. These signals determine the type of operation according to the following table:</p>
+
+<table BORDER="1" WIDTH="100%" CELLPADDING="1" CELLSPACING="1">
+<tr><TH WIDTH="15%">*LSTRB</th>
+<TH WIDTH="15%">ADDR0</th>
+<TH WIDTH="15%">R/*W</th>
+<th>Type of Access</th></tr>
+<tr><td>0</td>
+<td>0</td>
+<td>0</td>
+<td>16 bit write (even address)</td></tr>
+<tr><td>0</td>
+<td>0</td>
+<td>1</td>
+<td>16 bit read (even address)</td></tr>
+<tr><td>0</td>
+<td>1</td>
+<td>0</td>
+<td>8 bit write (odd address)</td></tr>
+<tr><td>0</td>
+<td>1</td>
+<td>1</td>
+<td>8 bit read (odd address)</td></tr>
+<tr><td>1</td>
+<td>0</td>
+<td>0</td>
+<td>8 bit write (even address)</td></tr>
+<tr><td>1</td>
+<td>0</td>
+<td>1</td>
+<td>8 bit read (even address)</td></tr>
+<tr><td>1</td>
+<td>1</td>
+<td>0</td>
+<td>Cannot occur for external memory accesses</td></tr>
+<tr><td>1</td>
+<td>1</td>
+<td>1</td>
+<td>Cannot occur for external memory accesses</td></tr></table>
+
+<p>The last two rows are for 16 bit reads and writes of odd addresses, which can only be performed in internal RAM.</p>
+
+<p>Using this table, we can safely interface RAM:</p>
+
+<p><img src="fig21b-2.gif" width="450" height="356" align=bottom /></p>
+
+<p>Peripheral devices almost always have 8 bit data paths, and it is unlikely that one would want to have them run simultaneously in pairs. They can be
+connected such that the device either uses even or odd byte addresses. ADDR0 and *LSTRB are not used. Care must be taken to not attempt to access the
+missing locations either explicitly or via a word access as a write would store erroneous data into the device. Another solution will be shown in the
+discussion about <a href="part021d.html">chip selects</a>, in that it is possible to have certain address ranges cause the microcontroller to behave as though it were in Expanded
+Narrow mode.</p>
+
+<p>Continue with <em><a href="part021c.html">Multiplexed Address and Data Busses</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

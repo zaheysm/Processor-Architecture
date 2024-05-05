@@ -1,0 +1,259 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>External Memory/Peripheral Interfacing</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table BORDER="1" WIDTH="100%">
+<tr><td><a href="part020.html">Previous Section</a></td>
+<td><a href="part022.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part021" target="q">Questions</a></td>
+<td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>External Memory/Peripheral Interfacing</h1>
+
+<ul>
+  <li><a href="part021.html">Memory Timing</a></li>
+  <li><a href="part021a.html">Operation in Normal Expanded Narrow Mode</a></li>
+  <li><a href="part021b.html">Operation in Normal Expanded Wide Mode</a></li>
+  <li><a href="part021c.html">Multiplexed Address and Data Busses</a></li>
+  <li<span class="selected">Using Chip Selects</span>
+  <ul>
+    <li><a href="#Chip Selects and Clock Stretch in the 68HC812A4">Chip Selects and Clock Stretch in the 68HC812A4</a></li>
+    <li><a href="#Timing Calculation Example">Timing Calculation Example</a></li>
+    <li><a href="#Chip Selects and Clock Stretch in the MC9S12DP256">Chip Selects and Clock Stretch in the MC9S12DP256</a></li>
+  </ul>
+  </li>
+  <li><a href="part021e.html">Memory Expansion</a></li>
+</ul>
+<h2><a name="Chip Selects and Clock Stretch in the 68HC812A4">Chip Selects and Clock Stretch in the 68HC812A4</a></h2>
+
+<p>In the preceding examples, "glue" logic was used to drive the chip enable inputs of the memory devices because it was necessary to perform address decoding to determine if the device
+was being selected. The 68HC812A4 has internal logic which generates "chip select" outputs that can be used directly to drive the chip enable inputs. Two chip selects, CSP0 and
+CSP1, are intended for program memory (ROM), another, CSD, is intended for data memory (RAM). Four more, CS0 through CS3, called "register following chip selects," are
+intended for peripheral devices. Each chip select has an associated clock stretch of 0, 1, 2, or 3 E-clocks. The following registers are used:</p>
+
+<table BORDER="1" WIDTH="100%" CELLPADDING="1" CELLSPACING="1">
+<tr><th>Register</th>
+<th>Bit 7 </th>
+<th>Bit 6 </th>
+<th>Bit 5</th>
+<th>Bit 4</th>
+<th>Bit 3</th>
+<th>Bit 2</th>
+<th>Bit 1</th>
+<th>Bit 0</th></tr>
+<tr><td>CSCTL0 ($003C)</td>
+<td>0</td>
+<td>CSP1E</td>
+<td>CSP0E</td>
+<td>CSDE</td>
+<td>CS3E</td>
+<td>CS2E</td>
+<td>CS1E</td>
+<td>CS0E</td></tr>
+<tr><td>CSCTL1 ($003D)</td>
+<td>0</td>
+<td>CSP1FL</td>
+<td>CSPA21</td>
+<td>CSDHF</td>
+<td>CS3EP</td>
+<td>0</td>
+<td>0</td>
+<td>0</td></tr>
+<tr><td>CSSTR0 ($003E)</td>
+<td>0</td>
+<td>0</td>
+<td>SRP1A</td>
+<td>SRP1B</td>
+<td>SRP0A</td>
+<td>SRP0B</td>
+<td>STRDA</td>
+<td>STRDB</td></tr>
+<tr><td>CSSTR1 ($003F)</td>
+<td>STR3A</td>
+<td>STR3B</td>
+<td>STR2A</td>
+<td>STR2B</td>
+<td>STR1A</td>
+<td>STR1B</td>
+<td>STR0A</td>
+<td>STR0B</td></tr></table>
+
+<p>CSCTL0 and CSCTL1 are used to enable the chip selects. CSSTR0 and CSSTR1 control the clock stretch. At reset, CSP0E is 1 (enabled), and all the clock stretch bits are 1, forcing
+maximum clock stretch. This allows the processor to start executing a program in the external ROM. The initialization code must configure these registers for any additional chip
+selects to be used (such as CSD for external RAM), and may reduce the clock stretch for increased performance. Most devices will work properly with a clock stretch of 1 E-clock.</p>
+
+<p>Between any clock stretch, and the dividing of word accesses into separate byte accesses, the instruction timing given in the CPU12 manual must be increased for each memory read or
+write according the table below. <em>N</em> is the number of cycles of clock stretch.</p>
+
+<table border="1" width="100%" cellpadding="1" cellspacing="1">
+<tr><th></th>
+<th>Byte</th>
+<th>Aligned Word</th>
+<th>Unaligned Word</th></tr>
+<tr><td>Internal</td>
+<td>0</td>
+<td>0</td>
+<td>0</td></tr>
+<tr><td>Expanded Narrow</td>
+<td>N</td>
+<td>1 + 2*N</td>
+<td>1 + 2*N</td></tr>
+<tr><td>Expanded Wide</td>
+<td>N</td>
+<td>N</td>
+<td>1 + 2*N</td></tr></table>
+
+<p>Normally, CSP0 is used for program ROM. The chip select is asserted for addresses in the range $8000-$FFFF. The CSD chip select is used for RAM in the address range $0000-$7FFF (providing CSDHF is also set).  The chip selects are not asserted for addresses handled by the internal memory and registers. CSP1, and the control bits CSP1FL, CSPA21,
+CSDHF (=0), and CS3EP are for use with extended addressing (greater than 64k address space). Using CSP0 and CSD one gets the following memory map:</p>
+
+<table border="1" width="100%" cellpadding="1" cellspacing="1">
+<tr><th>Address</th>
+<th>Bank Accessed</th></tr>
+<tr><td>$0 - $1FF with some exceptions</td>
+<td>Registers</td></tr>
+<tr><td>$0 - $1FF exceptions</td>
+<td>External RAM</td></tr>
+<tr><td>$200 - $3FF</td>
+<td>External RAM or Peripherals (see below)</td></tr>
+<tr><td>$400-$7FF</td>
+<td>External RAM</td></tr>
+<tr><td>$800-$BFF</td>
+<td>Internal RAM</td></tr>
+<tr><td>$C00 - $FFF</td>
+<td>External RAM</td></tr>
+<tr><td>$1000-$1FFF</td>
+<td>Internal EEPROM</td></tr>
+<tr><td>$2000-$7FFF</td>
+<td>External RAM</td></tr>
+<tr><td>$8000-$FFFF</td>
+<td>External ROM</td></tr></table>
+
+<p>The partial schematic for the memory banks needed in this arrangement in Expanded Wide Mode is:</p>
+
+<p><img src="fig21d-1.gif" width="483" height="737" align=bottom /></p>
+
+<p>The stretch bits are set as follows:</p>
+
+<table border="1" width="50%" cellpadding="1" cellspacing="1">
+<tr><th>Bit SxxxA</th>
+<th>Bit SxxxB</th>
+<th>E Clocks</th></tr>
+<tr><td>0</td>
+<td>0</td>
+<td>0</td></tr>
+<tr><td>0</td>
+<td>1</td>
+<td>1</td></tr>
+<tr><td>1</td>
+<td>0</td>
+<td>2</td></tr>
+<tr><td>1</td>
+<td>1</td>
+<td>3</td></tr></table>
+
+<p>The peripheral chip selects, CS0 through CS3 are asserted for small overlapping ranges of addresses. They are always in the 512 byte address block just above that occupied by the
+internal registers. In case of addresses which fall in the range of two or more enabled chip selects, the higher numbered select has priority. All of the peripheral chip selects have
+priority over the program and data memory chip selects, as shown in the memory map above. The chip select address blocks given the default register block location are:</p>
+
+<table border="1" width="40%" cellpadding="1" cellspacing="1">
+<tr><th>Chip Select</th>
+<th>Address Block</th></tr>
+<tr><td>CS0</td>
+<td>$200-$3FF</td></tr>
+<tr><td>CS1</td>
+<td>$300-$3FF</td></tr>
+<tr><td>CS2</td>
+<td>$380-$3FF</td></tr>
+<tr><td>CS3</td>
+<td>$280-$2FF</td></tr></table>
+
+<p>If all four chip selects are used, each chip select will be asserted for a 128 byte block of addresses. </p>
+
+<p>The NDRC bit in the Miscellaneous Mapping Control Register (MISC, $0013) when set forces 8 bit data bus operation (using Port C, DATA8 through DATA15) in the peripheral chip
+select address block ($200-$3FF). This allows 8 bit peripheral devices to be easily used in the Expanded Wide Mode.</p>
+
+<table border="1" width="100%" cellpadding="1" cellspacing="1">
+<tr><th>Register</th>
+<th>Bit 7</th>
+<th>Bit 6</th>
+<th>Bit 5</th>
+<th>Bit 4</th>
+<th>Bit 3</th>
+<th>Bit 2</th>
+<th>Bit 1</th>
+<th>Bit 0</th></tr>
+<tr><td>MISC</td>
+<td>EWDIR</td>
+<td>NDRC</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td></tr></table>
+
+<p>In the following example, CS3 is used to read from a single 74LS374 8 bit
+latch in a system running in Expanded Wide mode:</p>
+
+<p><img src="fig21d-2.gif" width="420" height="203" align=bottom /></p>
+
+<p>Data from outside is latched into the 74LS374 with the strobe. The strobe could be connected to a <a href="part016.html#Key Wakeups">key wakeup</a> to cause an interrupt, signaling the microcontroller that there is new data
+present. The 68HC12 can read the data by reading any memory location from $280 to $2FF since no additional address decoding is performed. The following initialization code
+sequence can be used:</p>
+<pre>    bset    CSCTL0 $8        ; enable CS3
+    bset    MISC $40         ; Set NDRC
+    bclr    CSSTR1 $C0       ; We don't need any stretch</pre>
+
+<p>If we were operating in Expanded Narrow mode, the setting of the NDRC bit would not be necessary, and we would connect to DATA0 - DATA7 of the 68HC12.</p>
+<h2><a name="Timing Calculation Example">Timing Calculation Example</a></h2>
+
+<p>Let us use for the example, the ROM memory connected to the 68HC812A4 using chip selects, as shown earlier in this section. The memory chip to be used is the Atmel
+AT27LV256A-5. We wish to know if the set-up and hold requirements of the data in for a read cycle of the microcontroller are met. There are two paths of concern relative to the
+microcontroller -- from chip select to data in  and from address out to read data in.  </p>
+
+<p>For the set-up time based on the chip select, from the start of the memory cycle (falling edge of ECLK):</p>
+
+<div class="minor"><ol>
+  <li>Propagation time from falling edge of ECLK until CSP0 asserted low (item
+  26 on timing diagram) = 60 ns (all measurements assume 125ns ECLK period)</li>
+  <li>Memory propagation time from chip enable to memory output (read data in
+  of the microcontroller)= 55 ns</li>
+  <li>Read data setup time (item 11) = 30 ns before the end of the memory cycle</li>
+</ol></div>
+
+<p>This adds up to 145 ns. However the memory cycle is 125 ns. In order to
+use this memory part, we would need memory with chip enable to output propagation
+time of 30 ns or less, or we could use 1 ECLK period of clock stretch.
+This would make the memory cycle 250 ns long, which would give plenty of
+time. Now let's consider the set-up time based on address out to data in,
+from the start of the memory cycle:</p>
+
+<div class="minor"><ol>
+  <li>Propagation time from falling edge of ECLK until address valid (item 5)
+  = 60 ns</li>
+  <li>Memory access time from address in to memory output (read data in of the microcontroller) = 55 ns</li>
+  <li>Read data setup time (item 11) = 30 ns before the end of the memory cycle</li>
+</ol></div>
+
+<p>The same values apply here, so again we need either a clock stretch value of 1 or faster memory.</p>
+
+<p>In this particular case, hold time is not an issue because the required hold time of the read data input microcontroller is 0ns while the microcontroller hold on the address and chip select are no less than 0ns - thus the data cannot go away while it is still required. Note that hold time is an issue with the MC9S12DP256. These calculations will be left as an exercise for the student!</p>
+<h2><a name="Chip Selects and Clock Stretch in the MC9S12DP256">Chip Selects and Clock Stretch in the MC9S12DP256</a></h2>
+
+<p>Because the MC9S12DP256 was designed primarily for single chip operation, it has limited features for chip selects and clock stretch. The only chip select provided for normal use is
+the *XCS pin of port K. The two EXSTR bits in the MISC register control the clock stretch to be 0, 1, 2, or 3, ECLK cycles. By default the value is 3. </p>
+
+<p>Continue with <em><a href="part021e.html">Memory Expansion</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

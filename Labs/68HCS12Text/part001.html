@@ -1,0 +1,278 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Microcontroller Overview</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table BORDER="1" WIDTH="100%" CELLPADDING="1" CELLSPACING="1">
+<tr><td>Previous Section</td>
+<td><a href="part002.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part001" target="q">Questions</a></td>
+<td><A href="search.htm"
+      target="search">Search the Text</a></td></tr></table>
+<h1>Microcontroller Overview</h1>
+
+<p>What is a microcontroller? There are two ways of approaching this
+question. One is that it is a miniaturized controller. The second is
+that it is a microprocessor with specific design goals. We will look
+at it both ways.</p>
+<h2>The Microcontroller as a Controller</h2>
+
+<p>Electrical-mechanical and mechanical controllers have been around for as long as there has been machinery to control. Controllers have three essential parts:</p>
+
+<div class="boxed">
+<UL>
+  <li>Inputs</li>
+  <li>Processing engine</li>
+  <li>Outputs</li>
+</ul>
+</div>
+<p>Inputs can be viewed as sensors. Some sensors monitor equipment or physical conditions. These include position sensors, tachometers, thermometers, light sensors, strain gauges, radio receivers, and
+many other devices. Other inputs are for human intervention such as switches and knobs. Another important input is time, typically clock "ticks".</p>
+
+<p>The processor can be mechanical/hydraulic (automatic transmissions in automobiles), electro-mechanical (relays), or electronic (state machines, analog or digital computers). The processor makes use
+of the inputs in combination with an internal state, and produces outputs.</p>
+
+<p><img src="fig1-2.gif" width="504" height="182" align=bottom /></p>
+
+<p>Outputs are used to control equipment (servo positioners, valves, pumps, heating elements...) or provide indicators for humans (lights, alarm bells, printer, liquid crystal displays...).</p>
+
+<p>The low cost of microcontrollers have made them ubiquitous in devices such as thermostats, telephones, microwave ovens, and even such things as toasters and other devices thought of as "low tech."</p>
+<h2>The Microcontroller as a Specialized Microprocessor</h2>
+
+<p>Microprocessors, computers on a silicon chip, have been available since the early 1970's when they were first designed for electronic calculators (Intel 4004). Their small size made them ideal for use
+as controllers. However for many years they could not compete with electro-mechanical controllers  in terms of price and reliability in hostile environments. Good system engineering and increasing
+complexity of systems overcame the reliability problems, and microcontrollers overcame the costs.</p>
+
+<p>The cost of the microcontroller itself isn't the issue, but the cost of the complete controller system is. An early microprocessor could take dozens of additional support chips to make into a working
+system. A microcontroller chip contains not only the processor, but also the memory (storage) needed, and a large number of I/O connections missing on a microprocessor. This not only reduces
+system cost but also increases reliability by reducing the number of connections. Better immunity to electrostatic fields and temperature variations make the microcontroller ideal for hostile
+environments such as automobiles. Luxury automobiles contain dozens of microcontrollers performing various tasks. </p>
+<h2>Data Representation in a Microprocessor</h2>
+
+<p>In modern computers, data is represented as <em>bits</em>. A bit, or <em>binary digit</em>, is capable of holding two values represented by two voltages high <em>h </em>and low <em>l</em>.  Bits are grouped together in an ordered
+collection of 8 bits called a <em>byte</em>. The bits are numbered 0 through 7, with 0 referred to as the <em>least significant bit</em> or <em>lsb</em>,  and 7 as the <em>most significant bit</em>, or <em>msb. </em>Most microprocessors handle bytes as
+the smallest unit. Memory stores data in byte-sized units or locations. Each location has an address. Such a memory is referred to as <em>byte-addressable</em>. </p>
+
+<p>It can be seen that each byte can hold 256 different values, representing all the combinations of high and low states of eight bits. To handle cases where more different values are required, multiple
+bytes are used. The most common size is 2 bytes or 16 bits, and is called a <em>word</em>. High-end microprocessors have word sizes that are larger than 16 bits, however microcontrollers at this time typically
+are limited to 16 bit words to reduce cost. </p>
+
+<p>The meaning of the bits is determined by the microprocessor user or programmer. The microprocessor can perform operations on the bits for several predefined meanings. Each bit can be considered
+to be a Boolean value. In this case h is <em>true</em> and l is
+<em>false.</em> A byte holds eight independent Boolean values. The
+processor can perform bitwise Boolean operations on pairs of bytes. By <em>bitwise</em> we mean
+each bit <em>N</em> of one byte is operated on with bit <em>N</em> of
+the second byte, and the Boolean result is placed in bit <em>N</em> of the result byte.</p>
+
+<p>Another common representation is an integer value. A byte can represent 256 different integer values. When using <em>unsigned integer</em> representation, the byte represents any integer value from 0 to 255.
+When using <em>signed integer</em> representation, the byte represents any integer value from -128 to 127.</p>
+
+<p>In implementing a user interface, a byte is often used to represent a character, typically using the ASCII character set.</p>
+<h2>Parts of a Microcontroller</h2>
+
+<p>A microcontroller contains the following parts:</p>
+
+<div class="boxed">
+<ul>
+  <li><a href="#CPU">Central Processing Unit (CPU)</a></li>
+  <li><a href="#RAM">Random Access Memory (RAM)</a></li>
+  <li><a href="#ROM">Read Only Memory (ROM)</a></li>
+  <li><a href="#EEPROM">Read Mostly Memory (EEPROM)</a></li>
+  <li><a href="#I/O Devices and Interfaces">I/O devices and interfaces</a></li>
+</ul>
+</div>
+<h3><a name="CPU"></a>CPU</h3>
+
+<p>The Central Processing Unit performs integer and Boolean arithmetic, reads from the inputs, writes to the outputs, and makes decisions. Its operation is under control of a program, which is a list of
+instructions for the processor to perform.</p>
+<h3><a name="RAM"></a>RAM</h3>
+
+<p>RAM memory is used to store values read from the input, the results of
+calculations, and other aspects of processing state. The CPU can both read
+and write to RAM memory at a high rate of speed. The down-side of RAM memory
+is that it is <em>volatile</em> - its contents are forgotten if the power is removed.
+Memory is organized into units of 8 binary (two-valued) bits, called bytes.
+Bytes are counted in units of kilobytes (KB) which represents 1,024 bytes
+(1024 = 2<sup>10</sup>), megabytes (MB) which represents 1024KB.
+Microcontrollers typically have much less than one megabyte of memory,
+many with a kilobyte or less.</p>
+
+<p>There are two major classifications of RAM memory, <em>static</em> and <em>dynamic</em>. Dynamic memory will forget its contents over time (a few milliseconds) unless it is <em>refreshed</em> by re-writing its contents. Static memory does not need to be refreshed.
+The advantage of dynamic memory is smaller size which means lower cost.
+However the difficulty of refreshing dynamic memory, and the small amount
+of RAM memory typically needed in a microcontroller has meant that almost
+all microcontroller designs use static memory.</p>
+<h3><a name="ROM"></a>ROM</h3>
+
+<p>ROM memory is non-volatile. However ROM memory can only be read. In a microcontroller, ROM memory is used to hold the CPU program and tables of data values that are not subject to change.</p>
+
+<p>There are several varieties of ROMs that differ in the ability to write, or <em>program</em> their values.</p>
+
+<div class="minor">
+<ul>
+
+   <li>Mask ROM -- data is stored in the ROM when the chip is
+manufactured, and cannot be changed. This is the least expensive type
+of ROM memory when used in large volumes.</li>
+
+  <li>PROM -- Programmable Read Only Memory, also known as OTP or One
+     Time Programmable memory, can be programmed just once by the
+     chip customer.  In low volumes, this is less expensive than
+Mask ROM, and it has the advantage that manufacturing changes to the
+ROM can be implemented quickly.</li>
+
+<li>EPROM -- Erasable Programmable Read Only Memory is programmed by
+placing charge on gates with no connection (this is done by using
+elevated operating voltages). An EPROM can be erased by exposing the
+chip to ultraviolet light. Significantly more expensive to manufacture
+than PROM, at one time these were popular during program development,
+but now have been supplanted by Flash EEPROM.</li>
+
+<li>Flash EEPROM -- Electronically Erasable Programmable Read Only Memory is
+an EPROM that can be erased electronically. Flash EEPROM is erased in its
+entirety in a single operation. Flash EEPROM allows its contents to be
+replaced in the field without replacing the part.</li>
+</ul></div>
+
+<h3><a name="EEPROM"></a>EEPROM -- Read Mostly Memory</h3>
+
+<p>Another variation of EEPROM memory allows erasing as little as a
+   single byte at a time. This type is referred to simply as EEPROM,
+   or sometimes as Read Mostly Memory. It is particularly useful for
+   program data that needs to be preserved when power is turned off or
+   otherwise lost. This would commonly be calibration or configuration
+   values. The number of times a particular location can be written is
+   typically around 100,000 times, and writing is much slower than
+   writing RAM memory, so the EEPROM is only used when the values must
+   be non-volatile.</p>
+
+<p>While virtually all microcontrollers contain RAM and ROM, fewer
+   contain EEPROM, and those that do tend to have only a small
+   quantity. However EEPROM memory is easily attached externally to
+   microcontrollers that do not have this type of memory device.</p>
+
+<h3><a name="I/O Devices and Interfaces"></a>I/O Devices and Interfaces</h3>
+
+<p>A microprocessor presents a memory interface which can be used to connect to external (to the microprocessor chip) memory and peripheral, Input/Output devices. The interface consists of three
+buses (groups of signals):</p>
+
+<div class="minor">
+<ul>
+  <li>Address bus -- individual locations in memory, or peripheral devices are selected by address.</li>
+  <li>Data bus -- data for the specified address travels to or from the processor on this bus.</li>
+  <li>Control bus -- signals to synchronize the external devices with the processor, specify the type of operation (read, write, input or output), and the size of the data (byte or word).</li>
+</ul>
+</div>
+
+<p>There are two prevalent architectures for connecting memory to the
+   microprocessor. The <em>Von Neumann Architecture</em> is used in the
+   68HCS12 covered in this text. There is a single bus used for both
+   the CPU instruction program and for data. Both the instructions and
+   the data can be read from any of the attached memory devices.</p>
+<p><img src="fig1-3.gif" width="407" height="141" align=bottom /></p>
+
+<p>The <em>Modified Harvard Architecture</em> is used in many
+   microcontrollers such as the Intel 8051 and Atmel AVR devices. The
+   CPU instructions are read over one bus, which is connected to ROM,
+   and the data is read over a second bus, which is connected to RAM.
+   What makes it "modified" is that additional CPU instructions are provided which can read the ROM as
+   data, and access the EEPROM.</p>
+<p><img src="fig1-4.gif" width="337" height="206" align=bottom /></p>
+
+<p>Microcontrollers have I/O devices and interfaces built in to reduce system chip count. Typically included are:</p>
+
+<div class="minor">
+<ul>
+  <li>Parallel ports -- data is read or written a byte at a time to an external device.</li>
+  <li>Synchronous serial ports -- data is read or written over a single wire a bit at a time. A number of bits (typically a byte) is transferred with one command and a clock signal is used to synchronize
+the sender and receiver.</li>
+  <li>Asynchronous serial ports -- sender and receiver have their own clocks. Typically used to connect the microcontroller to a terminal or remote computer. This is the "serial port" found on personal
+computers.</li>
+  <li>External Interrupts -- inputs to signal to the processor that some external event has occurred. </li>
+  <li>Analog to Digital converters -- provide analog signal inputs</li>
+  <li>Digital to Analog converters -- provide analog signal outputs</li>
+  <li>Counters and Timers -- used to measure times of external events and to output pulses of controllable width and period.</li>
+  <li>DMA -- Direct Memory Access, allows transfer of data between peripherals and memory without using the central processor.</li>
+  <li>Clock -- system clock</li>
+</ul>
+</div>
+<h2>HCS12 Specifics</h2>
+
+<p>In this course we will study the Freescale Semiconductor 68HCS12 microcontroller.
+Microcontrollers come in many variations. The one we will specifically
+use is the MC9S12DP256B, and the remainder of this text will assume
+that variation is being used unless otherwise stated. This is a
+modern revision of the older
+68HC12 microcontrollers, and
+the two versions are similar in most respects. The variations differ in the quantity and type of internal
+memory, external memory interfaces, provided I/O devices, speed of
+operation, and operating voltages. The modular design approach of the
+68HCS12 allows many variations by adding or eliminating modules on the
+chip. The MC9S12DP256B has more modules than most of the variations,
+making it ideal for learning microcontrollers. Some more recent
+variations have additional, advanced features, such as USB interfaces, which are
+not discussed in this text.</p>
+
+<p><img src="fig1-1.gif" width="437" height="646" align=bottom alt="68HC12 block diagram courtesy of Freescale"/></p>
+
+<p>In terms of what we've covered so far, the MC9S12DP256B has the following features:</p>
+
+<div class="boxed">
+<ul>
+  <li>12,288 bytes of internal Static RAM</li>
+  <li>4096 bytes of internal EEPROM</li>
+  <li>262,144 bytes of internal Flash EEPROM</li>
+  <li>16/8 bit external memory/peripheral address/data bus (can transfer a word or byte at a time), ports A and B.</li>
+  <li>External address page bus allows addressing 1 megabyte of external memory, port K.</li>
+  <li>External Memory Control bus, port E.</li>
+  <li>20 external interrupt pins, port H, J, and P</li>
+  <li>2 Serial Communication Interfaces (SCI), which are asynchronous serial ports, port S.</li>
+  <li>3 Serial Peripheral Interfaces (SPI), which are synchronous serial ports, ports S and P or H.</li>
+  <li>5 Controller Area Network Interfaces (CAN), typically used in automotive networks, ports M and J.</li>
+  <li>Byte Data Link Controller (BDLC), another automotive network interface, port M.</li>
+  <li>Inter-IC Bus (IIC), two wire serial interface for inter-device communication, port J.</li>
+  <li>8 Pulse Width Modulators (PWM), used to control servo motors and other tasks, port P.</li>
+  <li>Two prioritized external interrupt pins, port E.</li>
+  <li>2 Analog to Digital Converters (ADC), with an 8 input analog multiplexer, ports AD0 and AD1.</li>
+  <li>8 timers (ECT), one of which can also count pulses, port T.</li>
+  <li>Clock with phase-locked loop so that system clock can be different from crystal. Two timers based on clock (periodic interrupt and computer operating properly watchdog interrupt).</li>
+  <li>Background Debug and Breakpoint Modules assist in debugging programs in the microcontroller.</li>
+</ul>
+</div>
+
+<p>Note that some port pins have multiple functions, and only one can be active at a time. Some functions can be routed to different ports to resolve conflicts. Most ports, if not used for the functions
+listed above, can be used as general purpose I/O pins.</p>
+
+<p>For instructional use, the microcontroller is
+mounted on a development board which provides numerous peripheral devices to help
+in understanding and utilizing the microcontroller. The Flash EEPROM is loaded with
+debugging and program loading software. This text uses the Wytec
+Dragon12-plus board which has a MC9S12DG256B microcontroller. This differs in having only
+2 Controller Area Network interfaces and no Byte Data Link Controller,
+but is the same in all other respects. If you are using a different
+development board, discover what microcontroller is used and find out
+how it differs from the one discussed in this text. Versions differ
+primarily in amount of memory, peripheral devices, and package pins. Another popular
+variation is the MC9S12C32 microcontoller and close relations, which
+are discussed in the appendix, <a href="c32.html"><em>The MC9S12C Family</em></a></p>
+
+<p>In the remainder of the text, this microcontroller will usually be
+referred to as the HCS12, the generic name for the second generation
+68HC12.  </p>
+
+<p>Reference: <a href="../motorola/9S12DP256BDGV2.pdf">MC9S12DP256B Device Users Guide</a></p>
+
+<p><a href="part002.html">Continue with <em>Binary Number Representation</em></a></p>
+
+<p><a href="index.html">Return to the Index</a></p>
+
+</body>
+</html>

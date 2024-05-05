@@ -1,0 +1,20 @@
+a          0041
+b          0042
+c          0043
+check      2046
+d          0044
+end_grades 1010
+f          0046
+gotoa      2041
+gotob      203c
+gotoc      2037
+gotod      2032
+gotof      202d
+grades     1000
+if_a       1024
+if_b       1023
+if_c       1022
+if_d       1021
+if_f       1020
+loop       2015
+stack      0000

@@ -1,0 +1,40 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>
+Square Root Calculation
+</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+<p>The value for which to take the square root is placed in the 4 byte
+floating point value starting at location $1000. After executing the
+program, the square root will be in the 4 byte floating point value
+starting at location $1004.</p>
+<APPLET code="Floating.class" archive="Floating.jar" name="Floating point conversion" width="440" height="200" hspace="0" vspace="0" align="middle">
+</APPLET>
+<p>The Simulator will appear in a separate window. When this page is
+exited, the simulator will stop. The controls in the simulator for
+loading code, generating a log file, and taking a snapshot are disabled when run from the
+browser.</p>
+<applet
+  archive = "Micro.jar"
+  code     = "Simulator.class"
+  name     = "Simulation"
+  width    = "200"
+  height   = "200"
+  hspace   = "0"
+  vspace   = "0"
+  align    = "middle"
+>
+<param name = "student" value = "true">
+<param name="dragon" value="false">
+<param name="dbug12" value="false">
+<param name="file" value="newton">
+</applet>
+</body>
+</html>

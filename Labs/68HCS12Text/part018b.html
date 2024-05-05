@@ -1,0 +1,256 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>The Timer Module</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table BORDER="1" WIDTH="100%">
+<tr><td><a href="part017.html">Previous Section</a></td>
+<td><A href="part018e.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part018" target="q">Questions</a></td>
+<td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>The Timer Module</h1>
+
+<ul>
+  <li><a href="part018.html">Timer Count</a></li>
+  <li><a href="part018a.html">Input Capture</a></li>
+  <li><span class="selected">Output Compare</span></li>
+  <li><a href="part018c.html">The Special Case of Channel 7</a></li>
+  <li><a href="part018d.html">Pulse Accumulator</a></li>
+</ul>
+<h2><a name="Output Compare"></a>Output Compare</h2>
+
+<p>Output Compare channels are useful for generating pulses or square waveforms. To configure a channel, <em>n</em>, for Output
+Compare, the timer module must be enabled (TEN=1) and the IOS<em>n</em> bit in TIOS must be changed from its default of 0 to 1.
+TCNT is continuously compared with TC<em>n</em>, and when the values match the C<em>n</em>F flag bit is set. Optionally, depending on the
+setting of the OM<em>n</em> and OL<em>n</em> bits, the PT<em>n</em> pin is set, cleared, or toggled. When either or both OM<em>n</em> and OL<em>n </em>are 1,  IOS<em>n</em> is
+1 and TEN is 1, then pin PT<em>n</em> is forced to be an output pin, and the value stored into PTT is ignored even if the direction bit
+in DDRT is set for output.</p>
+
+<p><img src="fig18b-1.gif" width="528" height="236" align=bottom /></p>
+
+<p>The C<em>n</em>F flag is cleared by writing a 1 to the bit, the traditional 68HC12 approach.
+However, if the TFFCA control bit is set then writing TC<em>n</em> will clear the flag. This can save an instruction in most applications, however as mentioned previously it
+can cause problems in applications which are also reading TCNT directly. As when the channel is used for Input Capture,
+setting the C<em>n</em>I bit enables interrupt requests when C<em>n</em>F gets set.</p>
+
+<p>The control and status registers TIOS, CFORC, TSCR1, TSCR2, TCTL1, TCTL2, TIE, and TFLG1 are used for Timer
+Output Compare channels, as well as the 16-bit word data registers TC<em>n</em> (TC0 through TC7). The bits are shown in the table below. As in the case of using the channels for Input Capture, it is important
+to use <em>bset</em> and <em>bclr</em> to configure a channel if the configurations of the other channels are unknown.</p>
+
+<table BORDER="1" WIDTH="100%" CELLPADDING="1" CELLSPACING="1">
+<tr><TD COLSPAN="9"><strong>Timer Output Compare Control and Status Bits</strong>
+
+<br />(Bits in <FONT COLOR="#ff0000">red</FONT> are not used by output compare function)
+
+<br />(Bits in <FONT COLOR="#0000ff">blue</FONT> are described under <a href="part018.html"><em>Timer Count</em></a>)</td></tr>
+<tr><th>Register</th>
+<th>Bit 7</th>
+<th>Bit 6</th>
+<th>Bit 5</th>
+<th>Bit 4</th>
+<th>Bit 3</th>
+<th>Bit 2</th>
+<th>Bit 1</th>
+<th>Bit 0</th></tr>
+<tr><td>TIOS</td>
+<td>IOS7</td>
+<td>IOS6</td>
+<td>IOS5</td>
+<td>IOS4</td>
+<td>IOS3</td>
+<td>IOS2</td>
+<td>IOS1</td>
+<td>IOS0</td></tr>
+<tr><td>CFORC</td>
+<td>FOC7</td>
+<td>FOC6</td>
+<td>FOC5</td>
+<td>FOC4</td>
+<td>FOC3</td>
+<td>FOC2</td>
+<td>FOC1</td>
+<td>FOC0</td></tr>
+<tr><td>TSCR1</td>
+<td><FONT COLOR="#0000ff">TEN</FONT></td>
+<td><FONT COLOR="#ff0000">TSWAI</FONT></td>
+<td><FONT COLOR="#ff0000">TSFRZ</FONT></td>
+<td>TFFCA</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td></tr>
+<tr><td>TSCR2 (was
+originally TMSK2)</td>
+<td><FONT COLOR="#ff0000">TOI</FONT></td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>TCRE</td>
+<td><FONT COLOR="#0000ff">PR2</FONT></td>
+<td><FONT COLOR="#0000ff">PR1</FONT></td>
+<td><FONT COLOR="#0000ff">PR0</FONT></td></tr>
+<tr><td>TCTL1</td>
+<td>OM7</td>
+<td>OL7</td>
+<td>OM6</td>
+<td>OL6</td>
+<td>OM5</td>
+<td>OL5</td>
+<td>OM4</td>
+<td>OL4</td></tr>
+<tr><td>TCTL2</td>
+<td>OM3</td>
+<td>OL3</td>
+<td>OM2</td>
+<td>OL2</td>
+<td>OM1</td>
+<td>OL1</td>
+<td>OM0</td>
+<td>OL0</td></tr>
+<tr><td>TIE (was originally
+TMSK1)</td>
+<td>C7I</td>
+<td>C6I</td>
+<td>C5I</td>
+<td>C4I</td>
+<td>C3I</td>
+<td>C2I</td>
+<td>C1I</td>
+<td>C0I</td></tr>
+<tr><td>TFLG1</td>
+<td>C7F</td>
+<td>C6F</td>
+<td>C5F</td>
+<td>C4F</td>
+<td>C3F</td>
+<td>C2F</td>
+<td>C1F</td>
+<td>C0F</td></tr></table>
+
+<p>The CFORC register is particularly interesting. This register always reads as $00. Writing a 1 bit will force the action to be taken for an output compare to happen immediately, except the interrupt flag
+is not set. This provides a way to asynchronously alter the value of a Port T pin being used for output compare. Remember that in this circumstance writing to the PTT register has no effect, so this is
+the only way to force a value. For example, we can set PT0 to a 1 when channel 0 is being used for output compare with this code segment:</p>
+<pre>    bset    TCTL2 #$3       ; OM0 and OL0 set to 1, compare causes set
+    bset    CFORC #$1       ; Force the set</pre>
+
+<p>Now let's investigate some examples.</p>
+
+<p><HR>
+<h3>Generating a Square Wave of a Given Frequency</h3>
+
+<p>The following program uses polling to generate a square wave with a frequency
+of 100 kHz. Channel 3 is used to generate the signal at pin PT3. Note that
+a frequency of 100 kHz is a period of 10 microseconds; however the time
+between output level changes is half of that, or 5 microseconds. This program
+is also <a href="part018b.asm">here</a>, and can be run in the simulator <a href="part018bx.html">here</a>. Check the box labeled "Log Output"
+under the Clock &amp; Timer section to have the program write the times (in system clock units, 1/24 microseconds) when the output changes.</p>
+<pre>#include registers.inc
+    org     PRSTART
+    bset    TSCR1 #$90      ; Set TEN and TFFCA bits
+    bset    TIOS #$8        ; Set IOS3 (channel 3 is output compare)
+    bset    TCTL2 #$40      ; Set OL3 (Toggle PT3 on successful compare)
+    ldd     TCNT            ; Get current time
+    addd    #5*24           ; add 5 microseconds of counts
+    std     TC3             ; Flag sets in 5 microseconds
+L1: brclr   TFLG1 #$8 L1    ; "Wait" until C3F flag sets.
+    addd    #5*24           ; Calculate time for next transition
+    std     TC3             ; Set time and reset flag.
+    bra     L1</pre>
+
+<p>The first three instructions perform the initialization. We will be toggling the PT3 pin every time TC3 equals TCNT. Since we want the first edge to occur 5 microseconds in the future, we fetch the
+value of TCNT, add 120 (five times 24 clocks per microsecond) and store into TC3. This will reset the C3F flag since TFFCA is set. Five microseconds from the fetch of TCNT, TCNT will equal TC3,
+PT3 will change level, and the C3F flag will be set. We add 120 to the current value of TC3 because we want the next edge to occur 5 microseconds from the last edge. Storing into TC3 will clear C3F. 
+We wait for C3F to be set again, and the process repeats.</p>
+
+<p>The maximum period is when we add 65535 to TC3, and is a bit more than 5.4 milliseconds. The minimum period is limited by the ability to execute the four instruction loop in half of the period. If the
+setting is too fast, then the new value of TC3 will be smaller than the value of TCNT when TC3 is loaded. This means that T3F will not be set for roughly 2.7 milliseconds. Suddenly, what would be a
+small period becomes one of the largest!</p>
+
+<p>We can, of course, use an interrupt service routine to update TC3, making the signal generation interrupt driven. The minimum period will be considerably longer because of the time taken to enter and
+leave the interrupt service routine. In the following example, we will use interrupts and add an additional twist.</p>
+
+<p><HR>
+<h3>Generating an Asymmetrical Square Wave</h3>
+
+<p>In the preceding example, the square wave was symmetrical, so that the 0 level and 1 level periods were identical. In this example, the periods can be different. In addition, the generator will be
+interrupt driven. On alternate interrupts we need to use different periods until the next interrupt and change the output pin to alternate levels. This appears to be an application for a state machine with
+two alternating states.</p>
+
+<p>The program below generates an asymmetrical square wave using timer channel 0, pin PT0. Variable <em>lotime</em> and <em>hitime</em> hold the time in TCNT units that the output level will be low and high,
+respectively. The source code for the program is also <a href="part018b2.asm">here</a> and can be run in the simulator <a href="part018b2x.html">here</a>. The simulator used the DBUG12 emulator, so the Go button needs to be pressed twice to start the
+program execution.</p>
+<pre>#include registers.inc
+        org     DATASTART       ; Data Memory (internal RAM)
+state:  ds      2               ; State pointer
+lotime: ds      2               ; Time (in TCNT counts) for low level
+hitime: ds      2               ; TIme (in TCNT counts) for high level
+
+        org     PRSTART         ; Program memory
+entry:
+        ; Initialization code
+        lds     #DATAEND        ; Initialize stack pointer
+        movw    #state1 state   ; Initialize data memory
+        movw    #10*24 lotime   ; Low for 10 microseconds
+        movw    #20*24 hitime   ; High for 20 microseconds</pre>
+
+<p>The minimum values for the low and high periods are limited by the execution
+time of the interrupt service routine. In this particular case, we cannot
+have the 5 microsecond period of the preceding example because it is too
+short!</p>
+<pre>        movw    #tc0int UserTimerCh0   ; Set interrupt vector using D-BUG12
+        bset    TIOS #1         ; Set IOS0 bit
+        bset    TSCR1 #$90      ; Set TEN and TFFCA bits
+        bset    TIE #$1         ; Set C0I bit
+        bset    TCTL2 #$3       ; Set OM0 OL0 so compare sets PT0 to 1
+        ldd     TCNT            ; Set initial count
+        addd    lotime
+        std     TC0</pre>
+
+<p>We initialize the timer as though the initial output level is 0. So the initial delay is <em>lotime</em>, and when C0F sets PT0 will change level to 1. We don't use toggle, but an explicit change to 1. If we used
+toggle and happened to miss an interrupt, then the low and high periods would reverse - possibly a serious problem!</p>
+<pre>        cli                     ; allow interrupts
+
+        ; Idle process
+idle:   wai
+        bra     idle</pre>
+
+<p>Same old idle process - does nothing but wait for an interrupt.</p>
+<pre>        ; Interrupt Service Routine
+tc0int:
+        ldx     state           ; Jump to current state
+        jmp     0,x</pre>
+
+<p>Two states, <em>state1</em> and <em>state2</em> for change to high and change to low. The state variable was initialized to <em>state1</em>, so it will be executed first.</p>
+<pre>state1:                         ; Changed to High
+        bclr    TCTL2 #$1       ; Clear OL0 so next match 
+                                ;   changes PT0 to 0</pre>
+
+<p>OM0 is still set, so the action is "Clear to zero."</p>
+<pre>        ldd     TC0             ; Set time for next match
+        addd    hitime
+        std     TC0
+        movw    #state2 state   ; Set next state
+        rti
+state2:                         ; Changed to Low
+        bset    TCTL2 #$1       ; Set OL0 so next match changes 
+                                ; PT0 to 1
+        ldd     TC0             ; Set time for next match
+        addd    lotime
+        std     TC0
+        movw    #state1 state   ; Set next state
+        rti</pre>
+
+<p>Continue with <em><a href="part018c.html">The Special Case of Channel 7</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

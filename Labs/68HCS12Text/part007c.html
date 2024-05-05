@@ -1,0 +1,99 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title> Arithmetic Instructions</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table border="1" width="100%">
+<tr valign="top"><td><a href="part006.html">Previous Section</a></td>
+<td><a href="part008.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part007" target="q">Questions</a></td>
+<td><a href="search.htm" target="search">Search the Text</a></td></tr></table>
+
+<h1>Arithmetic Instructions</h1>
+<ul>
+  <li><a href="part007.html">Addition and Subtraction</a></li>
+  <li><a href="part007a.html">Multiplication and Division</a></li>
+  <li><a href="part007b.html">Shifting</a></li>
+  <li><span class="selected">Test and Compare</span></li>
+</ul>
+
+<p>The major purpose of test and compare instructions is to set the condition codes for a following conditional branch. The compare instructions work like subtract instructions, setting the condition
+codes to indicate relative values, however the difference is thrown away and not stored back into a register. The test instructions are equivalent to a compare with zero. The available instructions are:</p>
+
+<div class="boxed"><ul>
+  <li><em><a name="cba">cba</a></em> - Compare accumulator A with accumulator B</li>
+  <li><em><a name="cmpa">cmpa</a></em> - Compare accumulator A with memory</li>
+  <li><em><a name="cmpb">cmpb</a></em> - Compare accumulator B with memory</li>
+  <li><em><a name="cpd">cpd</a> </em>- Compare accumulator D with memory</li>
+  <li><em><a name="cps">cps</a></em> - Compare stack pointer SP with memory</li>
+  <li><em><a name="cpx">cpx</a></em> - Compare index register X with memory</li>
+  <li><em><a name="cpy">cpy</a></em> - Compare index register Y with memory</li>
+  <li><em><a name="tst">tst</a></em> - Test memory byte</li>
+  <li><em><a name="tsta">tsta</a></em> - Test accumulator A</li>
+  <li><em><a name="tstb">tstb</a></em> - Test accumulator B</li>
+</ul></div>
+
+<p>The instructions that compare a register to memory allow immediate, direct, extended, and indexed addressing modes. The immediate modes allow comparing a register with a constant value. In
+every case they subtract the memory value from the accumulator. The <em>cba</em> instruction subtracts the contents of register B from the contents of register A. The <em>tst</em> instruction allows extended and
+indexed addressing modes.</p>
+
+<p>Examples:</p>
+<pre>    cmpa    #7          ; Compare accumulator A with constant value 7
+    cpx     foo         ; Compare index register X with contents of word
+                        ; location foo
+    cpx     #foo        ; Compare index register X with address of location
+                        ; foo (constant value foo)
+    tst     ab1         ; Test byte at location ab1 (compare with 0)
+    cmpb    7,X         ; Compare accumulator B with contents of byte at
+                        ; location specified by contents of X plus 7.</pre>
+
+<p>It is important for the compare instructions that the arguments both be signed or both be unsigned. Comparison between a signed and an unsigned value doesn't work unless the values are in the
+range of values acceptable to both signed and unsigned. In the case of bytes, that would be 0 to 127, and for words that would be 0 to 32767. Comparisons between signed and unsigned bytes that
+cover their full ranges can be accomplished by extending both values to words and then doing a signed comparison:</p>
+<pre>    ldab    value1      ; Signed value to compare
+    sex     b d         ;   sign extended to a word
+    std     temp        ;   "Temp" is a word of RAM memory allocated for
+                        ;   temporary data storage
+    ldab    value2      ; Unsigned value to compare
+    clra                ;   zero extend to a word (accumulator D = AB)
+    cpd     temp        ; Do comparison</pre>
+
+<p>Eight instructions in the 68HC12 perform comparisons, and then optionally do a load or store to provide minimum and maximum functions of two values:</p>
+<div class="boxed"><ul>
+  <li><em><a name="emaxd">emaxd</a> </em>- Place larger of memory word or D in accumulator D</li>
+  <li><a name="emaxm"><em>emaxm</em></a> - Place larger of memory word or D in memory</li>
+  <li><em><a name="emind">emind</a></em> - Place smaller of memory word or D in accumulator D</li>
+  <li><a name="eminm"><em>eminm</em></a> - Place smaller of memory word or D in memory</li>
+  <li><em><a name="maxa">maxa</a></em> - Place larger of memory byte or A in accumulator A</li>
+  <li><em><a name="maxm">maxm</a></em> - Place larger of memory byte or A in memory</li>
+  <li><a name="mina"><em>mina</em></a> - Place smaller of memory byte or A in accumulator A</li>
+  <li><em><a name="minm">minm</a></em> - Place smaller of memory byte or A in memory</li>
+</ul></div>
+
+<p>These instructions perform a comparison of the accumulator with the contents of a memory byte or word, setting the condition codes like the <em>cpd</em> or <em>cmpa</em> instructions. Only indexed addressing
+modes are allowed. The larger or smaller of the two values is then placed in either the memory location or the accumulator, depending on the individual instruction selected. The values are
+considered to be unsigned.</p>
+
+<p>The requirement of using indexed addressing modes is not a problem for the intended usage of these instructions, finding the minimum or maximum value in an array, however there is a work-around
+for other uses:</p>
+
+<p>Example:</p>
+<pre>    ldx     #0         ; Set X to 0
+    emaxd   foo,x      ; Compare contents of D with contents of word
+                       ;  location foo, and place the larger of the two
+                       ;  in D.</pre>
+
+<p>Continue with <em><a href="part008.html">Iteration</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

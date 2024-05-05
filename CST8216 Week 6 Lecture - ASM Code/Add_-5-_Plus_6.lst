@@ -1,0 +1,20 @@
+
+as12, an absolute assembler for Motorola MCU's, version 1.2h
+
+                        ; Add_-5_Plus_6.asm
+                        ;
+                        ; Author:               D. Haley
+                        ; Student Number:       nnn-nnn-nnn
+                        ; Date:                 13 Oct 2020
+                        ;
+                        ; Purpose:              Add the following values: -5 + 6 (Note: -5 = $FB)
+2000                            org     $2000   ; Start of program code
+2000 86 fb                      ldaa    #$FB    ; first number to add
+2002 c6 06                      ldab    #6      ; second number to add
+2004 18 06                      aba             ; a <- a + b with contents of a destroyed
+2006 3f                         swi             ; stop simulator
+                                end
+
+Executed: Wed Oct 20 13:09:50 2021
+Total cycles: 19, Total bytes: 7
+Total errors: 0, Total warnings: 0

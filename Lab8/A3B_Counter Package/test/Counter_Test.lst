@@ -1,0 +1,117 @@
+
+as12, an absolute assembler for Motorola MCU's, version 1.2h
+
+                        ; Counter_HEX_Display.asm
+                        ;
+                        ; Author:               D. Haley, Professor, for CST8216
+                        ; Modified by:          <place your Name(s) here>
+                        ; Student Number(s):    <place your Student Number(s) here>
+                        ; Lab Section(s):       <place your Lab Section Number(s) here>
+                        ; Course:               CST8216 Fall 2021
+                        ; Date:                 <include the code completion date here>
+                        
+                        ; Description   This counter counts from START_COUNT to END_COUNT as defined
+                        ;               in the program's equ statements
+                        
+                        ;               Behaviour:
+                        ;               This counter continually counts until Stop is pressed
+                        ;                on the simulator, as follows:
+                        ;
+                        ;               do
+                        ;                  count in HEX mode
+                        ;                  count in BCD mode
+                        ;               while (Stop not pressed on the simulator)
+                        ;
+                        ;               The speed of the counter is adjusted by changing DVALUE,
+                        ;               which changes the delay of displaying values in
+                        ;               the Delay Subroutine Value
+                        ;
+                        ; Other info:   The counter will use the Hex Displays to display the count.
+                        ;
+                        ;               The count must be in a single register, Accumulator A.
+                        ;
+                        ;               The range of the count can be altered by stopping the program,
+                        ;               changing the START_COUNT and END_COUNT values, re-assembling
+                        ;               and loading/running the program in the Simulator again.
+                        ;
+                        ;               START_COUNT must be >=0 and END_COUNT must be <= 99
+                        
+                        ; ***** DO NOT CHANGE ANY CODE BETWEEN THESE MARKERS *****
+                        ; Library Routines used in this software - you must load API.s19 into the
+                        ; Simulator to use the following subroutines as detailed in the API Booklet
+                        ;
+2117                    Config_Hex_Displays         equ        $2117
+211f                    Delay_Ms                    equ        $211F
+2139                    Hex_Display                 equ        $2139
+2144                    Extract_Msb                 equ        $2144
+2149                    Extract_Lsb                 equ        $2149
+                        
+                        ; Program Constants
+2000                    STACK           equ     $2000
+0001                    One             equ     1
+00ff                    FF              equ     $FF
+                        
+                        
+                                                        ; Port P (PPT) Display Selection Values
+000b                    DIGIT1_PP2      equ     %1011   ; 2nd from Right-most display MSB
+0007                    DIGIT0_PP3      equ     %0111   ; Reft-most display LSB
+                        
+1000                                    org     $1000
+1000 01                 Count_Mode      db      1       ; if Count_Mode = $00
+                        ;                                     count in HEX
+                        ;                                 if Count_Mode = $FF
+                        ;                                     count in BCD
+                        ;                                 endif
+                        ;
+                        ; ***** END OF DO NOT CHANGE ANY CODE BETWEEN THESE MARKERS *****
+                        
+                        ; Delay Subroutine Value
+0064                    DVALUE  equ     #100            ; Delay value (base 10) 0 - 255 ms
+                                                        ; 125 = 1/8 second <- good for Dragon12 Board
+                        
+                        ; Changing these values will change the Starting and Ending count
+0000                    START_COUNT      equ     $00     ; Starting count
+0015                    END_COUNT        equ     $15     ; Ending count
+                        
+2000                            org     $2000           ; program code
+2000 cf 20 00                   lds     #STACK          ; stack location
+2003 16 21 17                   jsr     Config_HEX_Displays ; Use the Hex Displays to display the count
+                        ; Continually Count. Start as HEX counter, then switch to BCD, then HEX ...
+2006 ce 10 00           Reboot  ldx     #Count_Mode
+2009 e6 00                      ldab    0,x
+200b c1 ff                      cmpb    #FF
+200d 27 06                      beq     ChangeToHex
+200f c6 ff                      ldab    #FF
+2011 6b 00                      stab    0,x
+2013 20 04                      bra     Start
+2015 c6 00              ChangeToHex     ldab    #START_COUNT
+2017 6b 00                              stab    0,x
+2019 86 00              Start        ldaa    #START_COUNT        ;counter start at 0
+201b 36                 Again   psha
+201c 16 21 44                   jsr     Extract_Msb
+201f c6 0b                      ldab    #DIGIT1_PP2
+2021 16 21 39                   jsr     Hex_Display
+2024 86 64                      ldaa    #DVALUE
+2026 16 21 1f                   jsr     Delay_ms
+2029 a6 80                      ldaa    0,sp        ;flash upper nibble
+202b 16 21 49                   jsr     Extract_LSB
+202e c6 07                      ldab    #DIGIT0_PP3
+2030 16 21 39                   jsr     Hex_Display
+2033 86 64                      ldaa    #DVALUE
+2035 16 21 1f                   jsr     Delay_ms
+2038 32                         pula    ;counter need resetting ?
+2039 81 15                      cmpa    #END_COUNT
+203b 27 c9                      beq     Reboot
+203d 8b 01                      adda    #One
+203f f6 10 00                   ldab    Count_Mode
+2042 c1 ff                      cmpb     #FF
+2044 27 d5                      beq     Again
+2046 c7                         clrb
+2047 18 07                      daa
+2049 20 d0                      bra     Again
+                                end ; your solution should fit between Assembler Lines 74 and 101
+                                    ; +/- 5 lines of code
+
+Executed: Fri Nov 26 17:03:31 2021
+Total cycles: 99, Total bytes: 76
+Total errors: 0, Total warnings: 0

@@ -1,0 +1,217 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>Decision Trees and Logic Instructions</title>
+<link rel="shortcut icon" href="icon.ico">
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table border="1" width="100%">
+<tr><td><a href="part009.html">Previous Section</a></td>
+<td><a href="part011.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part010" target="q">Questions</a></td>
+<td><a href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>Decision Trees and Logic Instructions</h1>
+<p><em>This section is split among several pages because of its
+   length. The start of split sections have a table of contents
+   showing each page and the contents of the current page. The current
+   page is emphasized in <span class="selected">bold</span>.</em></p>
+
+<ul>
+  <li><span class="selected">Boolean Logic Review</span></li>
+  <ul>
+    <li><a href="#NOT Function">NOT Function</a></li>
+    <li><a href="#AND Function">AND Function</a></li>
+    <li><a href="#OR Function">OR Function</a></li>
+    <li><a href="#EOR Function">EOR Function</a></li>
+  </ul>
+  <li><a href="part010a.html">Selection Control Structure</a></li>
+  <li><a href="part010b.html">Bitwise Boolean Operations</a></li>
+  <li><a href="part010c.html">Advanced Bit Instructions</a></li>
+  <li><a href="part010d.html">Bitwise Boolean Summary</a></li>
+</ul>
+
+<p>In the microcontroller, the Boolean TRUE value is represented by a 1 (or high) bit, while that of the boolean FALSE value are represented by a 0
+(or low) bit. Boolean operations are applied on byte operands in a <em>bitwise</em> fashion - each bit of one operand byte is taken with the corresponding
+bit of the second operand byte and the operation is applied to each pair of bits.</p>
+
+<p>Commonly found operations are AND, OR, Exclusive-Or (EOR), and NOT (complement).</p>
+<h2><a name="NOT Function"></a>NOT Function</h2>
+
+<p>This function, also called the complement function, is the only function of one argument. It turns a TRUE to a FALSE and a FALSE to a TRUE.
+In the assembler (or in C), the ~ character represents the bitwise complement operator. For instance, $41 (binary 01000001) complemented would
+be represented as ~$41 in the assembler and would be the value $BE (10111110).</p>
+
+<p>A limitation of the freeware assembler provided is that the ~ operator is only allowed before a symbol or a constant. A workaround is to use the
+exclusive-or operator, described below.</p>
+<h2><a name="AND Function"></a>AND Function</h2>
+
+<p>The result of the AND function is TRUE only if both arguments are TRUE. Here is the function table:</p>
+
+<table BORDER="1" WIDTH="50%" CELLPADDING="1" CELLSPACING="1">
+<tr><td>AND</td>
+<td>0</td>
+<td>1</td></tr>
+<tr><td>0</td>
+<td>0</td>
+<td>0</td></tr>
+<tr><td>1</td>
+<td>0</td>
+<td>1</td></tr></table>
+
+<p>In the assembler (or in C), the &amp; character represents the
+   bitwise AND function. For example, to AND the values $A7 with $63 in an assembler
+operand expression would be the expression $A7&amp;$63. It would be calculated bitwise as follows:</p>
+
+<table BORDER="1" WIDTH="100%" CELLPADDING="1" CELLSPACING="1">
+<tr><td>$A7</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>1</td></tr>
+<tr><td>$63</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>1</td></tr>
+<tr><td>$A7&amp;$63</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>1</td></tr></table>
+
+<p>giving a result of $23. The AND function can be used to clear (give a FALSE value to) bits. Consider the assignment <em>v=v&amp;m</em>, where v is our
+Boolean value with one or more bits we wish to clear, and <em>m</em> is called the <em>mask</em>. For each 1 bit in <em>m</em>, the corresponding bit in <em>v</em> will be unchanged
+(see the function table). For each 0 bit in <em>m</em>, the corresponding bit in <em>m</em> will be cleared. When using an AND function to clear bits, one often
+complements the mask so that a 1 bit in the mask will clear the corresponding bit. For instance $A7&amp;~1 will clear the least significant bit of the
+value $A7, giving the result $A6.</p>
+<h2><a name="OR Function"></a>OR Function</h2>
+
+<p>The result of the OR function is TRUE if either one or both arguments are TRUE. Here is the function table:</p>
+
+<table BORDER="1" WIDTH="50%" CELLPADDING="1" CELLSPACING="1">
+<tr><td>OR</td>
+<td>0</td>
+<td>1</td></tr>
+<tr><td>0</td>
+<td>0</td>
+<td>1</td></tr>
+<tr><td>1</td>
+<td>1</td>
+<td>1</td></tr></table>
+
+<p>In the assembler (or in C), the | character represents the bitwise OR function. For example, to OR the two values we used in the preceding
+example, we would use the assembler expression $A7|$63, which calculates:</p>
+
+<table BORDER="1" WIDTH="100%">
+<tr><td>$A7</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>1</td></tr>
+<tr><td>$63</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>1</td></tr>
+<tr><td>$A7|$63</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>1</td></tr></table>
+
+<p>giving a result of $E7.The OR function can be used to set (give a
+TRUE value to) bits. Consider the assignment <em>v=v|m</em>, where v is our Boolean
+value with one or more bits we wish to set, and <em>m</em> is the mask. For each 1 bit in <em>m</em>, the corresponding bit in <em>v</em> will be set (see the function table).
+For each 0 bit in <em>m</em>, the corresponding bit in <em>m</em> will be unchanged. For instance $A6|1 will set the least significant bit of the value $A6, giving the
+result $A7.</p>
+<h2><a name="EOR Function"></a>EOR Function</h2>
+
+<p>The result of the EOR function is TRUE if either one  but not both arguments are TRUE. Here is the function table:</p>
+
+<table BORDER="1" WIDTH="50%" CELLPADDING="1" CELLSPACING="1">
+<tr><td>EOR</td>
+<td>0</td>
+<td>1</td></tr>
+<tr><td>0</td>
+<td>0</td>
+<td>1</td></tr>
+<tr><td>1</td>
+<td>1</td>
+<td>0</td></tr></table>
+
+<p>In the assembler (or in C), the ^ character represents the bitwise EOR function. For example, to EOR the two values we have been using in the
+preceding examples, we would use the assembler expression $A7^$63, which calculates:</p>
+
+<table BORDER="1" WIDTH="100%">
+<tr><td>$A7</td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>1</td></tr>
+<tr><td>$63</td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>1</td></tr>
+<tr><td>$A7^$63</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td></tr></table>
+
+<p>giving the result $C4. The EOR function can be used to complement (give a FALSE value to) bits. Consider the assignment <em>v=v^m</em>, where v is our
+Boolean value with one or more bits we wish to complement, and <em>m</em> is the mask. For each 1 bit in <em>m</em>, the corresponding bit in <em>v</em> will be
+complemented (see the function table). For each 0 bit in <em>m</em>, the corresponding bit in <em>m</em> will be unchanged. For instance $A7^1 will complement the
+least significant bit of the value $A7, giving the result $A6. $A6^1 will complement the bit back to its original value, 1. </p>
+
+<p>It was pointed out earlier that the ~ operator in the assembler could not be applied to expressions. In other words, ~($23&amp;$41) would be invalid.
+However we can get the desired result by exclusive or with -1 (all bits set): -1^($23&amp;$41) will work. </p>
+
+<p>Continue with <em><a href="part010a.html">Selection Control Structure</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

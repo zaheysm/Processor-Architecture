@@ -1,0 +1,24 @@
+
+as12, an absolute assembler for Motorola MCU's, version 1.2h
+
+                        
+                        
+                        
+                        
+                        
+1000                            org     $1000
+1000                    Result  ds      1
+                        
+2000                            org     $2000
+2000 86 23                      ldaa    #$23
+2002 81 44                      cmpa    #$44
+2004 26 04                      bne     Here
+2006 86 66                      ldaa    #$66
+2008 20 02                      bra     There
+200a 86 33              Here    ldaa    #$33
+200c 7a 10 00           There   staa    Result
+                                end
+
+Executed: Sun Nov 14 16:12:49 2021
+Total cycles: 17, Total bytes: 15
+Total errors: 0, Total warnings: 0

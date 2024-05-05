@@ -1,0 +1,75 @@
+
+as12, an absolute assembler for Motorola MCU's, version 1.2h
+
+                        ; Exam.asm
+                        ;
+                        ; Name:                 Zahi Masarwa
+                        ; Student Number:       040985420
+                        ;
+                        ; NOTE:                 No credit will be given if the above information is missing
+                        ;
+                        ; Final Exam Quiz instructions and this starter code
+                        ; provides instructions on what this program must do
+                        
+                        ; Program Constants
+                        
+000f                    OFFSET          equ	 15                    ; <== Calculate Constant Offset Addressing Mode
+                                                                ;     offset value from the Array to Index_Number_Array
+                                                                ;     using the appropriate adddresses.
+                                                                ;      You may HARD CODE this value.
+                        
+0010                    DIVISOR         equ	16                     ; <== Determine the divisor used with the
+                                                                ;     idiv instruction from Final Exam Quiz instructions
+0010                    ARRAY_LEN       equ     End_Array-Array ; dynamic array size calculation
+0000                    Index           equ     $00             ; Starting Array index
+00cc                    ORIG_ZERO       equ     $CC             ; if original Array value = 0, store this value
+00ff                    NON_ZERO        equ     $FF             ; if idiv results not equal to zero, store this value
+                        
+                        
+1000                            org     $1000
+1000 80 91 9f b0 c0 d0  Array   db	128,145,159,176,192,208,0,0,0,0,31,49,64,81,95,112                ; cut and paste the array provided to you
+     00 00 00 00 1f 31
+     40 51 5f 70
+                                                                ; in the Final Exam Quiz instructions here
+1010                    End_Array
+                        
+1010                                  org    $1010                  ; <== Final Exam Quiz instructions contains
+                                                                ;     this value. Use this address to
+                                                                ;     calculate your offset for
+                                                                ;     CONSTANT OFFSET ADDRESSING mode
+1010                    Index_Number_Array
+1010                                    ds      End_Array-Array
+1020                    End_Index_Number_Array
+1030                                    org     $1030
+                        
+1030                    counter          ds      1
+                        
+2000                                    org     $2000
+2000 cf 20 00                           lds     #$2000
+2003 96 11                              ldaa    Index_Number_Array-Array+1
+                        ; your code goes here
+2005 cd 10 00                           ldy    	#Array
+2008 e6 70              loop		ldab    1,y+
+200a c1 00                              cmpb    #0
+200c 27 16                              beq     store
+200e ce 00 10                           ldx     #DIVISOR
+2011 18 10                              idiv
+2013 c1 00                              cmpb    #0
+2015 27 06                              beq     storeR
+2017 86 ff                              ldaa    #NON_ZERO
+2019 6a 4f                              staa    OFFSET,y
+201b 20 0b                              bra     continue
+201d b6 10 30           storeR          ldaa    counter
+2020 6a 4f              		staa    OFFSET,y
+2022 20 04                              bra     continue
+2024 86 cc              store           ldaa    #ORIG_ZERO
+2026 6a 4f                         	staa    OFFSET,y
+2028 72 10 30           continue        inc     counter
+202b 8d 10 10           		cpy     #End_Array
+202e 26 d8                              bne     loop
+2030 3f                                 swi
+                                        end
+
+Executed: Thu Dec 16 18:47:04 2021
+Total cycles: 72, Total bytes: 65
+Total errors: 0, Total warnings: 0

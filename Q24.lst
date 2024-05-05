@@ -1,0 +1,39 @@
+
+as12, an absolute assembler for Motorola MCU's, version 1.2h
+
+                        
+                        
+1000                                    org     $1000
+1000 95 87 92 55 38 00  Marks         	db      $95,$87,$92,$55,$38,$0,$88,$52,$63,$99
+     88 52 63 99
+100a                    EndMarks
+                        
+1010                                    org     $1010
+1010 25 21 15 33        passes          db      $25, $21, $15, $33
+1014                    EndPasses
+                        
+1020                                    org     $1020
+1020                    Dest            ds      EndMarks-Marks
+                        
+                        
+2000                                    org     $2000
+2000 cf 20 00           	        lds     #$2000
+                        	        
+2003 ce 10 00                           ldx    #Marks
+                                        
+2006 a6 05                              ldaa    5,x
+                                        
+2008 e6 32                              ldab    3,x+
+                                        
+200a cd 10 20                           ldy    	#Dest
+                        
+200d 6c 73                              std     4,y+
+                        
+200f 6a 5e                              staa    -2,y
+                                        
+2011 3f                                 swi
+                                        end
+
+Executed: Wed Dec 01 14:20:00 2021
+Total cycles: 28, Total bytes: 32
+Total errors: 0, Total warnings: 0

@@ -1,0 +1,126 @@
+
+as12, an absolute assembler for Motorola MCU's, version 1.2h
+
+                        ; Grades.asm
+                        ;
+                        ; Author:               Shahram A
+                        ;
+                        ; Student Number:       040-971-488
+                        ;
+                        ; Date:                  Nov 12 2021
+                        ;
+                        ; Purpose:               Reading values from a Marks.txt file.
+                        ;
+                        
+                        
+                        ; Program Constants
+                        
+0032                    FIFTY    equ      50
+005a                    NINETY   equ      90
+0050                    EIGHTY   equ      80
+0046                    SEVENTY  equ      70
+003c                    SIXTY    equ      60
+                        
+                        
+                        
+                        ;Program data goes here
+                        
+1000                             org      $1000
+                        
+1000                    Marks                      ; Array starts here
+                        #include Marks.txt      ; including the text file.
+1000 41 4a 4e 4d        		db	65, 74, 78, 77
+1004 38 3a 31 63        		db	56, 58, 49, 99
+1008 46 61 4c 54        		db	70, 97, 76, 84
+100c 60 56 62 3b        		db	96, 86, 98, 59
+                        #endinclude
+
+1010                    EndMarks               ; This is used for one value past(after) the last given array element. Marks+1.
+                                               ; Marks goes up to $1015 which means EndMarks = $1016. (one value past the last given array element).
+                        
+                        ; Expected Result
+                        
+                        ; C F F B A B D B D C F F D A A F   ; According to the values provided in the Marks.txt file.
+                                                            ; The marks in the txt file needs to match the flowchart for
+                                                            ; Grades.asm.
+                        
+                        
+                        
+                        
+                        ; Grades array origin is $1030.
+1030                             org     $1030
+                        
+1030                    Grades   ds      EndMarks-Marks  ; this will define the length of the data array. EndMarks = $1016 - $1015 = Marks, which = 1 for (ds).
+                        
+                        
+                        
+                        
+                        
+                        ;Program instruction goes here
+                        
+2000                             org      $2000       ; Program instruction area
+2000 cf 20 00           Start    lds      #$2000      ; stack location
+2003 ce 10 00                    ldx      #Marks      ; Point to starting address of Marks (pointer x pointing to #Marks array)
+2006 cd 10 30                    ldy      #Grades     ; Point to starting address of Grades (pointer y pointing to #Grades destination)
+                                 ;ldab     #$00
+                        
+2009 a6 30              Loop     ldaa     1,x+        ;this will load accumular (a) into the starting memory address $1000 (#Marks) and stores the
+                                                             ;value into accumulator (a) then will advance to the next address $1001 and so on.
+                        
+                        
+                        
+                        
+200b 81 5a              Check90  cmpa     #NINETY    ; Shouldn't this be cmpx, since pointer (x) is pointing to #Marks array.
+200d 24 0e                        bhs      AssignA
+                        
+200f 81 50              Check80  cmpa     #EIGHTY
+2011 24 0e                        bhs      AssignB
+                        
+2013 81 46              Check70  cmpa     #SEVENTY
+2015 24 0e                        bhs      AssignC
+                        
+2017 81 3c              Check60  cmpa     #SIXTY
+2019 24 0e                        bhs      AssignD
+                        
+                        ;Check60  cmpa     #SIXTY
+                                 ; blo      AssignF
+201b 20 10              Fgrade    bra      AssignF     ; If the value from Marks.txt is anything else other then the conditions above then assign grade F.
+                        
+201d c6 41              AssignA   ldab      #'A'       ; Why is this ldab  (load accumulator b)?
+201f 20 0e                         bra      Next
+                        
+2021 c6 42              AssignB   ldab      #'B'
+2023 20 0a                         bra      Next
+                        
+2025 c6 43              AssignC   ldab      #'C'
+2027 20 06                         bra      Next
+                        
+2029 c6 44              AssignD   ldab      #'D'
+202b 20 02              	   bra 	    Next
+                        
+202d c6 46              AssignF   ldab      #'F'
+202f 6b 70              Next	  stab      1,y+
+                        
+                        
+2031 8e 10 10                      cpx     #EndMarks   ; Since, (x) pointer is pointing to #Marks array
+                                                       ; due to it being declared above; ldx #Marks.
+                                                       ; Then, line 100, will compare the last memory address at
+                                                       ; pointer x (#Marks) and if the memory address value in pointer
+                                                       ; x is one address past the last source address (in this case if
+                                                       ; its $1016) then if the subtraction $1016 - 1016 = 0, then I finish the loop and will execute the next line of
+                                                       ; code after line 100. This is the (All - Marks processed - Yes) part of the flowchart.
+                        
+                        
+                        
+2034 26 d3              	   bne      Loop      ; if line 100 of the code does not equal to 0, then repeat the loop again. In this case, I have
+                        			      ; setup a label called Loop, which starts at ldaa 1,x+ then it will follow the next lines of codes sequentially.
+                        		       	      ; This is the (All - Marks processed - No) part of the flowchart.
+                        
+                        
+2036 3f                            swi
+                                   end
+                        
+
+Executed: Sun Nov 14 18:20:06 2021
+Total cycles: 70, Total bytes: 71
+Total errors: 0, Total warnings: 0

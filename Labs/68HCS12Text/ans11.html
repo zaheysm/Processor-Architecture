@@ -1,0 +1,44 @@
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>An Answwer for Designing with Microcontrollers -- The 68HCS12</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+<!--Version 4. Contents copyright 2007, Thomas Almy-->
+<h2>Question</h2>
+
+<p>Write a code sequence using an iteration control structure which
+  will clear memory locations $2000 through $200F.</p>
+
+<h2>Answer</h2>
+<pre>
+    ldx  #$2000
+l1: clr  1,x+
+    cpx  #$200F
+    bls  l1        ; iterate while address <= $200F
+</pre>
+<p>This could also be done using <em>movb #0 1,x+</em> which would be
+   slower, or even clearing an accumulator and then storing the value
+   with, for instance, <em>staa 1,x+</em>. An alternative which
+   doesn't use the auto-increment indexed addressing mode:</p>
+<pre>
+    ldx  #$2000
+l1: clr  0,x
+    inx
+    cpx  #$200F
+    bls  l1        ; iterate while address <= $200F
+</pre>
+<p>Another alternative which uses a counter:</p>
+<pre>
+    ldaa #16       ; number of bytes
+    ldx  #$2000    ; starting address
+l1: clr  1,x+
+    dbne a l1      ; repeat until a decrements to zero
+</pre>
+
+</body>
+</html>

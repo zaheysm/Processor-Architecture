@@ -1,0 +1,192 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title> Arithmetic Instructions</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table border="1" width="100%">
+<tr><td><a href="part006.html">Previous Section</a></td>
+<td><a href="part008.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part007" target="q">Questions</a></td>
+<td><a href="search.htm" target="search">Search the Text</a></td></tr></table>
+ <h1>Arithmetic Instructions</h1>
+
+<ul>
+  <li><a href="part007.html"> Addition and Subtraction</a></li>
+  <li><a href="part007a.html">Multiplication and Division</a></li>
+  <li><span class="selected">Shifting</span>
+  <ul>
+    <li><a href="#Logical Right Shifts">Logical Right Shifts</a></li>
+    <li><a href="#Arithmetic Right Shifts">Arithmetic Right Shifts</a></li>
+    <li><a href="#Left Shifts">Left Shifts</a></li>
+    <li><a href="#Rotates">Rotates</a></li>
+  </ul>
+  </li>
+  <li><a href="part007c.html">Test and Compare</a></li>
+</ul>
+
+<p>Shift instructions are used for positioning bits within bytes and for quick multiplication and division by powers of two. The positioning use is
+primarily when individual bits represent Boolean values, and discussion of this use is deferred until the section <em><a href="part010.html">Decision Trees and Logic
+Instructions</a></em>.</p>
+<h2><a name="Logical Right Shifts"></a>Logical Right Shifts</h2>
+
+<p>In a logical right shift operation, the contents of the data byte (or word)
+areshifted such that each bit moves to the right (lower significance position).
+A 0 is shifted into the most significant bit, and the bit shifted out on
+the right is stored in the carry condition code bit. If the data represents
+an unsigned integer, a logical right shift will divide its value by 2.</p>
+
+<p><img src="part7blsr.gif" width="268" height="97" align=bottom /></p>
+
+<p>The provided instructions are:</p>
+
+<div class="boxed"><ul>
+  <li><em><a name="lsr">lsr</a></em> - Logical shift to right memory byte</li>
+  <li><a name="lsra"><em>lsra</em></a> - Logical shift to right accumulator A</li>
+  <li><a name="lsrb"><em>lsrb</em></a> - Logical shift to right accumulator B</li>
+  <li><a name="lsrd"><em>lsrd</em></a> - Logical shift to right accumulator D</li>
+</ul></div>
+
+<p>These instructions set the condition codes to indicate if the resulting value is positive or zero (it cannot be negative). The <em>lsr</em> instruction
+allows extended and indexed addressing modes. A few examples:</p>
+
+<table border="1" width="100%" cellpadding="1" cellspacing="1">
+<tr><th>Initial value (binary)</th>
+<th>Value after logical right shift (binary)</th>
+<th>Final condition code bits</th></tr>
+<tr><td>0 1 1 1 0 1 0 0</td>
+<td>0 0 1 1 1 0 1 0</td>
+<td>Z=0 C=0 N=0 V=0</td></tr>
+<tr><td>1 1 1 1 0 1 0 0</td>
+<td>0 1 1 1 1 0 1 0</td>
+<td>Z=0 C=0 N=0 V=0</td></tr>
+<tr><td>0 0 0 0 0 0 0 1</td>
+<td>0 0 0 0 0 0 0 0</td>
+<td>Z=1 C=1 N=0 V=1</td></tr></table>
+
+<h2><a name="Arithmetic Right Shifts"></a>Arithmetic Right Shifts</h2>
+
+<p>To perform a right shift of a signed integer value, it is necessary to maintain the sign bit rather than shift in a zero. The arithmetic right shift
+operation shifts in the original value of the most significant bit. This operation has the effect of dividing the value by two, however it is a
+flooring division in that the quotient is truncated in toward the more negative value. This means that -2 right shifted is -1, while -1 right
+shifted is still -1. A negative value can never be right shifted to become zero.</p>
+
+<p><img src="part7basr.gif" width="268" height="96" align=bottom /></p>
+
+<p>The provided instructions are:</p>
+
+<div class="boxed"><ul>
+  <li><em><a name="asr">asr</a></em> - Arithmetic shift to right memory byte</li>
+  <li><em><a name="asra">asra</a></em> - Arithmetic shift to right accumulator A</li>
+  <li><em><a name="asrb">asrb</a></em> - Arithmetic shift to right accumulator B</li>
+</ul></div>
+
+<p>Note that there is no instruction to arithmetic shift accumulator D, however we will shortly show a solution to this absence. These
+instructions set the condition codes to indicate if the resulting value is positive, negative, or zero. The <em>asr</em> instruction allows extended and
+indexed addressing modes. Examples:</p>
+
+<table BORDER="1" WIDTH="100%">
+<tr><th>Initial value (binary)</th>
+<th>Value after logical right shift (binary)</th>
+<th>Final condition code bits</td></th>
+<tr><td>0 1 1 1 0 1 0 0</td>
+<td>0 0 1 1 1 0 1 0</td>
+<td>Z=0 C=0 N=0 V=0</td></tr>
+<tr><td>1 1 1 1 0 1 0 0</td>
+<td>1 1 1 1 1 0 1 0</td>
+<td>Z=0 C=0 N=1 V=1</td></tr>
+<tr><td>0 0 0 0 0 0 0 1</td>
+<td>0 0 0 0 0 0 0 0</td>
+<td>Z=1 C=1 N=0 V=1</td></tr></table>
+
+<h2><a name="Left Shifts"></a>Left Shifts</h2>
+
+<p>There is only one left shift operation that works for both signed and unsigned values. All bits are shifted to the left, with a 0 being shifted into
+the least significant bit and the value shifted out being stored in the carry bit of the condition code register. The effect of a left shift
+instruction on an integer value is to multiply it by two, which is to add the value to itself.</p>
+
+<p><img src="part7blsl.gif" width="266" height="96" align=bottom /></p>
+
+<p>The provided instructions are:</p>
+
+<div class="boxed"><ul>
+  <li><em><a name="asl">asl</a> <a name="lsl">lsl</a></em> - Arithmetic/Logical shift to left memory byte</li>
+  <li><a name="asla"><em>asla</em></a> <a name="lsla">lsla</a> - Arithmetic/Logical shift to left accumulator A</li>
+  <li><em><a name="aslb">aslb</a> <a name="lslb">lslb</a></em> - Arithmetic/Logical shift to left accumulator B</li>
+  <li><em><a name="asld">asld</a> <a name="lsld">lsld</a> </em>- Arithmetic/Logical shift to left accumulator D</li>
+</ul></div>
+
+<p>The two mnemonics, arithmetic and logical, refer to the same instruction. The memory byte shift allows the extended and indexed addressing
+modes. Condition codes are set based on the result being negative, zero, or positive, and overflow is indicated if the value shifted is signed
+and the shift causes an overflow. Examples:</p>
+
+<table BORDER="1" WIDTH="100%">
+<tr><th>Initial value (binary)</th>
+<th>Value after logical right shift (binary)</th>
+<th>Final condition code bits</td></th>
+<tr><td>0 1 1 1 0 1 0 0</td>
+<td>1 1 1 0 1 0 0 0</td>
+<td>Z=0 C=0 N=1 V=1</td></tr>
+<tr><td>1 1 1 1 0 1 0 0</td>
+<td>1 1 1 0 1 0 0 0</td>
+<td>Z=0 C=1 N=1 V=0</td></tr>
+<tr><td>0 0 0 0 0 0 0 1</td>
+<td>0 0 0 0 0 0 1 0</td>
+<td>Z=0 C=0 N=0 V=0</td></tr>
+<tr><td>1 0 0 0 0 0 0 0</td>
+<td>0 0 0 0 0 0 0 0</td>
+<td>Z=1 C=1 N=0 V=1</td></tr></table>
+
+<p><a name="Rotates"></a><h2>Rotates</h2>
+
+<p>Rotates exist for both directions. The difference between a rotate and a logical shift is that the bit shifted in is the original value of the carry
+bit in the condition code register. Nine sequential rotates will return the data to its original value. Rotate instructions are used primarily to
+implement extended-precision arithmetic.</p>
+
+<p><img src="part7brol.gif" width="259" height="101" align=bottom /></p>
+
+<p><img src="part7bror.gif" width="263" height="97" align=bottom /></p>
+
+<p>The following rotate instructions are provided:</p>
+
+<div class="boxed"><ul>
+  <li><em><a name="rol">rol</a></em> - Rotate left memory byte</li>
+  <li><em><a name="rola">rola</a></em> - Rotate left accumulator A</li>
+  <li><em><a name="rolb">rolb</a></em> - Rotate left accumulator B</li>
+  <li><em><a name="ror">ror</a></em> - Rotate right memory byte</li>
+  <li><em><a name="rora">rora</a></em> - Rotate right accumulator A</li>
+  <li><em><a name="rorb">rorb</a></em> - Rotate right accumulator B</li>
+</ul></div>
+
+<p>The memory instructions allow extended or indexed addressing modes. These instructions set the condition codes identically to their shift
+instruction counterparts.</p>
+
+<p>Here is how one does an arithmetic right shift of register D:</p>
+<pre>    asra            ; Arithmetic right shift of most significant byte
+    rorb            ; Rotate right least significant byte, which shifts
+                    ; into the most significant bit position the least
+                    ; significant bit shifted out of the most significant
+                    ; byte (got that?)</pre>
+
+<p>The rule for multi-precision right shifts is that you start with an arithmetic or logical right shift (as appropriate for the type of data) of the
+most significant byte, then perform right rotates of the remaining bytes toward the least significant byte. The rule for multi-precision left shifts
+is that you start with a left shift of the least significant byte then perform left rotates of the remaining bytes toward the most significant byte.
+The following code will multiply the 4 byte value starting at location $820 by 2:</p>
+<pre>    lsl     $823    ; left shift least significant byte
+    rol     $822    ; left rotate remaining bytes ...
+    rol     $821
+    rol     $820    ;   with most significant byte last</pre>
+
+<p>Continue with <em><a href="part007c.html">test and compare</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

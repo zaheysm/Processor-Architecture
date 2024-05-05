@@ -1,0 +1,113 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>External Memory/Peripheral Interfacing</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table BORDER="1" WIDTH="100%">
+<tr><td><a href="part019.html">Previous Section</a></td>
+<td><a href="part022.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part021" target="q">Questions</a></td>
+<td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>External Memory/Peripheral Interfacing</h1>
+<p><em>This section is split among several pages because of its
+   length. The start of split sections have a table of contents
+   showing each page and the contents of the current page. The current
+   page is emphasized in <span class="selected">bold</span>.</em></p>
+<ul>
+  <li><span class="selected">Memory Timing</span></li>
+  <li><a href="part021a.html">Operation in Normal Expanded Narrow Mode</a></li>
+  <li><a href="part021b.html">Operation in Normal Expanded Wide Mode</a></li>
+  <li><a href="part021c.html">Multiplexed Address and Data Busses</a></li>
+  <li><a href="part021d.html">Using Chip Selects</a></li>
+  <li><a href="part021e.html">Memory Expansion</a></li>
+</ul>
+
+<p>In this section we will discuss interfacing memory and peripherals to a microcontroller. The interfacing techniques are identical
+for memory and peripherals in systems which have memory-mapped i/o, and they are similar (usually differing only in control
+lines) for systems which have i/o instructions (not Freescale!). We will only consider memory interfacing in this section, with the
+understanding that it can also apply to peripherals. When we look as a specific microcontroller, we will start with the
+68HC812A4, which offers a simpler interface than the MC9S12DP256B we have been studying. Documentation for this
+microcontroller can be found <a href="../motorola/MC68HC812A4.pdf">here</a>. The section <em>Multiplexed Address and Data Busses</em> will introduce the operation of the
+MC9S12DP256B memory interface.  </p>
+
+<p>In a <em>read</em> operation, data is transferred from the memory to the microcontroller and in a <em>write </em>operation data is transferred from
+the microcontroller to memory. An address bus with a width equal to the addressable locations of the system is driven by the
+microcontroller to the memory. A data bus with a width equal to the data path size of the microcontroller is used to transfer data
+between the microcontroller and memory. Several control lines are used to synchronize the operation and specify the direction and
+perhaps size (8 bits or 16 bits) of the transfer.</p>
+
+<p><img src="fig21-1.gif" width="461" height="192" align=bottom /></p>
+
+<p>The figure above shows a simplified, "generic" interface between a microcontroller and a <em>bank</em> of memory. A memory bank
+occupies consecutive memory addresses (an address <em>block</em>), starting at a specific address, for the number of bytes contained in the
+memory device. If the device contains 64k bits, organized as 8k bytes (assuming here that the data bus is 8 bits, one byte wide),
+then 8192 memory locations will be assigned to the memory device. Since the address bus is typically 16 bits wide, with 64k
+addressable locations, the device will occupy an 8k block of addresses. The common way of assigning the bank's location is to
+have the first address be a multiple of the size of the bank. In this case, the starting address should be $0000, $2000, $4000,
+$6000, ... $E000. If the block started at, say, $4000, then the memory locations $4000-$5FFF would be assigned to the device.
+One can see that the upper three bits of the address select the block, while the lower 13 bits select the memory location within the
+block. An <em>address decoder</em> is used to select the memory bank (CS input) when the upper bits have the correct value for the bank.</p>
+
+<p>Multiple banks of memory can exist, and can even be of different sizes,
+providing no two banks are selected at the same time. The busses are shared
+among the banks. It is important that only the selected bank drives the
+data bus when a read is requested and that no banks drive the bus when
+a write is requested. For this reason, even ROM memory banks must know
+if a read or write is requested, even though they cannot perform a write
+function, because they must only drive the bus on a read request from the
+bank.</p>
+
+<p>A write request involves the following sequence of events. Various control signals, including clock signals, are used to
+synchronize the actions between the microcontroller and memory:</p>
+
+<div class="minor"><ul>
+  <li>The microcontroller places the address on the address bus. The memory bank uses the address to determine if it is selected, and
+to select the address within the bank.</li>
+  <li>The microcontroller indicates a write operation, and provides the data on the data bus. The selected bank must then take the
+data and store it appropriately.</li>
+</ul></div>
+
+<p>In some systems, the memory device can indicate that it has completed the requested operations. In others, such as the 68HC12,
+the memory device gets a specific amount of time to complete the request. The microcontroller can be configured to give more
+time for slow devices.</p>
+
+<p>A read request involves the following sequence of events:</p>
+
+<div class="minor"><ul>
+  <li>The microcontroller places the address on the address bus. The memory bank uses the address to determine if it is selected, and
+to select the address within the bank.</li>
+  <li>The microcontroller indicates a read operation. The selected bank must place the data at the selected address on the bus within
+a certain amount of time, then remove it within a certain other amount of time (allowing the microcontroller to latch the data).</li>
+</ul></div>
+
+<p>Again, in some systems the memory device can indicate that it has completed the request. In the 68HC12 and 68HCS12, the
+microcontroller can be configured to give more time for slow devices.</p>
+
+<p>Let's look at the timing chart for the 68HC812A4, from the Freescale electrical
+specification:</p>
+
+<p><img src="fig21-2.gif" width="462" height="496" align=bottom /></p>
+
+<p>For the moment, we are concerned with the ECLK, ADDR, DATA, and R/*W signals. ECLK is used to synchronize the
+operation, and is nominally a 125 nanosecond period. We can see that When ECLK goes high, the address is available, as is the
+R/*W signal. The falling edge of ECLK is used to latch the data either in the memory (on a write) or in the 68HC12 (on a read).
+Without stretching the clock, the timing is very tight between when the address is available and when the data must be available.
+This means the memory must have a very fast access time, or the ECLK period must be stretched. The ECLK can be stretched 1,
+2, or 3 times an E clock cycle, or 125, 250, or 375 nanoseconds. In evaluation boards using this part, all accesses to external
+memory are stretched by this 125 nanoseconds. The clock stretching feature is part of the chip select feature discussed later in this
+section. At that point we will have an <a href="part021d.html#Timing Calculation Example">example of timing calculations</a>.</p>
+
+<p>Continue with <em><a href="part021a.html">Operation in Normal Expanded Narrow Mode</a><a href="part022.html"></a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

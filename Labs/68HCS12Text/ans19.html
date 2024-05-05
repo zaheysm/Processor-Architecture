@@ -1,0 +1,27 @@
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>An Answwer for Designing with Microcontrollers -- The 68HCS12</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+<!--Version 4. Contents copyright 2007, Thomas Almy-->
+<h2>Question</h2>
+
+<p>What sequence of instructions will generate a positive pulse on
+port J pin 0, assuming the pin is initially configured for output and
+is in the low state.  Assuming a 24 MHz system clock, what will be the
+width of the pulse?</p>
+
+<h2>Answer</h2>
+<pre>
+    bset ptj #$1
+    bclr ptj #$1</pre>
+<p>Since the port is written at the same point in time in both of
+   these instructions, the pulse width will be the time it takes to
+   execute one instruction, 4 clock cycles, or 167 ns.</p>
+</body>
+</html>

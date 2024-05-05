@@ -1,0 +1,133 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>System Clocks</title>
+<link rel="shortcut icon" href="icon.ico">
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table BORDER="1" WIDTH="100%">
+<tr><td><a href="part013a.html">Previous Section</a></td>
+<td><a href="part015.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part014" target="q">Questions</a></td>
+<td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>System Clocks</h1>
+
+<p>The 68HCS12 requires an accurate, stable clock input for most applications. The clock can be provided from an external source, typically a crystal oscillator
+module, or an external crystal which is excited by circuitry within the 68HCS12. An internal PLL (<em>Phase Locked Loop</em>) can be used to provide internal clock
+frequencies different than that of the external crystal. In addition, the 68HCS12 has a fallback position in that if the clock is missing altogether at reset the
+internal PLL will be used to generate a non-regulated clock until the external signal appears.</p>
+
+<p>Pin 7 of Port E is sampled at system reset. If it is low, an external oscillator is expected to be connected to pin EXTAL. If the pin is high, then a crystal is
+expected to be connected in a modified Colpitts oscillator configuration:</p>
+
+<p><center><img src="fig14-3.gif" width="342" height="184" /></center>Internal to the microcontroller is an amplifier which drives the XTAL pin from the EXTAL pin. Capacitor C<sub>DC</sub> is only needed to block the DC voltage from the
+crystal, and might not be needed depending on the crystal used. Capacitors C<sub>1</sub> and C<sub>2</sub> are 22 picofarads each.
+<p>Earlier 68HC12 chip designs, as well as most microcontrollers, use a standard Colpitts oscillator design shown below. When an external system clock (such as a
+crystal oscillator in a dual-inline package) is used, it is connected to the EXTAL pin. If a crystal is used, it is connected as shown in the schematic. The resistor
+should be 10 megohms, and the capacitors roughly 10 picofarads.</p>
+
+<p><center><img src="fig14-1.gif" width="390" height="177"
+alt="schematic for crystal"/></center>
+
+The clock signal is used to produce a four phase clock running at half
+the frequency. The four phase clock is only used in the processor. An
+internal clock divider divides the crystal (or external clock source)
+frequency by two for operation of the memory bus and most peripheral
+devices. This is referred to as the <em>system clock </em>or
+<em>memory clock</em> in this text, aditionally as "module" or "bus"
+clock in the Freescale documentation and also appears as <em>"CPU
+Cycles"</em> in the Freescale documentation for instruction timing
+calculation.  Thus an 8 MHz crystal, such as found on the
+Dragon12-plus
+board, will result in a 4 MHz system clock speed when calculating
+instruction execution time. The undivided crystal clock is used for
+the <a href="part017.html">RTI and COP circuits</a> which are part of
+the clock block, for programming the <a href="part020.html">EEPROM</a>
+and Flash EEPROM memories, and for the CAN and BDM interfaces.  The
+system clock is used for other peripheral blocks such as the serial
+communications interface and timers. All peripherals have clock
+dividers so that their speed of operation can be adjusted.</p>
+
+<p><center><img src="fig14-4.gif" width="530" height="147"
+/></center></p>
+
+<p>A phase-locked loop circuit can be switched in to adjust the processor
+and system clock speed above or below the crystal frequency. Since the
+microcontroller powers up with the phase locked loop disabled, it is important
+that the external clock frequency not exceed the maximum clock frequency
+of 25 MHz. The Dragon12-plus board uses the phase locked loop to multiply the
+8 MHz crystal frequency by 3 to generate a system clock frequency of 24 Mhz. Remember
+that using the phase-locked loop will not affect the operation of the circuits
+which run at the crystal frequency. If the phase locked loop is used, a
+filter consisting of a resistor and two capacitors must be connected to
+the XFC pin.</p>
+
+<p><center><img src="fig14-2.gif" width="107" height="147"
+/></center></p>
+
+<p>The optimal values for C<sub>P</sub>, C<sub>S</sub> and
+   R<sub>S</sub> depends on the output frequency and SYNR values. The
+   formula for calculating these values is given in the Electrical
+   Characteristics appendix of the <a
+   href="../Motorola/9S12DP256BDGV2.pdf">Device Users Guide</a>.</p>
+
+<div id="minor"><ul>
+
+   <li>Registers SYNR and REFDV are set to produce the desired system
+clock frequency, F, where F=f*(SYNR+1)/(REFDV+1), and f is the input
+frequency. SYNR is a 6 bit value in the range 0 to 63 and REFDV is a 4
+bit value in the range of 0 to 15. For best operation of a phase
+locked loop, the smallest values that achieve the desired output
+frequency should be used. Writing to SYNR will start the phase locked
+loop running; however it won't be used yet.  In the Dragon12-plus,
+which has a 24 Mhz system clock with an 8 Mhz crystal, SYNR=2 and
+REFDV=0. The older DRAGON12 had a 4 MHz crystal and used SYNR=5 and REFDV=0
+to obtain the 24 MHz system clock. (<em>Note that the formula in the
+Freescale documentation shows an additional factor of 2 in the
+numerator, thus calculates the processor clock frequency.)</em></li>
+
+  <li>Wait for the phase locked loop to lock onto the crystal frequency. This can be determined by waiting for bit 3 of register CRGFLG to be 1.</li>
+  <li>The PLLSEL bit (the most significant bit) of CLKSEL is set to 1. This switches the internal clock source to the PLL. </li>
+</ul></div>
+
+<p>Why do we want to use the PLL? One reason would be that we have a crystal
+or other clock source that has a frequency less than the microcontroller
+can run, and we want to get maximum performance from the system. However,
+consider battery powered applications or others where the power consumption
+must be limited. The power consumption of a CMOS part is roughly proportional
+to the clock speed. We can lower the clock speed when we don't need the
+performance, to save power. A DRAGON12 board used in a robotics experiment
+might turn off the PLL, reducing the clock speed to 2 MHz, when the robot
+is inactive.</p>
+
+<p>To assist in reducing power consumption, the <em>wai</em> and
+<em>stop</em> CPU instructions can be executed. The former saves power
+by removing the clock from selected modules and perhaps also stopping
+the PLL. The clocks are resumed when an interrupt or system reset
+occurs, which ends the execution of the <em>wai</em> instruction.
+Clock selection for disabling during the <em>wai</em> instruction is
+controlled by the CLKSEL register described in the <a
+href="../motorola/S12CRGV2.pdf"><em>CRG Block User's Guide</em></a>.
+In addition, some I/O modules can be shut down during the <em>wai</em>
+instruction. The <em>stop</em> instruction is similar, but it stops
+almost all clock activity. An external interrupt or system reset is
+necessary to restart. For this reason, the <em>stop</em> instruction
+must be enabled in the condition code register, otherwise the
+<em>stop</em> instruction does nothing.</p>
+
+<p>Detail of the operation of the clock circuit can be found in the <a href="../motorola/S12CRGV2.pdf"><em>CRG Block User's Guide</em></a>. The behavior during wait and stop mode is considerably more
+complicated than described above. The clock generator module also contains several interrupt sources (clock monitor, computer operating properly, and real
+time) that will be described later.</p>
+
+<p>Continue with <em><a href="part015.html">Interrupts, Traps, and Resets</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

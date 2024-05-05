@@ -1,0 +1,39 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>
+Mixed Addition Example
+</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+<p>You will need to press <em>Go</em> once for each of the three
+sample data sets. The program calculates I2=C1+I1 and I3=C2+I1, where
+C1 is an unsigned byte at $1000, C2 is a signed byte at $1001, and I1
+through I3 are signed words at locations $1002, $1004, and $1006
+respectively.</p>
+<p>The Simulator will appear in a separate window. When this page is
+exited, the simulator will stop. The controls in the simulator for
+loading code, generating a log file, and taking a snapshot are disabled when run from the
+browser.</p>
+<applet
+  archive = "Micro.jar"
+  code     = "Simulator.class"
+  name     = "Simulation"
+  width    = "200"
+  height   = "200"
+  hspace   = "0"
+  vspace   = "0"
+  align    = "middle"
+>
+<param name = "student" value = "true">
+<param name="dragon" value="false">
+<param name="dbug12" value="false">
+<param name="file" value="part007">
+</applet>
+</body>
+</html>

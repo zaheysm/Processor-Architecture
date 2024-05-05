@@ -1,0 +1,154 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Electrical Characteristics</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+<table border="1" width="100%">
+<tr><td><a href="part012.html">Previous Section</a></td>
+<td><a href="part013.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part012a" target="q">Questions</a></td>
+<td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>Electrical Characteristics</h1>
+
+<ul>
+  <li><a href="#Introduction">Introduction</a></li>
+  <li><a href="#CMOS Technology">CMOS Technology</a></li>
+  <li><a href="#TTL environments">Interfacing CMOS Microcontrollers in TTL environments</a></li>
+  <li><a href="#Other Interfacing Situations">Other Interfacing Situations</a></li>
+  <li><a href="#Timing Considerations">Timing Considerations</a> </li>
+  <li><a href="#Power and Ground">Power and Ground</a></li>
+</ul>
+<h2><a name="Introduction"></a>Introduction</h2>
+
+<p>So far we have treated the two binary states, 0 and 1, in an abstract fashion. In the real implementation, these two states are represented by different voltage levels. The voltage levels
+depend on the technology used, but can easily be referred to as <em>high </em>(or "H")<em> </em>and <em>low</em> (or "L"). Normally, the high level represents the 1 state and the low level the 0 state, but this is
+not always the case, and if switched the levels are said to be
+<em>inverted</em> or <em>active low</em>.</p>
+<h2><a name="CMOS Technology"></a>CMOS Technology</h2>
+
+<p><img src="fig12a-1.gif" width="267" height="295" align=right />The 68HCS12 is implemented using CMOS technology. A CMOS inverter, the simplest structure, is typically used to buffer both the
+input and output pins of the device. Here is the schematic of the inverter:</p>
+
+<p>In a pure CMOS design, the high level is the same as the positive power supply voltage (V<sub>PP</sub> in the illustration) and the low level is the
+same as the negative power supply voltage (V<sub>MM</sub>). When the input voltage to the inverter is low, the n-channel device is turned off while
+the p-channel device will be turned on and in saturation. The output voltage will therefore be at the positive supply voltage. Likewise,
+when the input voltage to the inverter is high, the p-channel device is turned off while the n-channel device will be turned on and in
+saturation. The output voltage will be at the negative supply
+voltage. Most CMOS parts use either a 5 volt or 3.3 volt power supply,
+with some recent parts using a 2.5 volt power supply.</p>
+
+<p>The input to the inverter draws no current. The output sees only a capacitive load in a pure CMOS design. This means that there is no
+static power consumption. (<em>Static</em> means when there are no state changes, such as when the clock is turned off.)  The saturated device
+behaves as a current source until the supply voltage is reached.  Therefore the transition time is proportional to the capacitive load. Any
+number of  gates can be driven if the delay is acceptable. Current is consumed during the transition because of charge transfer and also
+within the inverter itself during the period of time that both transistors are conducting:</p>
+
+<p><img src="fig12a-2.gif" width="283" height="235" align=bottom /></p>
+
+<p>So we have the following considerations when running in a pure CMOS environment:</p>
+
+<div class="minor"><ul>
+  <li>Unused inputs must not be allowed to "float" because they can cause static current draw. </li>
+  <li>Load capacitance must be minimized to obtain maximum performance.</li>
+  <li>Current consumption is roughly proportional to clock speed.</li>
+</ul></div>
+
+<h2><a name="TTL environments"></a>Interfacing CMOS Microcontrollers in TTL environments</h2>
+
+<p>Frequently the CMOS components must be interfaced to TTL (typically 74LS
+series) components. These TTL components run at different voltage levels
+than CMOS. In particular, the specifications for the 74LS series are typically:</p>
+
+<div class="minor"><ul>
+  <li>Maximum low level input voltage - 0.8v (at -0.4mA current)</li>
+  <li>Minimum high level input voltage - 2v (at 20uA)</li>
+  <li>Maximum low level output voltage - 0.5v (sinking 8mA)</li>
+  <li>Minimum high level output voltage - 2.7v (sourcing 0.4mA)</li>
+</ul></div>
+
+<p>If we look at the transfer characteristics of the CMOS inverter we see that it changes state midrange (5 volt supply shown):</p>
+
+<p><img src="fig12a-3.gif" width="273" height="252" align=bottom /></p>
+
+<p>When CMOS drives TTL, the TTL input voltage levels will be met, even with 3.3 volt CMOS. Our only potential problem is the current requirement to drive the logic low level.
+However there is a problem driving 5 volt CMOS from TTL. To insure an adequate high level, the TTL device should drive only CMOS, and there should be a pullup resistor to
+achieve an adequate high level.</p>
+
+<p>Checking the electrical characteristics (in the <a href="../motorola/9S12DP256BDGV2.pdf"><em>MC9S12DP256 Device Users Guide</em></a>, Appendix A) for the 68HCS12 we find that it can drive low to V<sub>SS</sub>+0.8 volts with a current 10mA.
+From this we can see that 25 LS TTL loads can be driven. However the loading should be minimized to reduce power consumption and heat generation. On input, the 68HCS12
+requires a logic high level of 0.65*V<sub>DD</sub> or 3.25 volts with a 5 volt supply.</p>
+<h2><a name="Other Interfacing Situations">Other Interfacing Situations</a></h2>
+
+<p>To reduce the number of pins necessary, some pins that are normally used as output pins are sensed as input pins during power-up and microcontroller reset. An example of this are
+the mode setting inputs which are also used for Port E, described in a<a href="part021a.html"> later section</a>. The pin should only be driving CMOS logic. A large valued resistor (one that does not constitute a
+significant load, say 10k ohms) is connected between the pin and V<sub>DD</sub> (for a logic 1 input) or V<sub>SS</sub> (for a logic 0 input). At power-up or reset the net is driven to the logic level through
+the resistor. However after the reset, when the pin is enabled for output, its driving capability easily overrides the load caused by the resistor.</p>
+
+<p><img src="fig12a-11.gif" width="550" height="177" align=bottom /></p>
+
+<p>When a mechanical switch is used as an input device, it is important that the input pin is always driven to a logic level and not be allowed to float. A floating input can cause noise
+and excessive power consumption. The easiest solution in the 68HCS12 is to have the switch connect the pin to ground when closed, and to rely on the available internal pull-up
+resistor to hold the pin voltage high when the switch is open. Also, contact bounce in the switches can cause false indication of multiple closing. For that reason a low pass filter is
+necessary. This can be done in software by checking the switch at well spaced time intervals, such as tens of milliseconds, which will be much longer than the period of contact
+bounce. It can also be done with an RC filter, at the expense of the additional parts</p>
+<h2><a name="Timing Considerations"></a>Timing Considerations</h2>
+
+<p>Most inputs are <em>synchronous</em> in that the data is captured on a clock edge. The timing diagram looks like this:</p>
+
+<p><img src="fig12a-4.gif" width="300" height="141" align=bottom /></p>
+
+<p>The data must be valid and stable <em>t<sub>s</sub></em><sub></sub> seconds before the clock edge, and must be maintained for <em>t<sub>h</sub></em><sub></sub> seconds after the edge. These are referred to as the <em>setup</em> and <em>hold</em> times for the signal. We need to make sure that these timing requirements are met in order to have reliable operation or any successful operation at all! Some data sheets will give <em>typical</em> as well
+as <em>min</em> (minimum) values. It is important to only use the worst case, or <em>min</em> values. Designs based on typical values typically don't work. In production, they can yield large failure
+rates, as much as 100% if a margin batch of parts are received.</p>
+
+<p>To determine if the requirements of the input pin are met, we must look at the output of the device driving the pin. Its timing diagram will look something like this:</p>
+
+<p><img src="fig12a-5.gif" width="300" height="141" align=bottom /></p>
+
+<p>Here <em>t<sub>d</sub></em><sub></sub> represents the delay from the clock edge until the data is valid. This is typically specified as with a <em>max</em> (maximum) value, with no minimum specified. However we can
+guess that the minimum is no less than 0. Putting this all together, the valid data that is output as a result of a clock edge will be captured at the input pin at the next clock edge. We
+can make a composite timing diagram like this:</p>
+
+<p><img src="fig12a-6.gif" width="600" height="211" align=bottom /></p>
+
+<p>We see that we meet the setup requirements as long as t<sub>s1</sub> is greater than zero, where the value is calculated as the clock period minus the output delay and input setup times. The
+delay time will need to be increased by any intervening logic or large distances between the pins. The hold requirements are met as long as <em>t<sub>s2</sub></em><sub></sub> is greater than zero. In this case we
+need to know the minimum delay time of the output, which can be hard to calculate. Luckily in most cases <em>t<sub>h</sub></em><sub></sub> is zero or a very small number and this is not a concern.</p>
+
+<p>Note that systems also need to be concerned about clock distribution to avoid a problem called <em>clock skew</em>. When this occurs, the clock signal arrives at different points in the system
+at different times. In the figure above the first clock edge is relevant to the output device while the second clock edge (except for the <em>t<sub>dmin</sub> </em>time) is relevant to the input device. Clock skew will directly affect
+the values of t<sub>s1 </sub>and t<sub>s2 </sub>and can cause the circuit to fail to operate.</p>
+<h2><a name="Power and Ground">Power and Ground</a></h2>
+<p>We have seen that digital CMOS circuits have a large amount of noise immunity, however that is not true for analog circuits such as found an analog to digital converters, digital to
+analog converters, and phase lock loops used in clock generation. Because the thin connecting wires between the chip wafer and the physical pins have a fairly high impedance, there
+is a tendency for noise generated by the digital circuits to be intensified on the chip. To solve the problem, multiple power (VDD) and ground (VSS) pins are used, and they are often
+separated by their use. For analog power sources, additional filtering is typically used. Analog grounds are kept separate from digital grounds and only connected at a single common
+point.   The MC9S12DP256B has the following power and ground connections:</p>
+
+<div class="minor"><ul>
+  <li>VDDX, VSSX - power and ground for I/O pins. Because of the heavy dynamic loads, these need close, high quality (good high frequency performance) bypass capacitors.</li>
+  <li>VDDR, VSSR - power and ground for I/O pins and internal voltage regulator. The internal logic core runs on a reduced (2.5v) voltage so minimum sized transistors can be used,
+which decreases chip area and increases performance. These pins also need good bypassing.</li>
+  <li>VDD1, VDD2, VSS1, VSS2 - internal core power, brought out to pins for bypassing. No other loading is allowed.</li>
+  <li>VDDA, VSSA - power and ground for the analog to digital converters and the internally generated 2.5 volt reference for the core logic. This is analog circuitry so it needs to be
+very low noise.</li>
+  <li>VRH, VRL - high and low reference voltages for the analog to digital converters. Typically connected to VDDA and VSSA but could come from other sources. VSSA does not
+have to be 0 volts, unlike other VSS pins.</li>
+  <li>VDDPLL, VSSPLL - internal voltage and ground for the PLL, brought out to pins for bypassing. No other loading is allowed.</li>
+</ul></div>
+
+<p>It is possible to disable the internal 2.5 volt voltage regulator and supply 2.5 volts on VDD1, VDD2, and VDDPLL.</p>
+
+<p>Continue with <em><a href="part013.html">General Purpose I/O Pins</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

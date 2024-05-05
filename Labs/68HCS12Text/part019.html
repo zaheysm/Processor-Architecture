@@ -1,0 +1,402 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>The Analog to Digital Converter</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table BORDER="1" WIDTH="100%">
+<tr><td><a href="part018.html">Previous Section</a></td>
+<td><a href="part021.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part019" target="q">Questions</a></td>
+<td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>The Analog to Digital Converter</h1>
+
+<ul>
+  <li><a href="#How It Works">How It Works</a></li>
+  <li><a href="#Initialization">Initialization</a></li>
+  <li><a href="#Channel Selection">Channel Selection</a></li>
+  <li><a href="#Scan Mode">Scan Mode</a></li>
+  <li><a href="#External Triggering">External Triggering</a></li>
+  <li><a href="#Using Port AD Pins for Digital Inputs">Using Port AD Pins for Digital Inputs</a></li>
+</ul>
+
+<p>The MC9S12DP256 contains two 8 channel, 10 bit Analog to Digital Converters, which Freescale refers to as <em>ATD</em>s. Each
+input channel may also be used as a general purpose digital input pin. The converter and its interface is described in the
+<em><a href="../motorola/S12ATD10B8CV2.pdf">ATD_10B8C Block Users Guide</a>.</em> Electrical characteristics are defined in the <a href="../motorola/9S12DP256BDGV2.pdf"><em>Users Guide</em></a> in Appendix A.2. This text
+section gives a brief overview of the ADC operation.</p>
+<h2><a name="How It Works"></a>How It Works</h2>
+
+<p>The Analog to Digital converter is switched capacitor and resistor, successive
+approximation design. Such a design is compact and easy to manufacture.
+Because it relies on stored charge, the ATD clock must run in a limited
+frequency range - 500 kHz to 2 MHz. A clock divider is used to get the
+ADC clock frequency in range for any system clock frequency. Successive
+approximation means that one bit of the resulting value is generated per
+clock -- a binary search is performed comparing the input voltage with
+that of a reference which consists of a resistive voltage divider allowing
+selections of N/256*Vref followed by three more stages of capacitive dividers.
+The ADC runs fairly slowly, with a minimum time of 7 microseconds to perform
+a conversion.</p>
+
+<p>An analog multiplexer selects one of eight input pins or several
+internal test sources to measure for each conversion. An initial
+sample time of two ATD clocks captures the approximate input voltage.
+A buffer amplifier mirrors the voltage to a large sample capacitor at
+the same time. During a final sample time, the large sample capacitor
+is connected to the input to reach its final value. Since the voltage
+across the capacitor will be close to that of the input, loading is
+greatly reduced over not having the first sampling. The period of the
+sampling time is programmable to 2, 4, 8, or 16 clock periods.
+Accuracy of the ATD would potentially increase with longer sampling
+times, especially when the source impedence is high. Leakage
+current in the input and the capacitive loading limit the maximum
+input impedence to obtain accurate results. Analysis of these factors,
+as well as the nonlinearity of the converter, is beyond the scope of
+this text.</p>
+
+<p><img src="fig19-1.gif" width="606" height="202" align=bottom /></p>
+
+<p>The conversion itself is performed using a successive approximation technique that does a binary search for the correct
+value. Each bit of conversion takes a single ADC clock cycle. The total conversion time is 10 ADC clocks, which when
+added to the sample times gives a total measuring time of 14 clocks, or 7 microseconds at the maximum
+ATD clock speed of 2 MHz.  The ADC can be run in 8 bit conversion mode which reduces the test time by 1
+microsecond (2 ADC clocks).</p>
+
+<p>The conversion requires two reference voltages, VRH and VRL. Voltages to be measured must be between these two
+reference voltages. The <em>range</em> of the converter is from VRL to VRH or VRH-VRL volts. The resolution of the converter
+is the voltage change that will cause the digital value (or <em>code</em>) to change, which is <em>range</em>/(2^N), or (VRH-VRL)/1024
+volts. It can be seen that to get the best resolution, the range must be as small as possible, however accuracy is only
+guaranteed when VRH-VRL = 5 volts +/- 10%. This means that the resolution will be roughly 5 mV.</p>
+
+<p><img src="fig19-3.gif" width="330" height="341" align=bottom /></p>
+
+<p>Each code represents a range of voltages. The converter n the
+68HCS12 is unusual in that the range for code 0 is centered around VRL
+while the VRH is above the range for the maximum code (an input of VRH
+will still result in the maximum code). The average voltage represented by a particular code
+is C*(V<sub>RH</sub>-V<sub>RL</sub>)/2<sup>bits</sup> +
+V<sub>RL</sub>. The code represented by a particular voltage
+<em>V</em> is
+round((V-V<sub>RL</sub>)*2<sup>bits</sup>/(V<sub>RH</sub>-V<sub>RL</sub>)).</p>
+
+<p>When using the ATD, it is important to have a well regulated, low noise power source. To assist in achieving this goal,
+the ATD portion of the microcontroller has separate power and ground pins (VDDA and VSSA).  VRH and VRL must
+also be connected. For most use, VRH can be connected to VDDA and VRL to VSSA.</p>
+<h2><a name="Initialization"></a>Initialization</h2>
+
+<p>There are two converters. The first converter has control and status registers named ATD0xxxx starting at location
+$0080. Data registers are named PORTAD0 or PORTAD (when used as
+digital input ports) and ADR0x for the 16-bit conversion result
+registers. The second converter has control and status registers named ATD1xxxx, port data register PORTAD1, and
+conversion result registers ADR1x. The input pads are labeled PAD00 to PAD07 for the first converter and PAD08
+through PAD15 for the second converter. Notice that the naming of the pins is inconsistent with the naming of the result
+registers. Some documentation lists the second converter as PAD10 through PAD17, so watch for inconsistencies here
+as well!</p>
+
+<p>For either converter, the converter is first initialized using control registers 2, 3, and 4. The initialization is completed by
+storing into control register 5, which has a side effect of starting the conversion sequence. The conversion sequence
+consists of 1 or more inputs being sampled, converted to decimal, and then stored in a result register.</p>
+
+<p>The following control and status registers are used to utilize ATD 0: ATD0CTL2,
+ATD0CTL3, ATD0CTL4, ATD0CTL5, ATD0STAT0, and ATD0STAT1. In the following
+table, the bits in <FONT COLOR="#ff0000">red</FONT> are used for initialization, those in
+<FONT COLOR="#008000">green</FONT> are for interrupt configuration, while those in black are for channel selection and making measurements.</p>
+
+<table BORDER="1" WIDTH="100%" CELLPADDING="1" CELLSPACING="1">
+<tr><th>Register</th>
+<th>Bit 7</th>
+<th>Bit 6</th>
+<th>Bit 5</th>
+<th>Bit 4</th>
+<th>Bit 3</th>
+<th>Bit 2</th>
+<th>Bit 1</th>
+<th>Bit 0</th></tr>
+<tr><td>ATD0CTL2</td>
+<td><FONT COLOR="#ff0000">ADPU</FONT></td>
+<td>AFFC</td>
+<td><FONT COLOR="#ff0000">AWAI</FONT></td>
+<td><FONT COLOR="#ff0000">ETRIGLE</FONT></td>
+<td><FONT COLOR="#ff0000">ETRIGP</FONT></td>
+<td><FONT COLOR="#ff0000">ETRIGE</FONT></td>
+<td><FONT COLOR="#008000">ASCIE</FONT></td>
+<td><FONT COLOR="#008000">ASCIF</FONT></td></tr>
+<tr><td>ATD0CTL3</td>
+<td>0</td>
+<td><FONT COLOR="#ff0000">S8C</FONT></td>
+<td><FONT COLOR="#ff0000">S4C</FONT></td>
+<td><FONT COLOR="#ff0000">S2C</FONT></td>
+<td><FONT COLOR="#ff0000">S1C</FONT></td>
+<td><FONT COLOR="#ff0000">FIFO</FONT></td>
+<td><FONT COLOR="#ff0000">FRZ1</FONT></td>
+<td><FONT COLOR="#ff0000">FRZ0</FONT></td></tr>
+<tr><td>ATD0CTL4</td>
+<td><FONT COLOR="#ff0000">SRES8</FONT></td>
+<td><FONT COLOR="#ff0000">SMP1</FONT></td>
+<td><FONT COLOR="#ff0000">SMP0</FONT></td>
+<td><FONT COLOR="#ff0000">PRS4</FONT></td>
+<td><FONT COLOR="#ff0000">PRS3</FONT></td>
+<td><FONT COLOR="#ff0000">PRS2</FONT></td>
+<td><FONT COLOR="#ff0000">PRS1</FONT></td>
+<td><FONT COLOR="#ff0000">PRS0</FONT></td></tr>
+<tr><td>ATD0CTL5</td>
+<td>DJM</td>
+<td>DSGN</td>
+<td>SCAN</td>
+<td>MULT</td>
+<td>0</td>
+<td>CC</td>
+<td>CB</td>
+<td>CA</td></tr>
+<tr><td>ATD0STAT0</td>
+<td>SCF</td>
+<td>0</td>
+<td>ETORF</td>
+<td>FIFOR</td>
+<td>0</td>
+<td>CC2</td>
+<td>CC1</td>
+<td>CC0</td></tr>
+<tr><td>ATD0STAT1</td>
+<td>CCF7</td>
+<td>CCF6</td>
+<td>CCF5</td>
+<td>CCF4</td>
+<td>CCF3</td>
+<td>CCF2</td>
+<td>CCF1</td>
+<td>CCF0</td></tr></table>
+
+<p>The ADPU bit enables the ATD module. Because the ATD consumes power, by default it is disabled. It takes 10
+microseconds for the ATD to become operating after setting the ADPU.  AWAI=1 turns off the ATD while the
+processor is in wait mode (<em>wai</em> instruction executing) to save power. Since measurements may be made during wait
+mode, this bit is 0 by default. </p>
+
+<p>The ETRIGLE, ETRIGP, and ETRIGE bits are used to configure triggered acquisition. Normally acquisition is under
+program control, however triggering allows capture and conversions to be performed based on an external trigger signal.</p>
+
+<p>The bits in ATD0CTL3 and ATD0CTL4 must be set for proper operation. S8C
+through S1C control the number of conversion performed with a single command.
+Values of 1 through 8 can be selected, with settings of 0 and 8 or above
+meaning 8 conversions. Normally the conversion results will be placed in
+consecutive result registers starting with ADR00 with each conversion command;
+however if the FIFO bit is set, then results are stored in consecutive
+result registers even between conversion commands and wrap around from
+ADR07 to ADR00 with each eighth conversion.</p>
+
+<p>The FRZ1 and FRZ0 bits allow pausing the conversion when stopped on a breakpoint using the BDM debugger. </p>
+
+<p>Set the SRES8 bit to 1 to perform 8 bit conversions rather than 10 bit conversions. In general this should only be done to
+save conversion time.</p>
+
+<p>SMP1 and SMP0 control the final sample time. As previously mentioned, there is no reason to set at other than the
+minimum 2 ATD clock periods, for a 14 clock period conversion time. This means that SMP1=SMP0=0, the default.</p>
+
+<p>The PRS4 through PRS0 bits control the ATD clock prescaler. This divides
+the P clock by one of even divisors 2 through 64 to generate the ATD
+clock, so the divisor is (PRS+1)*2.
+Since the ATD clock must be in the range 500 kHz to 2 MHz, valid divisor
+values depend on the processor clock. In the typical case of 24 MHz,
+the smallest divisor would be 12, so PRS would be 5. The largest
+divisor would be 48, giving a PRS value of 23. Since we typically
+would want the fastest operation, the prescaler value should be 5,
+binary 00101, which is the default value.</p>
+<h2><a name="Channel Selection"></a>Channel Selection</h2>
+
+<p>Register ATD0CTL5 is used for channel selection. When the MULT and SCAN bits are both 0, and FIFO is 0 as well,
+the ATD performs conversions by sampling one of the inputs <em>N</em> times and storing the converted voltage in registers
+ADR00 through ADR0<em>N-1</em> where <em>N</em> is the number of conversions. The CC, CB, and CA bits determine which input will
+be used for the measurements. The data registers are 16 bits long. If the DJM bit is 1, the values are right justified (i.e.
+will be integers between 0 and 1023). If the DJM bit is a 0, the values are left justified and represent a binary fraction.
+We will discuss binary fractions in the chapter <a href="part024.html">Scaled Arithmetic</a>. By using left justification, the number of converter
+bits (8 or 10 in this case) will not affect the design of the code used to process the results since extra bits increase themeasurement precision and do not change the range of values. In addition, if left justification is used, the DSGN bit can
+be set and the converted values will be signed rather than unsigned.</p>
+
+<p><img src="fig19n-2.gif" width="472" height="238" align=bottom /></p>
+
+<p>Storing into ATD0CTL5 starts the conversion sequence. As each conversion completes and is stored into a result
+register, the corresponding CCF bit in ATD0STAT1 is set. When all conversions complete, the SCF bit in ATD0STAT0
+is set. The CC bits in ADT0STAT0 indicate the data register where the next conversion result will be stored.</p>
+
+<p>The AFFC bit in ATD0CTL2 controls "Fast Flag Clear All" mode of the ATD. When 0, reading the ATD0STAT1
+register and then reading the data register will clear the corresponding CCF bit, and storing into ATD0CTL5 will clear
+the SCF bit. When AFFC=1, reading the data register will clear the corresponding CCF bit and the SCF bit. It turns out
+that the "Fast Flag Clear All" will not necessarily save any execution time or code, unlike the similar feature in the
+Timing Module. However it is useful when using interrupts, as described later.</p>
+
+<p>In the following example, the ATD is initialized, then a sequence of four conversions is performed on pin PAD03. The
+results are read and averaged. This program is also <a href="part019.asm">here</a>, and can be run using the simulator <a href="part019x.html">here</a>.</p>
+<pre>#include registers.inc
+        org     DATASTART       ; Data memory (Internal RAM)
+reading ds      2               ; Voltage reading goes here
+
+        org     PRSTART         ; Program Memory
+entry:  ; Initialization code
+        movb    #$80 ATD0CTL2    ; Power up the ATD
+        ldaa    #240/3           ; 10 microsecond delay
+wait:   dbne    a wait
+        movb    #$20 ATD0CTL3    ; Sets 4 conversions
+        movb    #5 ATD0CTL4      ; Sets divider to x12, 10 bit conversion
+                                 ; minimum sample time
+
+        ; Start the ATD sequence
+        movb    #$83 ATD0CTL5    ; Start operation, sampling PAD03
+                                 ; right justified values
+wait2:  brclr   ATD0STAT0 #$80 wait2      ; Wait for SCF=1
+
+        ; Read and average the four measurements
+        ldd     ADR00H  ; get first value ("H" is high byte address)
+        addd    ADR01H  ; add second
+        addd    ADR02H  ; add third
+        addd    ADR03H  ; add fourth
+        lsrd            ; divide by 4
+        lsrd
+        adcb    #0      ; And round result
+        adca    #0
+        std     reading
+        swi             ; Return to Monitor
+        end</pre>
+
+<p>If the MULT bit of ATD0CTL5 is set, then instead of performing <em>N</em> conversions of a single analog input, a single
+conversion is performed for <em>N</em> analog inputs. Bits CC, CB, and CA are used to specify the first input to be measured, and
+the input number is incremented (modulo 8) for each successive conversion.</p>
+
+<p><img src="fig19n-3.gif" width="514" height="258" align=bottom /></p>
+
+<p>It is possible to operate the ATD with an interrupt service routine. Interrupts
+are enabled by setting the ASCIE bit in ATD0CTL2 to 1. The interrupt flag,
+ASCIF, is set when the ASCIE bit is 1 and a conversion sequence completes
+(the ASCIF flag is the same as the CCF flag when interrupts are enabled).
+This causes an interrupt service request. The interrupt service routine
+reads the values in the data registers. When the interrupt routine starts
+the next conversion sequence by writing to ATD0CTL5, the ASCIF bit will
+clear, allowing the interrupt routine to return to the previously executing
+routine. To stop performing readings, the interrupt routine must clear
+the ASCIE bit. This will mask ASCIF from causing the interrupt service
+routine to be re-entered. If at some future time it is desired to perform
+readings again, the ATD0CTL5 register is loaded with a new command (which
+will clear ASCIF) then the ASCIE bit is set to allow interrupts to occur
+again. By modifying the preceding program (changes shown in <FONT COLOR="#ff0000">red</FONT>),
+it can function as an interrupt
+driven measurement routine:</p>
+<pre>#include registers.inc
+        org     DATASTART       ; Data memory (Internal RAM)
+reading ds      2               ; Voltage reading goes here
+
+        org     PRSTART         ; Program Memory
+entry:  ; Initialization code
+        <FONT COLOR="#ff0000">lds     #DATAEND         ; Initialize stack pointer</FONT>
+<FONT COLOR="#ff0000">        movw    #atdint UserAtoD0 ; Set interrupt vector, D-Bug12</FONT></pre>
+<pre>        movb    #<FONT COLOR="#ff0000">$82</FONT> ATD0CTL2    ; Power up the ATD, <FONT COLOR="#ff0000">enable interrupt</FONT>
+        ldaa    #240/3           ; 10 microsecond delay
+wait:   dbne    a wait
+        movb    #$20 ATD0CTL3    ; Sets 4 conversions
+        movb    #5 ATD0CTL4      ; Sets divider to x12, 10 bit conversion
+                                 ; minimum sample time
+
+        ; Start the ATD sequence
+        <FONT COLOR="#ff0000">cli</FONT>
+        movb    #$83 ATD0CTL5    ; Start operation, sampling PAD03
+                                 ; right justified values
+
+<FONT COLOR="#ff0000">wait2:  wai                       ; Idle process
+        bra wait2</FONT></pre>
+<pre>
+        ; Read and average the four measurements
+<FONT COLOR="#ff0000">atdint:</FONT> ldd     ADR00H  ; get first value
+        addd    ADR01H  ; add second
+        addd    ADR02H  ; add third
+        addd    ADR03H  ; add fourth
+        lsrd            ; divide by 4
+        lsrd
+        adcb    #0      ; And round result
+        adca    #0
+        std     reading
+        ; Do one of the following two instructions:
+<FONT COLOR="#ff0000">        movb    #$83 ATD0CTL5    ; Start next operation OR
+;       bclr    ATD0CTL2 #$02    ; ASCIE=0 to disable ADC interrupt</FONT></pre>
+<pre><FONT COLOR="#ff0000">        rti             ; Return from interrupt</FONT></pre>
+<pre>        end</pre>
+
+<p> Interrupts can also be used in Scan Mode --</p>
+<h2><a name="Scan Mode"></a>Scan Mode</h2>
+
+<p>An alternative to using an interrupt service routine is to use Scan Mode. In scan mode (SCAN=1  in ATD0CTL5) the
+ATD runs continuously, immediately starting a new sequence when the current sequence completes.  The data registers
+can be read at any time and will always have the most recent measurements. When using Scan mode, the SCF flag is set
+after the each conversion sequence completes. The CCF flag bits are set when a data register has a new value and cleared
+when the data register is read (if AFFC=1, or after ATD0STAT1 is read and a data register is read if AFFC=0). If a new
+data value is loaded into a result register before its CCF flag bit is cleared, the FIFOR status bit is set indicating "FIFO
+Overflow".</p>
+
+<p>When using interrupts in combination with Scan Mode, typically the AFFC bit is first set. When the data registers are
+read in the interrupt routine, the ASCIF bit will be cleared automatically. The interrupt will occur again when the next
+sequence completes.</p>
+
+<p>The following program is a variation of the first program in this section, with changed lines indicated in <FONT COLOR="#ff0000">red</FONT>. It will
+continuously measure PAD3, averaging the most recent four measurements. In order to perform "useful work" in this
+program, code can be added where indicated, or the application can be interrupt driven. In the interrupt driven case, we
+could average the readings in the interrupt service routine.</p>
+<pre>#include registers.inc
+        org     DATASTART       ; Data memory (Internal RAM)
+reading ds      2               ; Voltage reading goes here
+        org     PRSTART         ; Program Memory
+entry:  ; Initialization code
+        movb    #$80 ATD0CTL2    ; Power up the ATD
+        ldaa    #240/3           ; 10 microsecond delay
+wait:   dbne    a wait
+        movb    #$20 ATD0CTL3    ; Sets 4 conversions
+        movb    #5 ATD0CTL4      ; Sets divider to x12, 10 bit conversion
+                                 ; minimum sample time
+        ; Start the ATD sequence
+        <font color="#ff0000">movb    #$A3 ATD0CTL5     ; PAD03, Scan Mode, right justified</font>
+wait2:  brclr   ATD0STAT0 #$80 wait2      ; Wait for SCF=1
+loop:   ; Read and average the four measurements
+        ldd     ADR00H  ; get first value
+        addd    ADR01H  ; add second
+        addd    ADR02H  ; add third
+        addd    ADR03H  ; add fourth
+        lsrd            ; divide by 4
+        lsrd
+        adcb    #0      ; And round result
+        adca    #0
+        std     reading
+<font color="#ff0000">         ; Do other things here
+        bra loop        ; Read again</font>
+        end</pre>
+
+<p>Another approach to using Scan Mode is to just read the data registers when the values are needed.</p>
+<h2><a name="External Triggering">External Triggering</a></h2>
+
+<p>Sometime it is desired to trigger an conversion sequence based on an external event rather than under program control or
+continuous operation. Pin 7 can be used as an external trigger input rather than as an ADC input by setting the ETRIGE
+bit to 1. When ETRIGE=1, a conversion sequence will not start by
+writing to ATD0CTL5. A conversion sequence will
+start on the rising edge of Pin 7 if ETRIGP is 1 and will start on the falling edge of Pin 7 if ETRIGP is 0. The SCAN bit
+is ignored and only a single sequence will be performed. However if ETRIGLE is 1 then the trigger input will be level
+sensitive and conversion sequences will be repetitively executed as long as Pin 7 is asserted high (ETRIGP=1) or low
+(ETRIGP=0). The status bit ETORF is set if a new sequence is triggered
+before the result are read.</p>
+<h2><a name="Using Port AD Pins for Digital Inputs">Using Port AD Pins for Digital Inputs</a></h2>
+
+<p>Input pins which are not being used for ADC inputs are available for general purpose digital inputs. Since voltage inputs
+around the digital switching point would cause excessive current to flow in the digital input logic, the pins must be
+enabled for digital use (which enables the digital input logic). The register ATD0DIEN has digital enable bits for the
+first ADC, while ATD1DIEN has digital enable bits for the second ADC.  Setting a value of one to a bit enables digital
+input in the corresponding bit position of the port. The digital
+values can be read from the PORTAD0 (1<sup>st</sup> ADC) or
+PORTAD1 (2<sup>nd</sup> ADC) data registers.</p>
+
+<p>Continue with <a href="part021.html">External Memory/Peripheral Interfacing</a><em><a href="part020.html"></a></em></p>
+
+<p>Return to the <a href="index.html">Index</a></p>
+
+</body>
+</html>

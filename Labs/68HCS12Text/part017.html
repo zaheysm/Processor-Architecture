@@ -1,0 +1,196 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>The RTI and COP Interrupts</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table border="1" width="100%">
+<tr><td><a href="part016.html">Previous Section</a></td>
+<td><a href="part018.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part017" target="q">Questions</a></td>
+<td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>The RTI and COP Interrupts</h1>
+<ul>
+  <ul>
+    <li><a href="#COP Clock Monitor">COP Clock Monitor</a></li>
+    <li><a href="#COP Failure">COP Failure</a></li>
+    <li><a href="#Real Time Interrupt">Real Time Interrupt</a></li>
+  </ul>
+</ul>
+
+<p>Some interrupts are solely clock triggered. This section will look at the Computer Operating Properly resets which monitor the
+system clock and system operation. In the HCS12 the same internal module that handles the COP resets has a "Real Time
+Interrupt", an interrupt that occurs at regular time intervals that can be used for a system clock to regulate the speed of controller
+operation. The module also contains the PLL control and clock operation in various states. Finding the correct bits for each function
+can be tricky. Use this table as a guide:</p>
+
+<table border="1" width="100%" cellpadding="1" cellspacing="1">
+<tr><th>Register</th>
+<th>Bit 7</th>
+<th>Bit 6</th>
+<th>Bit 5</th>
+<th>Bit 4</th>
+<th>Bit 3</th>
+<th>Bit 2</th>
+<th>Bit 1</th>
+<th>Bit 0</th></tr>
+<tr><td>CRGFLG</td>
+<td><FONT COLOR="#0000ff">RTIF</FONT></td>
+<td><FONT COLOR="#808080">PORF</FONT></td>
+<td>0</td>
+<td><FONT COLOR="#808080">LOCKIF</FONT></td>
+<td><FONT COLOR="#808080">LOCK</FONT></td>
+<td><FONT COLOR="#808080">TRACK</FONT></td>
+<td><FONT COLOR="#ff0000">SCMIF</FONT></td>
+<td><FONT COLOR="#ff0000">SCM</FONT></td></tr>
+<tr><td>CRGINT</td>
+<td><FONT COLOR="#0000ff">RTIE</FONT></td>
+<td>0</td>
+<td>0</td>
+<td><FONT COLOR="#808080">LOCKIE</FONT></td>
+<td>0</td>
+<td>0</td>
+<td><FONT COLOR="#ff0000">SCMIE</FONT></td>
+<td>0</td></tr>
+<tr><td>PLLCTL</td>
+<td><FONT COLOR="#ff0000">CME</FONT><FONT COLOR="#808080"></FONT></td>
+<td><FONT COLOR="#808080">PLLON </FONT></td>
+<td><FONT COLOR="#808080">AUTO</FONT></td>
+<td><FONT COLOR="#808080">ACQ</FONT></td>
+<td><FONT COLOR="#808080">PRE</FONT></td>
+<td><FONT COLOR="#808080">PCE</FONT></td>
+<td><FONT COLOR="#ff0000">SCME</FONT></td>
+<td>0</td></tr>
+<tr><td>RTICTL</td>
+<td>0</td>
+<td><FONT COLOR="#0000ff">RTR6</FONT></td>
+<td><FONT COLOR="#0000ff">RTR5</FONT></td>
+<td><FONT COLOR="#0000ff">RTR4</FONT></td>
+<td><FONT COLOR="#0000ff">RTR3</FONT></td>
+<td><FONT COLOR="#0000ff">RTR2</FONT></td>
+<td><FONT COLOR="#0000ff">RTR1</FONT></td>
+<td><FONT COLOR="#0000ff">RTR0</FONT></td></tr>
+<tr><td>COPCTL</td>
+<td><FONT COLOR="#008000">WCOP</FONT></td>
+<td><FONT COLOR="#808080">RSBCK</FONT></td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td><FONT COLOR="#008000">CR2</FONT></td>
+<td><FONT COLOR="#008000">CR1</FONT></td>
+<td><FONT COLOR="#008000">CR0</FONT></td></tr>
+<tr><td>ARMCOP</td>
+<td><FONT COLOR="#008000">Bit 7</FONT></td>
+<td><FONT COLOR="#008000">Bit 6</FONT></td>
+<td><FONT COLOR="#008000">Bit 5</FONT></td>
+<td><FONT COLOR="#008000">Bit 4</FONT></td>
+<td><FONT COLOR="#008000">Bit 3</FONT></td>
+<td><FONT COLOR="#008000">Bit 2</FONT></td>
+<td><FONT COLOR="#008000">Bit 1</FONT></td>
+<td><FONT COLOR="#008000">Bit 0</FONT></td></tr></table>
+
+<p>The bits marked in <FONT COLOR="#ff0000">RED</FONT> are for the COP Clock Monitor, while those in <FONT COLOR="#008000">GREEN</FONT> are for the COP Failure, and those in <FONT COLOR="#0000ff">BLUE</FONT> are
+for the Real Time Interrupt. Those in <FONT COLOR="#808080">GREY</FONT> are not discussed in this section (they are for PLL functions).</p>
+<h2><a name="COP Clock Monitor"></a>COP Clock Monitor</h2>
+
+<p>The clock monitor is enabled by setting the CME bit (it is set by default). The clock monitor will detect any loss of clock (loss can
+be complete absence or simply a very slow, in kilo-Hertz range,  frequency), except for execution of the <em>stop</em> instruction. There are
+two modes of operation, depending on the value of the SCME bit, which can only be written to once after reset. When SCME is 1,
+the default, the microcontroller goes into "self clock mode" in which the PLL supplies a minimal speed clock to keep the system
+running. When the clock input is restored, normal operation will resume. Self clock mode is indicated by the SCM bit being 1. In
+addition, the SCMIE bit will enable an interrupt to occur when the  SCM bit changes <em>in either direction</em>, and the SCMIF bit is the
+interrupt flag which can only be cleared by writing a 1 to the bit. The vector at $FFC4 is used.</p>
+
+<p>When SCME is 0, the microcontroller resets when the clock fails. The reset vector at $FFFC is used.</p>
+<h2><a name="COP Failure"></a>COP Failure</h2>
+
+<p>The Computer Operating Properly "Watchdog" reset provides a method to detect software failures. It works like a night
+watchperson who has to report in at regular intervals, otherwise a problem is assumed.</p>
+
+<p>The CR2, CR1, and CR0 bits in the COPCTL register are used to set the COP time-out period. At reset, these bits are initialized to
+0, disabling the COP Failure reset. The register may only be written to once after reset, so once it is enabled, it cannot be disabled.</p>
+
+<table BORDER="1" CELLPADDING="1" CELLSPACING="1">
+<tr><th>CR2</th>
+<th>CR1</th>
+<th>CR0</th>
+<th>Oscillator clock cycles to time-out</th></tr>
+<tr><td>0</td>
+<td>0</td>
+<td>0</td>
+<td>COP reset is disabled</td></tr>
+<tr><td>0</td>
+<td>0</td>
+<td>1</td>
+<td>2<sup>14</sup></td></tr>
+<tr><td>0</td>
+<td>1</td>
+<td>0</td>
+<td>2<sup>16</sup></td></tr>
+<tr><td>0</td>
+<td>1</td>
+<td>1</td>
+<td>2<sup>18</sup></td></tr>
+<tr><td>1</td>
+<td>0</td>
+<td>0</td>
+<td>2<sup>20</sup></td></tr>
+<tr><td>1</td>
+<td>0</td>
+<td>1</td>
+<td>2<sup>22</sup></td></tr>
+<tr><td>1</td>
+<td>1</td>
+<td>0</td>
+<td>2<sup>23</sup></td></tr>
+<tr><td>1</td>
+<td>1</td>
+<td>1</td>
+<td>2<sup>24</sup></td></tr></table>
+
+<p>The time-out time depends on the external clock speed (not that of
+   the PLL, if enabled). An 8 MHz crystal will cause a reset period
+of about 2.1 seconds at the maximum setting of CR2=CR1=CR0=1. In order to avoid the reset, register ARMCOP must be written
+with the value $55 followed by the value $AA before the period ends. Writing any other values, or failure to write these values in
+order will cause a reset using the vector at $FFFA. When $AA is written to ARMCOP, a new period begins.</p>
+
+<p>If the WCOP bit is set to 1, there is an additional restriction in that the $55 value must be written to ARMCOP in the final 25% of
+the period. This is called Window COP Mode. As a consolation, it may be written as many times as desired in that window.</p>
+
+<p>With the watchdog enabled, the idle process of an interrupt driven program can be modified so that failure to execute the idle
+process or have regular interrupts will cause a reset:</p>
+<pre>       movb    #7 COPCTL      ; start the COP counter
+idle:  movb    #$55 ARMCOP    ; Reset the watchdog
+       movb    #$AA ARMCOP
+       wai                    ; wait for next interrupt
+       bra     idle           ;  (there better be one within two seconds!)</pre>
+<h2><a name="Real Time Interrupt">Real Time Interrupt</a></h2>
+
+<p>The Real Time Interrupt, which uses the interrupt vector at $FFF0, provides a periodic interrupt. The interrupt rate is based on the
+oscillator frequency, like the COP Failure reset. The clock divider is
+set in register RTICTL and is (N+1)*2<sup>(M+9)</sup>, where <em>N</em> is the bit field RTR3 through RTR0 and
+<em>M</em> is the bit field RTR6 through RTR4. To turn off the counter, M has the value 0. </p>
+
+<p>At the end of the period, and at that rate thereafter, the RTIF bit in the CRGFLG register is set. If RTIF and the RTIE bit in
+CRGINT are set, then an interrupt request is made. The RTIF bit is cleared by writing a 1 to it, the standard interrupt flag clearing
+method in the 68HC12.</p>
+
+<p>This periodic interrupt is often used to implement state machines or control external devices at a fixed rate. Two examples of these
+are in the appendix,  <a href="part017b.html"><em>Time Multiplexed Displays</em></a> discusses driving a four digit, LED display and <a href="part017a.html"><em>Implementing State Machines in
+Software</em></a> shows the implementation of a traffic light controller.</p>
+
+<p>Reference: <a href="../motorola/S12CRGV2.pdf">CRG Block Users Guide</a></p>
+
+<p>Continue with <a href="part018.html"><em>The Timer Module</em></a>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

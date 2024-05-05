@@ -1,0 +1,65 @@
+
+as12, an absolute assembler for Motorola MCU's, version 1.2h
+
+                        ; FX.asm
+                        ;
+                        ; Author: Zahi Masrwa
+                        ; Course: CST8216
+                        ; Student Number: 040985420
+                        ; Date: 2021-11-15
+                        ;
+                        ; Purpose:      To illustrate how to solve an equation such as:
+                        ;               f(x) = 5x + 3 for x = 0 to 9, using 8-bit Multiplication
+                        ;               The calculated x in f(x) values will be placed into the X_Values array
+                        ;               The calculated f(x) values will be placed into the Results array
+                        ;
+000a                    ARRAY_LEN       equ     10      ; Number of values to calculate (10): x = 0 to 9
+2000                    STACK           equ     $2000   ; Need two arrays of length ARRAY_LEN
+0005                    Five            equ     5
+0003                    Three           equ     3
+0000                    Start           equ     0
+                                                        ; - one holds x = 0 to 9
+                                                        ; - one holds f(x) results
+                        
+1020                            org        $1020                    ; org as per assignment instructions
+                        
+1020                    X_Values                ; Complete this line of code
+                                ;db      0, 1, 2, 3, 4, 5, 6, 7, 8, 9                             ; Value of x used in calculation stored here
+1020                            ds      ARRAY_LEN
+102a                    End_X_Values
+                        
+1030                            org        $1030                     ; org as per assignment instructions
+                                
+1030                    Results
+1030                            ds        ARRAY_LEN                      ; Complete this line of code
+                                                        ; Result of f(x) calculation stored here
+103a                    End_Results
+                        
+                        ; Expected Results
+                        
+                        ;
+                        
+                        
+2000                            org     $2000
+2000 cf 20 00                   lds     #STACK
+2003 86 00              	ldaa    #start
+2005 ce 10 20           	ldx     #X_Values
+2008 cd 10 30                   ldy     #Results
+200b 6a 30              loop0   staa    1,x+
+200d 42                         inca
+200e 8e 10 2a                   cpx     #End_X_Values
+2011 26 f8                      bne     loop0
+2013 ce 10 20                   ldx     #X_Values
+2016 a6 30              loop    ldaa    1,x+
+2018 c6 05                      ldab    #Five
+201a 12                         mul
+201b cb 03                      addb    #Three
+201d 6b 70                      stab    1,y+
+201f 8e 10 2a                   cpx     #End_X_Values
+2022 26 f2                      bne     loop
+2024 3f                         swi
+                                end
+
+Executed: Sat Nov 13 10:21:50 2021
+Total cycles: 47, Total bytes: 37
+Total errors: 0, Total warnings: 0

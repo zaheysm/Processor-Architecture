@@ -1,0 +1,144 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Central Processing Unit</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table BORDER="1" WIDTH="100%" CELLPADDING="1" CELLSPACING="1">
+<tr><td><a href="part002.html">Previous Section</a></td>
+<td><a href="part004.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part003" target="q">Questions</a></td>
+<td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>Central Processing Unit</h1>
+<p><em>This section is split among several pages because of its
+   length. The start of split sections have a table of contents
+   showing each page and the contents of the current page. The current
+   page is emphasized in <span class="selected">bold</span>.</em></p>
+<ul>
+  <li><span class="selected">CPU Overview</span>
+  <ul>
+    <li><a href="#Memory and I/O Interface">Memory, I/O Interface</a></li>
+    <li><a href="#ALU">ALU</a></li>
+    <li><a href="#Registers">Registers</a></li>
+    <li><a href="#Control Unit">Control Unit</a></li>
+  </ul>
+  </li>
+  <li><a href="part003a.html">CPU Demonstration</a></li>
+  <li><a href="part003b.html">68HC12 CPU Specifics</a></li>
+</ul>
+<h2><a name="CPU Overview"></a>CPU Overview</h2>
+
+<p>In this section we will look at the operation of a simple Central Processing Unit, or <em>CPU</em>.  The CPU has the following components:</p>
+
+<div class="minor"><ul>
+  <li>An Arithmetic-Logic Unit (<em>ALU</em>) capable of performing
+  operations such as addition, subtraction, comparisons, shifting, and bitwise Boolean (AND, OR, NOT) operations.</li>
+  <li>A number of <em>registers</em>. Each register is fast memory capable of holding a byte or word of data.</li>
+  <li>An I/O port to communicate with external devices (peripherals) and memory. (Note that peripherals and memory within the microcontroller integrated circuit are still external to the CPU).</li>
+  <li>A control unit which controls the operation of the CPU based on a sequence of <em>instructions</em> in memory.</li>
+  <li>A clock to synchronize operations. The clock is crystal controlled and is typically 10 to 50 MHz in modern microcontrollers.</li>
+</ul></div>
+
+<p>For the purposes of introduction, we will use the following simple CPU:</p>
+
+<p><img src="fig3-1.gif" width="511" height="288" align=bottom /></p>
+<h2><a name="Memory and I/O Interface"></a>Memory and I/O Interface</h2>
+
+<p>The Memory and I/O interface consists of three busses:</p>
+
+<div class="minor"><dl>
+  <dt>Address Bus</dt>
+  <dd>16 bit bus from the CPU which has the
+     address of the next byte to read or write.</dd>
+  <dt>Data Bus</dt>
+  <dd>8 bit bus, bidirectional, that transfers data
+     read from the memory or peripheral to the CPU or data to write
+     from the CPU to the memory or peripheral.</dd>
+  <dt>Control Bus</dt><dd>Signals from the CPU indicating read or
+     write requested, I/O or memory access requested (on some
+     systems), and a clock to synchronize the operation.</dd>
+</dl></div>
+
+<p>The concept of an address makes it possible to select the exact byte of
+data to access. With a 16 bit bus, 65,536 different addresses exist. Since
+in the case of a microcontroller byte addressing is used, each address
+corresponds to a byte, and thus up to 65,536 bytes of memory can be accessed.
+</p>
+<p><img src="fig003-16.gif" border="0"/></p>
+<p>In a simple system, memory is connected such that the address specified
+on the address bus is always being read as long as the R/*W control line
+is high. The CPU sends out a new address at time <em>a</em> and expects the new data to be available on the data bus at time <em>b</em>. This is called the <em>access
+time.</em>  To write to memory, the CPU again sends out the address, but it lowers the R/*W control line. Then it drives the data bus which is no longer being driven by memory because R/*W is low.
+The processor then raises the R/*W line at time <em>c</em>, which is used to latch the data into the memory.</p>
+
+<p><img src="fig3-2.gif" width="429" height="109" align=bottom /></p>
+
+<p>In more sophisticated systems, the data and address bus can be time multiplexed to save pins, the data bus may be wider to increase the memory data transfer bandwidth, or clock signals may be
+provided to signal a read operation. These changes require additional control lines. Examples will be given <a href="part023.html">later in the course</a>.</p>
+<h2><a name="ALU"></a>ALU</h2>
+
+<p>The ALU performs operations on one or two operands under the control of the control unit. Typically one operand is the accumulator register (A), and the other operand can come from numerous
+different registers, the data supplied over an internal bus. The result typically is stored back into the accumulator. Common operations include:</p>
+
+<div class="boxed"><ul>
+  <li>Add</li>
+  <li>Subtract</li>
+  <li>Increment</li>
+  <li>Decrement</li>
+  <li>Negate</li>
+  <li>And</li>
+  <li>Or</li>
+  <li>Complement</li>
+  <li>Shift left</li>
+  <li>Shift right</li>
+</ul></div>
+<h2><a name="Registers"></a>Registers</h2>
+
+<p>The registers are the following:</p>
+
+<div class="minor"><dl>
+  <dt>A</dt><dd>Accumulator, an 8 bit register used to hold the results of calculations. This is the only register in this design that can be directly manipulated by the user (the programmer).</dd>
+  <dt>MAR</dt><dd>Memory Address Register, a 16 bit register which holds the memory location being addressed for reading or writing.</dd>
+  <dt>MDR</dt><dd>Memory Data Register, an 8 bit register which holds the memory data to be written or read.</dd>
+  <dt>IR</dt><dd>Instruction Register, an 8 bit register which holds the operation code, or <em>opcode</em>, for the instruction being executed.</dd>
+  <dt>PC</dt><dd>Program Counter, a 16 bit register which holds the address of the next instruction byte to be read from memory. This register is capable of being incremented, being a counter.</dd>
+  <dt>T</dt><dd>Temporary Register, an 8 bit register used by the CPU as a "scratch pad" to temporarily hold data during the execution of an instruction.</dd>
+</dl></div>
+
+<p>Register loading is under the control of the control unit. Data is transferred between registers over internal busses, again under control of the control unit. In an 8 bit microcontroller, the internal
+busses are typically 8 bits wide. Data transferred between 16 bit registers is performed 8 bits at a time. A 16 bit microcontroller has 16 bit data paths so that no additional time is necessary to transfer
+between 16 bit registers.</p>
+<h2><a name="Control Unit"></a>Control Unit</h2>
+
+<p>The control unit controls the operation of the entire CPU. It does this by executing CPU <em>instructions</em> which are stored in memory. These sequences of instructions are called a <em>program</em>. Each
+instruction tells the CPU to perform a single operation, such as an addition. When an instruction is executed, the control unit obtains the next instruction from the following location in memory. The
+location of the next instruction byte is held in the Program Counter (PC) register. While the PC register is normally incremented to go from one instruction to the next, certain instructions, most
+notably the <em>branch</em> instructions, load new values into the PC register to specify a specific location for the next instruction.</p>
+
+<p>Instructions are one or more bytes long. The first byte, called the <em>operation code</em> or <em>opcode</em>, indicates what operation is to be performed and how many bytes are in the instruction. The remaining
+bytes are called <em>operands </em>which are constant values necessary for instruction execution, such as specific memory locations to use to fetch data.</p>
+
+<p>Instruction execution consists of three phases:</p>
+
+<div class="minor"><ol>
+  <li>Fetch - instruction is read from memory</li>
+  <li>Decode -- instruction is examined and any operands determined</li>
+  <li>Execute -- instruction is executed</li>
+</ol></div>
+
+<p>Faster CPUs will often overlap the execution of one instruction with the fetch of the next. This can often be confusing for studying the operation of a processor, however most of the time these
+implementation considerations can be ignored.</p>
+
+<p>Continue with <em><a href="part003a.html">CPU Demonstration</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>External Memory/Peripheral Interfacing</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table BORDER="1" WIDTH="100%">
+<tr><td><a href="part020.html">Previous Section</a></td>
+<td><a href="part022.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part021" target="q">Questions</a></td>
+<td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>External Memory/Peripheral Interfacing</h1>
+
+<ul>
+  <li><a href="part021.html">Memory Timing</a></li>
+  <li><span class="selected">Operation in Normal Expanded Narrow
+     Mode</span></li>
+  <li><a href="part021b.html">Operation in Normal Expanded Wide Mode</a></li>
+  <li><a href="part021c.html">Multiplexed Address and Data Busses</a></li>
+  <li><a href="part021d.html">Using Chip Selects</a></li>
+  <li><a href="part021e.html">Memory Expansion</a></li>
+</ul>
+
+<p>The 68HC12 and 68HCS12 have 8 operating modes, which are selected via the MODC (or BGND after power-up),  MODA (PE6), and MODB (PE5) pins. These pins are
+sampled during reset to configure the mode. After reset MODA and MODB can be used for as general purpose I/O pins while MODC is used for the BDM. The mode can be
+checked by reading the mode register, MODE). Operating modes are explained in detail in section 4 of the <a href="../motorola/9S12DP256BDGV2.pdf">Technical Summary</a>. There are three modes which are "Normal"
+operating modes: Normal Expanded Wide, Normal Expanded Narrow, and Normal Single-Chip. In single-chip mode the external memory interface is not available, making the
+ports used for the memory interface available as general purpose I/O pins.</p>
+
+<p>External memory and memory mapped peripherals can be connected in the Expanded modes. Address blocks used by internal components get precedence; if the address is not
+part of the internal register bank, RAM, or EEPROM then the external interface is used.</p>
+
+<p><strong>The reset of this section applies only to the 68HC12 component:</strong></p>
+
+<p>In Normal Expanded Narrow Mode, the address bus is brought out on ports A, B and G, for a total of 22 bits giving an address space of 4 megabytes using paging described in
+the section on <a href="part021e.html">Memory Expansion</a>. If the paging mechanism is not used, then port G can be used as general purpose I/O pins, and a 16 bit address is presented on ports A and B
+for a 64 kilobyte address space. The data bus is 8 bits wide, and is presented on port C. Port D is available as general purpose I/O pins.</p>
+
+<p>Because the data bus is 8 bits wide, only byte transfers are possible. Connection to 8 bit memory devices is simpler and less expensive than 16 bit devices, however there is a
+performance loss as the processor has internal 16 bit data paths and external memory reads and writes of 16 bit data words is accomplished by splitting the operation into two
+consecutive memory cycles, the lower address being sent first.</p>
+
+<p>When calculating the timing of instructions, one memory cycle must be added for each external word memory reference. The time must be increased if clock stretch is used - a
+single cycle clock stretch means that three additional clock cycles must be added for an external word memory reference. While there is no penalty for 8 bit data references, all
+instruction fetches are words, meaning a performance penalty for each instruction executed.</p>
+
+<p>The partial schematic below shows the connections to a memory subsystem consisting of 16k bytes of RAM starting at address $8000 and 16k bytes of ROM starting at address
+$C000. Address lines ADDR0 through ADDR13 connect to the address input pins of the memory devices. The ROM bank is addressed when ADDR14 and ADDR15 are both
+1. In addition, ECLK is used to force reading only during the second half of the memory cycle (refer to the timing diagram <a href="fig21-2.gif">here</a>) when the address lines are valid and the memory is allowed to drive the
+data bus. The RAM is addressed similarly; however ADDR14 must be 0, so
+it gets inverted. The R/*W signal from the microcontroller connects directly
+to the *WE (write enable) input of the RAM to write to the RAM when it
+is selected. The *CE (chip enable) and *OE (output enable when reading)
+since we will always want to drive the data bus when we are reading from
+the memory device.</p>
+
+<p><img src="fig21a-1.gif" width="428" height="431" align=bottom /></p>
+
+<p>It needs to be emphasized that any design must take into account the timing characteristics of the microcontroller's interface busses, the memory devices, and any additional
+"glue" logic. Failure to perform a timing analysis could result in a system that does not work, or even worse, has occasional errors or is reliant on hand selected components.</p>
+
+<p>Continue with <em><a href="part021b.html">Operation in Normal Expanded Wide Mode</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

@@ -1,0 +1,271 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>External Memory/Peripheral Interfacing</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table border="1" width="100%">
+<tr><td><a href="part020.html">Previous Section</a></td>
+<td><a href="part022.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part021" target="q">Questions</a></td>
+<td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>External Memory/Peripheral Interfacing</h1>
+
+<ul>
+  <li><a href="part021.html">Memory Timing</a></li>
+  <li><a href="part021a.html">Operation in Normal Expanded Narrow Mode</a></li>
+  <li><a href="part021b.html">Operation in Normal Expanded Wide Mode</a></li>
+  <li><a href="part021c.html">Multiplexed Address and Data Busses</a></li>
+  <li><a href="part021d.html">Using Chip Selects</a></li>
+  <li><span class="selected">Memory Expansion</span>
+  <ul>
+    <li><a href="#Memory Expansion in the 68HC812A4">Memory Expansion in the 68HC812A4</a>
+    <ul>
+      <li><a href="#The Program Page">The Program Page</a></li>
+      <li><a href="#The Data Page">The Data Page</a></li>
+      <li><a href="#The Extra Page">The Extra Page</a></li>
+    </ul>
+    </li>
+    <li><a href="#Memory Expansion in the MC9S12DP256">Memory Expansion in the MC9S12DP256</a>
+    <ul>
+      <li><a href="#Accessing the internal 256K Flash ROM">Accessing the internal 256K Flash ROM</a></li>
+      <li><a href="#Accessing external memory">Accessing external memory</a></li>
+    </ul>
+    </li>
+  </ul>
+  </li>
+</ul>
+<h2><a name="Memory Expansion in the 68HC812A4">Memory Expansion in the 68HC812A4</a></h2>
+
+<p>We have seen that the 68HC812A4 microcontroller has a 64k byte address
+space internally, yet has 22 address lines for 4 megabytes of memory. The
+16 bit address is mapped into the 22 bit address via memory expansion logic
+called <em>paging</em>. There are three 16 bit address blocks called page <em>windows</em>, one is the program page window, the second is the
+data page window, and the third is the extra page window. The window definition register, WINDEF ($0037) is used to enable the data (DWEN), program (PWEN), and/or extra
+(EWEN) pages, and are disabled at reset. The MXAR ($0038) register is used to enable the upper address lines on port G, which are also disabled at reset, however built-in pull-up
+resistors hold these pins in the high state.</p>
+
+<table border="1" width="100%" cellpadding="1" cellspacing="1">
+<tr><th>Register</th>
+<th>Bit 7</th>
+<th>Bit 6</th>
+<th>Bit 5</th>
+<th>Bit 4</th>
+<th>Bit 3</th>
+<th>Bit 2</th>
+<th>Bit 1</th>
+<th>Bit 0</th></tr>
+<tr><td>WINDEF</td>
+<td>DWEN</td>
+<td>PWEN</td>
+<td>EWEN</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td></tr>
+<tr><td>MXAR</td>
+<td>0</td>
+<td>0</td>
+<td>A21E</td>
+<td>A20E</td>
+<td>A19E</td>
+<td>A18E</td>
+<td>A17E</td>
+<td>A16E</td></tr></table>
+
+<p>We will discuss program memory paging in detail, followed by a brief summary of the other pages which are similar.</p>
+<h2><a name="The Program Page">The Program Page</a></h2>
+
+<p>The program page window occupies the 16k address range $8000 to $BFFF. When the window is enabled (PWEN=1), addresses within that range are mapped into a 22 bit external
+address by combining the 8 bits of register PPAGE as the upper bits with the lower 14 bits of the internal address. PPAGE ($0035) is:</p>
+
+<p> 
+<table border="1" width="100%">
+<tr><th>Register</th>
+<th>Bit 7</th>
+<th>Bit 6</th>
+<th>Bit 5</th>
+<th>Bit 4</th>
+<th>Bit 3</th>
+<th>Bit 2</th>
+<th>Bit 1</th>
+<th>Bit 0</th></tr>
+<tr><td>PPAGE</td>
+<td>PPA21</td>
+<td>PPA20</td>
+<td>PPA19</td>
+<td>PPA18</td>
+<td>PPA17</td>
+<td>PPA16</td>
+<td>PPA15</td>
+<td>PPA14</td></tr></table>
+
+<p>The effect of this is that PPAGE selects one of 256 16k byte pages which is mapped into the internal address block $8000 to $BFFF. By changing the contents of the PPAGE
+register we can access the entire 4 megabyte address space within the program page window.</p>
+
+<p>The CSP0 chip select is used to indicate accessing the program memory which is mapped by PPAGE. CSP0 is asserted for references to internal memory locations $8000 to $FFFF
+regardless of the generated external address. This allows up to 4 megabytes of program ROM while still allowing data RAM and peripherals to be accessed from internal memory
+addresses in the range $0000 to $7FFF. Example: if PPAGE=0, the internal address $A000 maps to the external address $2000, but with CSP0 asserted so the program ROM is
+accessed. The internal address $2000 maps to the same external address $2000, but CSP0 will not be asserted. Assuming we are using chip select CSD for external data memory in
+the address range $0000 to $7FFF, CSD will be asserted. Even though the external addresses are the same, we can still determine if the reference is to program or data memory.</p>
+
+<p>The mapping of all internal addresses to external addresses is in the Freescale documentation and is shown below:</p>
+
+<p><img src="fig21e-1.gif" width="501" height="295" align=bottom /></p>
+
+<p>Note that for address range $C000 to $FFFF, all of the high order address lines are forced to 1. When we are using program memory expansion, this internal address range
+corresponds to the last page, $FF, of program memory. The reset vector is located at external address $3FFFFE and $3FFFFF and not $FFFE and $FFFF. Until paging and the
+upper address lines are enabled, the internal address range $8000 through $BFFF will appear as though PPAGE=$FE at external addresses $3F8000 through $3FBFFF.</p>
+
+<p>While the program can manipulate the PPAGE register to change the program window page, two instructions have been added which set the PPAGE register directly for subroutine
+calls and returns. The <em><a name="CALL">call</a> </em> instruction
+is like the <em>jsr</em> instruction with a second argument which specifies a new PPAGE value. The existing PPAGE value is pushed on the stack.
+Subroutines called with <em>call</em> return using the <em><a name="RTC">rtc</a></em> instruction, which restores the original PPAGE value from the stack. Other than these assisting instructions, writing programs in a
+paged environment is difficult because the internal address is not the same as the external address. The <em>lbra </em>instruction should be used instead of the <em>jmp</em> instruction since the latter
+will cause jumps outside of the program window:</p>
+<pre>    ORG 0         ; In program memory, so page is 0,
+                  ; However internal address is $8000 with PPAGE=0!
+    jmp  foo      ; This fails since it jumps to internal address $100
+    lbra foo      ; This succeeds by jumping to internal address $8100
+    ORG  100      ; Page 0, offset $100 is internal address $8100
+                  ; with PPAGE=0
+foo:</pre>
+
+<p>All routines must reside within a single page since there is no convenient way to jump between pages. Handling the problems of paging is virtually automatic with modern
+compilers and linkers, so high level languages, rather than assemblers, are used almost exclusively when memory expansion is used.</p>
+
+<p>Since interrupt processing does not use the PPAGE register, interrupt routines must be placed in the "fixed page" in the internal address range $C000 to $FFFF or in internal
+EEPROM.</p>
+<h2><a name="The Data Page"></a>The Data Page</h2>
+
+<p>The data page window appears in the 4k byte internal address block $7000 - $7FFF. When enabled with DWEN=1, one of 256 4k byte data memory pages is selected via register
+DPAGE ($0034):</p>
+
+<table border="1" width="100%" cellpadding="1" cellspacing="1">
+<tr><th>Register</th>
+<th>Bit 7</th>
+<th>Bit 6</th>
+<th>Bit 5</th>
+<th>Bit 4</th>
+<th>Bit 3</th>
+<th>Bit 2</th>
+<th>Bit 1</th>
+<th>Bit 0</th></tr>
+<tr><td>DPAGE</td>
+<td>PDA19</td>
+<td>PDA18</td>
+<td>PDA17</td>
+<td>PDA16</td>
+<td>PDA15</td>
+<td>PDA14</td>
+<td>PDA13</td>
+<td>PDA12</td></tr></table>
+
+<p>The combined address is 20 bits allowing up to one megabyte of data memory to be addressed within the window. Address lines A21 and A20 are forced to 1. By default, the Data
+Chip Select is only asserted for internal memory addresses in the range $7000 to $7FFF, matching the data page. If bit CSHDF of register CSCTL1 is set, as it was in the memory
+interfacing example, the chip select is asserted for the internal memory address range of $0000 to $7FFF. In this case, internal addresses from $0000 to $6FFF which aren't in the
+space of an internal module (or in the extra page, if used) will appear as external addresses $3F0000 through $3F6FFF. This corresponds to data pages $F0 through $F6.</p>
+
+<p>Since CSD is used for the data page and CSP0 is used for the program page, it is possible to have 4 megabytes of program memory ROM and 1 megabyte of data memory RAM on
+a single system.</p>
+<h2><a name="The Extra Page"></a>The Extra Page</h2>
+
+<p>The extra page window appears in a 1k byte internal address block at either $0400 - $07FF (In MISC register, EWDIR=0) or $0000 - $03FF (EWDIR=1). The advantage of the
+latter is that it includes the direct addressing space ($0000 - $00FF), however the disadvantage is most of the locations are overridden by the register bank. Of course, the register
+bank can be moved. When enabled with EWIN=1, one of 256 1k byte memory pages is selected via register EPAGE ($0036) :</p>
+
+<table border="1" width="100%" cellpadding="1" cellspacing="1">
+<tr><th>Register</th>
+<th>Bit 7</th>
+<th>Bit 6</th>
+<th>Bit 5</th>
+<th>Bit 4</th>
+<th>Bit 3</th>
+<th>Bit 2</th>
+<th>Bit 1</th>
+<th>Bit 0</th></tr>
+<tr><td>EPAGE</td>
+<td>PEA17</td>
+<td>PEA16</td>
+<td>PEA15</td>
+<td>PEA14</td>
+<td>PEA13</td>
+<td>PEA12</td>
+<td>PEA11</td>
+<td>PEA10</td></tr></table>
+
+<p>The combined address is 18 bits allowing up to 256k bytes to be addressed within the window. The upper address lines are forced to 1. Chip select 3 must be used when using the
+extra page, in which case CS3 no longer is a register following chip select as the CS3EP (Chip Select 3 Follows the Extra Page) in CSCTL1 must be set as well.</p>
+<h2><a name="Memory Expansion in the MC9S12DP256">Memory Expansion in the MC9S12DP256</a></h2>
+
+<p>Unlike the 68HC12 part previously discussed, the MC9S12DP256 has a need for memory expansion even when running in single chip mode. This part has 256KB of Flash ROM
+which needs to be accessible, along with the RAM, register block, and EEPROM, within a 64KB address space.</p>
+<h2><a name="Accessing the internal 256K Flash ROM">Accessing the internal 256K Flash ROM</a></h2>
+
+<p>The 256KB Flash ROM is divided into 16 16KB pages, numbered $30 through $3F. This corresponds to the 20 bit physical address (as seen in assemblers, program loaders and
+some debuggers) of $C0000 through $FFFFF. Normally, page $3E is accessible via memory addresses $4000 through $7FFF, page $3F is accessible via memory addresses $C000
+through $FFFF, and any page can be accessed via the "window" at memory addresses $8000 through $BFFF by storing the desired page number in the PPAGE register.</p>
+
+<table border="1" width="100%">
+<tr><th>Register</th>
+<th>Bit 7</th>
+<th>Bit 6</th>
+<th>Bit 5</th>
+<th>Bit 4</th>
+<th>Bit 3</th>
+<th>Bit 2</th>
+<th>Bit 1</th>
+<th>Bit 0</th></tr>
+<tr><td>PPAGE</td>
+<td>0</td>
+<td>0</td>
+<td>PIX5</td>
+<td>PIX4</td>
+<td>PIX3</td>
+<td>PIX2</td>
+<td>PIX1</td>
+<td>PIX0</td></tr></table>
+
+<p><img src="fig21e-2.gif" width="626" height="402" align=bottom /></p>
+
+<p>While the program can directly manipulate the PPAGE register to change the window page, two instructions have been added which set the PPAGE register directly for subroutine
+calls and returns. The <em>call </em> instruction is like the
+<em>jsr</em> instruction with a second argument which specifies a new PPAGE value. The existing PPAGE value is pushed on the stack.
+Subroutines called with <em>call</em> return using the <em>rtc</em> instruction, which restores the original PPAGE value from the stack. Other than these assisting instructions, writing programs in a
+paged environment is complicated by the fact that the internal address is not the same as the Flash ROM address. Programming should be handled using assemblers and compilers
+that are aware of the memory expansion and handle all the details automatically. </p>
+
+<p>All routines must reside within a single page since, unlike subroutine
+calls; there is no convenient way to jump between pages. Since interrupt
+processing does not use the PPAGE register, interrupt routines must be
+placed in fixed pages $3E or $3F, or in the EEPROM.</p>
+<h2><a name="Accessing external memory">Accessing external memory</a></h2>
+
+<p>When using the HCS12 in Expanded modes to attach external memory devices, the contents of the PPAGE register are presented as the lower 6 bits of Port K and only the lower 14
+bits of the PortA/B address bus are used. Memory locations which are not handled by internal devices can access external memory. Thus Port K values of $00 through $2F
+combined with memory addresses in the program window, $8000 through $BFFF, can be used. This allows connecting up to 768K of external memory.</p>
+
+<p><img src="fig21e-3.gif" width="626" height="78" align=top /></p>
+
+<p>Port K must be enabled for use by setting the EMK bit in the MODE register. There are two bits in the MISC register that allow additional external access at the expense of Flash
+ROM access. The ROMON bit, if 0, will disable the Flash ROM. In this case all addresses that are not used by EEPROM, RAM, or the registers will be available to external
+devices. The ROMHM bit, if 1 will disable access to the Flash ROM in the address range $4000 to $7FFF. Of course this page $3E can still be accessed in the program window by
+setting PPAGE to $3E. </p>
+
+<p>Now if the internal Flash is to be disabled, how is it possible to configure the microcontroller with ROMON=1? At power-up bit 7 of port K is sampled. The voltage on the pin is
+used to set the ROMON bit to 1 if high or 0 if low. This is the same technique that was used to set the mode bits.</p>
+
+<p>Continue with <em><a href="part022.html">Serial Communication Interface</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

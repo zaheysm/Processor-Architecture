@@ -1,0 +1,533 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Interrupts, Traps, and Resets</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table BORDER="1" WIDTH="100%">
+<tr><td><a href="part014.html">Previous Section</a></td>
+<td><a href="part016.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part015" target="q">Questions</a></td>
+<td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>Interrupts, Traps, and Resets</h1>
+
+<ul>
+  <li><a href="#Interrupt Vector Map">Interrupt Vector Table</a></li>
+  <li><a href="#Operation of an Interrupt">Operation of an Interrupt</a></li>
+  <li><a href="#Writing Interrupt Service Routines">Writing Interrupt Service Routines</a></li>
+  <li><a href="#CLanguage">Writing I/O Routines in the C Language</a></li>
+  <li><a href="#Power Up Reset">Power Up Reset</a></li>
+  <li><a href="#Software Interrupts and Traps">Software Interrupts and Traps</a></li>
+</ul>
+
+<p>(Refer to the <a href="#References">references</a> while reading this section.)</p>
+
+<p>There are three related circumstances which are commonly referred to as "interrupts" but are more appropriately called
+exceptions: interrupts, traps, and resets. All three of these will cause a jump to an address specified in the Interrupt Vector
+Table.</p>
+
+<p>An <em>interrupt</em> is an asynchronous event, asynchronous with respect to the executing program. Interrupts can occur at any
+time, during the execution of any instruction. Peripheral devices invoke interrupts.</p>
+
+<p>A <em>trap</em> is a software triggered event. Traps are deterministic - they are the result of attempting to execute unimplemented
+instructions or execution of the SWI instruction. In some microcontrollers, traps can also occur when attempting to access
+invalid memory locations.</p>
+
+<p>While interrupts and traps invoke an interrupt service subroutine, a <em>reset</em> jumps to its vector location. No return is expected
+or possible. A reset occurs when the power is turned on, by pulsing a reset pin on the processor, or by Computer Operating
+Properly failures.</p>
+<h2><a name="Interrupt Vector Map"></a>Interrupt Vector Table</h2>
+
+<p>The vector table occupies locations $FF80 through $FFFF. The vector addresses are words because the vectors are 16
+   bit addresses of the interrupt, trap, or reset routines.</p>
+<table border="1">
+   <tr><th>Vector Address</th><th>Vector
+      Name</th><th>Source</th><th>CCR Mask Bit</th></tr>
+<tr><td>FFFE</td><td><em>none</em></td><td>Reset</td><td><em>none</em></td></tr>
+<tr><td>FFFC</td><td><em>none</em></td><td>Clock Fail Reset</td><td><em>none</em></td></tr>
+<tr><td>FFFA</td>
+   <td><em>none</em></td>
+   <td>COP Fail Reset</td>
+   <td><em>none</em></td></tr>
+<tr><td>FFF8</td>
+   <td>UserTrap</td>
+   <td>TRAP instruction Trap</td>
+   <td><em>none</em></td></tr>
+<tr><td>FFF6</td>
+   <td>UserSWI</td>
+   <td>SWI instruction Trap</td>
+   <td><em>none</em></td></tr>
+<tr><td>FFF4</td>
+   <td>UserXIRQ</td>
+   <td>XIRQ</td>
+   <td>X</td></tr>
+<tr><td colspan="4">HPRIO selected source is here</td></tr>
+<tr><td>FFF2</td>
+   <td>UserIRQ</td>
+   <td>IRQ</td>
+   <td>I</td></tr>
+<tr><td>FFF0</td>
+   <td>UserRTI</td>
+   <td>Real Time Interrupt (RTI)</td>
+   <td>I</td></tr>
+<tr><td>FFEE</td>
+   <td>UserTimerCh0</td>
+   <td>Timer Channel 0</td>
+   <td>I</td></tr>
+<tr><td>FFEC</td>
+   <td>UserTimerCh1</td>
+   <td>Timer Channel 1</td>
+   <td>I</td></tr>
+<tr><td>FFEA</td>
+   <td>UserTimerCh2</td>
+   <td>Timer Channel 2</td>
+   <td>I</td></tr>
+<tr><td>FFE8</td>
+   <td>UserTimerCh3</td>
+   <td>Timer Channel 3</td>
+   <td>I</td></tr>
+<tr><td>FFE6</td>
+   <td>UserTimerCh4</td>
+   <td>Timer Channel 4</td>
+   <td>I</td></tr>
+<tr><td>FFE4</td>
+   <td>UserTimerCh5</td>
+   <td>Timer Channel 5</td>
+   <td>I</td></tr>
+<tr><td>FFE2</td>
+   <td>UserTimerCh6</td>
+   <td>Timer Channel 6</td>
+   <td>I</td></tr>
+<tr><td>FFE0</td>
+   <td>UserTimerCh7</td>
+   <td>Timer Channel 7</td>
+   <td>I</td></tr>
+<tr><td>FFDE</td>
+   <td>UserTimerOvf</td>
+   <td>Timer TCNT Overflow</td>
+   <td>I</td></tr>
+<tr><td>FFDC</td>
+   <td>UserPAccOvf</td>
+   <td>Pulse Accumulator A Overflow</td>
+   <td>I</td></tr>
+<tr><td>FFDA</td>
+   <td>UserPAccEdge</td>
+   <td>Pulse Accumulator Edge</td>
+   <td>I</td></tr>
+<tr><td>FFD8</td>
+   <td>UserSPI0</td>
+   <td>SPI0</td>
+   <td>I</td></tr>
+<tr><td>FFD6</td>
+   <td>UserSCI0</td>
+   <td>SCI0</td>
+   <td>I</td></tr>
+<tr><td>FFD4</td>
+   <td>UserSCI1</td>
+   <td>SCI1</td>
+   <td>I</td></tr>
+<tr><td>FFD2</td>
+   <td>UserAtoD0</td>
+   <td>ATD0 (ADC)</td>
+   <td>I</td></tr>
+<tr><td>FFD0</td>
+   <td>UserAtoD1</td>
+   <td>ATD1</td>
+   <td>I</td></tr>
+<tr><td>FFCE</td>
+   <td>UserPortJ</td>
+   <td>Port J Key Interrupts</td>
+   <td>I</td></tr>
+<tr><td>FFCC</td>
+   <td>UserPortH</td>
+   <td>Port H Key Interrupts</td>
+   <td>I</td></tr>
+<tr><td>FFCA</td>
+   <td>UserModDwnCtr</td>
+   <td>User Modulus Down Counter</td>
+   <td>I</td></tr>
+<tr><td>FFC8</td>
+   <td>UserPAccBOv</td>
+   <td>Pulse Accumulator B Overflow</td>
+   <td>I</td></tr>
+<tr><td>FFC6</td>
+   <td>UserCRG</td>
+   <td>PLL Lock</td>
+   <td>I</td></tr>
+<tr><td>FFC4</td>
+   <td>UserSCME</td>
+   <td>CRG Self Clock Mode</td>
+   <td>I</td></tr>
+<tr><td>FFC2</td>
+   <td>UserDLC</td>
+   <td>BDLC</td>
+   <td>I</td></tr>
+<tr><td>FFC0</td>
+   <td>UserIIC</td>
+   <td>IIC</td>
+   <td>I</td></tr>
+<tr><td>FFBE</td>
+   <td>UserSPI1</td>
+   <td>SPI1</td>
+   <td>I</td></tr>
+<tr><td>FFBC</td>
+   <td>UserSPI2</td>
+   <td>SPI2</td>
+   <td>I</td></tr>
+<tr><td>FFBA</td>
+   <td>UserEEPROM</td>
+   <td>EEPROM Programming</td>
+   <td>I</td></tr>
+<tr><td>FFB8</td>
+   <td>UserFLASH</td>
+   <td>Flash Programming</td>
+   <td>I</td></tr>
+<tr><td>FFB0 to FFB6</td>
+   <td>UserMSCAN0xxxx</td>
+   <td>CAN0 vectors</td>
+   <td>I</td></tr>
+<tr><td>FFA8 to FFAE</td>
+   <td>UserMSCAN1xxxx</td>
+   <td>CAN1 vectors</td>
+   <td>I</td></tr>
+<tr><td>FFA0 to FFA6</td>
+   <td>UserMSCAN2xxxx</td>
+   <td>CAN2 vectors</td>
+   <td>I</td></tr>
+<tr><td>FF98 to FF9E</td>
+   <td>UserMSCAN3xxxx</td>
+   <td>CAN3 vectors</td>
+   <td>I</td></tr>
+<tr><td>FF90 to FF96</td>
+   <td>UserMSCAN4xxxx</td>
+   <td>CAN4 vectors</td>
+   <td>I</td></tr>
+<tr><td>FF8E</td>
+   <td>UserPortP</td>
+   <td>Port P Key Interrupts</td>
+   <td>I</td></tr>
+<tr><td>FF8C</td>
+   <td>UserPWMShDn</td>
+   <td>PWM Shutdown</td>
+   <td>I</td></tr>
+<tr><td>FF80 to FF8A</td>
+   <td colspan="3">Reserved</td></tr>
+
+</table>
+
+<p>Only one
+interrupt request source can be processed at one time. For this reason
+the vectors are prioritized, with the highest priority source, in this
+case Reset, at the top of the table. It is possible to select any
+maskable interrupt (those marked with CCR Mask Bit being <em>I</em> in the
+table) to be the highest priority of all the maskable interrupts by
+setting the HPRIO register to the low byte of the vector address.  For
+instance, <em>D8</em> would be SPI0. Highest
+priority should be given to the interrupt source for which fast
+servicing is most critical. This is typically either the most
+frequently interrupting source or one with critical timing. Resets
+always have the highest priority because they abort the execution of
+any program. Traps appear to have a higher priority than interrupts,
+however the action of a trap happens during the execution of the
+instruction causing the trap while interrupts are checked and occur
+before the execution of an instruction and not during the execution
+(there are a couple notable exceptions in the fuzzy logic
+instructions).</p>
+
+<p>Note that maskable interrupts are blocked ("masked off") and are not serviced if the I bit of the condition code register is 1. The XIRQ interrupt is blocked if the X
+bit of the condition code register is 1. Nothing can block traps or resets. Maskable interrupts have local enable bits in their device's control registers. The local
+enable bit is set to 1 if the device is to cause an interrupt and 0 if the device is either not used or is to be polled.</p>
+
+<p>Because at power-up a reset occurs immediately, the interrupt
+vectors must be in ROM memory. This poses a problem during program
+development - the vectors are in ROM, but the application program will
+want to set the vectors to point to application code. D-Bug12 has code
+to "re-vector" interrupts to application code, and the application
+program indicates the location of the routines using an array located
+in D-Bug12's reserved RAM. When the interrupt occurs, the code in
+D-Bug12 which handles the interrupt will jump to the routine specified
+in the array. If no routine was specified, an error will occur. The
+down side of this technique is that it adds additional latency to the
+interrupt response. Use the definitions provided in the REGISTERS.INC
+file for the memory locations to store the interrupt vector as part of
+the program initialization code. The name is shown in the interrupt
+table, above. For instance, to specify routine
+<em>rtiint</em> will service the Real Time Interrupt, the following
+code must be executed before the interrupt is allowed to occur:</p>
+
+<pre>    movw    #rtiint UserRTI	</pre>
+
+<p>In the absence of D-Bug12 (final application build, or using the simulator) the routine address is placed directly in the interrupt table in ROM:</p>
+<pre>    org     $FFF0
+    dw      rtiint</pre>
+<h2><a name="Operation of an Interrupt"></a>Operation of an Interrupt</h2>
+
+<p>In order for an interrupt to be serviced, several things must be true:</p>
+
+<div class="minor"><ul>
+  <li>The interrupt source must be requesting an interrupt. For internal peripherals, this indication is an interrupt <em>flag</em> bit being 1 in a status register.</li>
+  <li>Interrupts must be enabled for the device. For internal peripherals, this is accomplished by setting the appropriate interrupt <em>enable</em> bit in a control register. The
+local enable in the table at the start of this sectioin.</li>
+  <li>The interrupt must not be masked. For most interrupts, this means the I bit in the condition code register must be 0. At power up, the I bit is 1, disabling all
+maskable interrupts.</li>
+</ul></div>
+
+<p><center><img src="fig15-2.gif" width="331" height="188" /></center>
+Interrupt requests are checked before the execution of each instruction. If at least one request meets the criteria for being serviced, the highest priority request is
+serviced. The following actions are performed by the processor to service a request:
+<div class="minor"><ul>
+  <li>The PC (containing the address of the next instruction that would execute if not for the interrupt), registers Y, X, A, B, and the CCR are pushed, in that order,
+on the stack.</li>
+  <li>The I bit of the CCR is set. In the case of an XIRQ interrupt, the X bit of the CCR is set as well.</li>
+  <li>The PC is set to the interrupt vector, the address of the first instruction in the interrupt routine, which is fetched from the interrupt vector table.</li>
+  <li>Execution continues, with the first instruction in the interrupt service routine.</li>
+</ul></div>
+
+<p>Because this sequence sets the I bit of the CCR, no other maskable interrupt requests can be serviced until the I bit has been cleared. Execution of the <em><a name="rti">rti</a></em>
+instruction at the end of the interrupt service routine restores all the registers to their state when the interrupt occurred. Because the I bit was originally clear, the
+<em>rti </em>instruction clears the bit allowing another maskable interrupt to be serviced.</p>
+
+<p>The term <em>interrupt latency </em>refers to the amount of time from signaling an interrupt until the first instruction of the interrupt service routine is executed. The worst
+case latency of the highest priority interrupt is the execution time of the slowest instruction plus the time to service the interrupt request. This time is 9 clocks, or
+3/8 microsecond with a 24 MHz system clock. Lower priority interrupts can be delayed by the time it takes for higher priority interrupt service routines to execute,
+and can demonstrate considerably higher latency. It is desirable to keep interrupt service routines as short as possible, or to enable interrupts within the routines,
+with the <em>cli</em> instruction, as quickly as possible without harming program integrity.</p>
+
+<p>The <em><a name="wai">wai</a></em> instruction can be used to reduce latency. This instruction saves the processor state in anticipation of an interrupt, then it waits until an interrupt occurs.
+Latency is reduced to 6 clocks when an interrupt occurs while waiting. For this reason, code that is doing nothing but waiting for an interrupt to occur should
+execute the <em>wai&nbsp;</em>instruction.</p>
+
+<p>A more extreme measure is to execute the <em><a name="stop">stop</a></em> instruction while waiting for an interrupt. This instruction also stops all clocks causing power consumption to drop
+to near zero.  The <em>stop</em> instruction is enabled by clearing the S bit in the condition code register, otherwise the <em>stop </em>instruction behaves like a two cycle NOP.
+There are some additional considerations when the <em>stop</em> instruction is used - since the clocks are stopped, interrupt sources which rely on presence of the clock
+will be disabled. Only the RESET, XIRQ, or IRQ signals will cause the stopped state to be exited. There is also a startup delay if the crystal clock generator is
+used rather than an external clock source, while the clock stabilizes.</p>
+<h2><a name="Writing Interrupt Service Routines"></a>Writing Interrupt Service Routines</h2>
+
+<p>We will consider a small program which uses a single interrupt service routine. The program is shown in file <a href="part015.asm">part015.asm</a>, and is shown and described below. The
+interrupt source is the Real Time Interrupt, which is configured to generate an interrupt every 1.024ms. The Real Time Interrupt will be discussed in detail in a
+later section.</p>
+
+<p>It is important to correctly initialize and configure the system before enabling interrupts. Any missing step will cause the program to fail. The following steps must
+be performed:</p>
+
+<div class="minor"><ul>
+  <li>Initialize the stack pointer</li>
+  <li>Set up interrupt vector(s)</li>
+  <li>Initialize variables that the interrupt service routines expect to have meaningful values</li>
+  <li>Configure devices which will be generating interrupts.</li>
+  <li>Enable the devices so that they can generate interrupt requests</li>
+  <li>Execute <em>cli</em> to allow interrupt requests to be processed.</li>
+</ul></div>
+
+<p>Viewing the example:</p>
+<pre>#include registers.inc
+;       org     $FFFE           ; Set starting location if a standalone application
+;       dw      entry
+;       org     $FFF0           ; Set interrupt vector if a standalone application
+;       dw      rtiisr          </pre>
+
+<p>Initialize the interrupt vector in ROM for the simulator or for final application distribution where D-BUG12 is not present.</p>
+<pre>        org     RAMSTART        ; Data Memory (internal RAM, location $1000)
+count:  ds      2               ; Counter of RTIs</pre>
+
+<p>The interrupt counter will need to be set to zero before we start counting.</p>
+<pre>        org     PRSTART         ; Program memory (internal RAM at $2000)
+entry:                          ; Program starts here
+        ; Initialization code
+        lds     #RAMEND         ; Initialize stack pointer ($2000)</pre>
+
+<p>It's a good idea to initialize the stack pointer first, in case we forget and invoke a subroutine during initialization.</p>
+<pre>        movw    #0 count        ; Initialize count
+        movb    #$23 RTICTL     ; set RTI rate to 1.024ms (8 MHz crystal frequency)
+        bset    CRGINT #$80     ; Enable RTI interrupts</pre>
+
+<p>The msb of CRGINT is the RTIE bit, the Interrupt Enable bit for real time interrupts.</p>
+<pre>        movw    #rtiisr UserRTI ; Set the RTI interrupt vector to rtiint</pre>
+
+<p>We need to call the D-BUG12 routine to set the interrupt vector when D-Bug12 is used (or we are using the D-Bug12 emulation in the simulator).</p>
+<pre>        cli                     ; Enable interrupts</pre>
+
+<p>All is done, so we can enable interrupts by clearing the I bit in the condition code register.</p>
+
+<p>In this example, all the work is done in an interrupt routine. This is called an <em>interrupt driven</em> program. So what do we execute after doing the <em>cli?</em> We execute an
+<em>idle process</em>, code that does nothing, but runs whenever no interrupt routine is executing. </p>
+<pre>        ; Main routine -- Idle Process
+idle:   wai
+        bra     idle</pre>
+
+<p>Because we always want to minimize interrupt latency, the idle process repeatedly executes the <em>wai</em> instruction.</p>
+
+<p>The interrupt service routine must do whatever processing is necessary because of the condition causing the interrupt. It must also clear the condition that caused
+the interrupt. Failure to do this will cause the interrupt routine to be entered again immediately after it returns. This is not a good thing.</p>
+<pre>; RTI Interrupt Service Routine
+rtiisr: bclr   CRGFLG #~$80      ; clear the RTI interrupt flag</pre>
+
+<p>Clear the RTI interrupt flag by writing a 1 to it while it is set. This is the typical technique for clearing interrupt flags in Freescale microcontrollers.</p>
+<pre>        ldd     count           ; increment the count
+        addd    #1
+        std     count</pre>
+
+<p>We've done the data processing. Since all registers are preserved, we don't need to worry about altering accumulator D or the condition code register. In
+microcontrollers which do not save registers with an interrupt, we would have to save and restore any registers we alter.</p>
+<pre>        rti</pre>
+
+<p>Done!</p>
+
+<p>If our application had many different interrupt service routines, we might
+want to minimize the latency of lower priority interrupts by clearing the
+I bit in the condition code register as soon as permissible. In this case
+we can clear the bit as soon as we remove the condition causing the interrupt
+to be signaled - clearing the interrupt flag. We will be safe from problems
+as long as the interrupt service routine returns before the next real time
+interrupt occurs. A bug (or is it a feature?) of some microcontrollers
+(perhaps not the current HCS12s) is that there is a small delay between
+clearing an interrupt flag and having the interrupt dispatching logic not
+see the presence of the interrupt. We solve the problem by adding a short
+delay before the <em>cli</em>. The "minimum latency" routine becomes:</p>
+<pre>rtiint: bclr   CRGFLG #~$80      ; clear the RTI flag
+        nop                     ; short delay
+        cli                     ; allow other interrupts to occur
+        ldd     count           ; increment the count
+        addd    #1
+        std     count
+        rti</pre>
+
+<p>This program can be run in the simulator in two ways. As a
+stand-alone program from this <a href="part015ax.html">link</a> or
+using a DBUG-12 emulation (which can be run on a development board as
+well) from this <a href="part015x.html">link</a>. In the latter case,
+the simulator's "student mode" is not used. A D-Bug12 emulator is
+loaded as well as the program which runs first to initialize the system. The
+simulation will then halt at a jump to location $2000, the start of
+the program. Pressing the <em>Go</em> button a second time will start the simulation of
+the program. Stop the program at any time and compare the execution
+time with the value <em>count</em> stored at location $1000. If you
+try to step program execution, you will probably get frustrated by the
+<em>wai</em> instruction. Press the <em>Step Over</em> button at this point
+and simulation time will advance until the next interrupt occurs.</p>
+
+<p>Because interrupts are handed first by D-Bug12, you will see the D-Bug12 interrupt service routine execute first, then it passes control back to the application
+routine. If you run the stand-alone program, the program interrupt
+service routine will be entered directly via the interrupt vector.</p>
+<h2><a name="CLanguage"></a>Writing I/O Routines in the C
+Language</h2>
+<p>I/O routines pose special challenges when written in the C language. These
+problems are generally overcome via extensions to the C language. Unfortunately,
+the extensions are non-standard. Every compiler vendor has variations and
+code is not portable between implementations. This section will use the
+free GNU C compiler. Issues not addressed by a compiler are typically handled
+by having assembly language modules. The problems are:</p>
+<div class="minor"><ul>
+  <li>There needs to be a mechanism to assign variables to specific memory locations
+  to handle the I/O registers and the interrupt vector table.
+  <li>There needs to be a way to declare a function to be an interrupt service
+  routine.
+  <li>There needs to be a mechanism to insert machine instructions that otherwise
+  would not be generated from the C language, such as CLI.
+  <li>The <strong>volatile</strong> keyword must be implemented because variables can change their values
+  on their own (status registers) or via another execution thread (such as
+  an interrupt service routine).
+</ul></div>
+<p>We will consider a C program that maintains a count of RTI interrupts. It is the same program that we just covered as an assembly language program! The source code is in <A href="part015a.c">part015a.c</a>.</p>
+<p>The GNU compiler doesn't allow assigning variables to specific memory locations,
+although it does allow reserving address ranges. Macros are used to handle
+I/O registers and interrupt vectors. For instance, the CRGINT register
+is defined</p>
+<pre>#define CRGINT *(volatile unsigned char *)(0x38)</pre>
+<p>which makes it a volatile, unsigned character at location $38. A function
+is declared to be an interrupt service routine by placing <em>__attribute((interrupt)) </em>before its name in the declaration. Finally, assembler instructions can
+be inserted with <em>__asm__ __volatile__ (&quot; xxx &quot;)</em> where <em>xxx</em> is the desired instruction. Knowing these features, and using the provided
+include files for the I/O registers and interrupt vectors, we can write
+the interrupt service routine:</p>
+<pre>void __attribute__((interrupt)) rtiint(void) {
+    CRGFLG = 0x80; /* clear the RTI flag */
+    count++;
+}</pre>
+<p>The variable <em>count</em> is defined:</p>
+<pre>static volatile int count;</pre>
+<p>Note that the <em>volatile </em>keyword is needed since the variable will change its value in an interrupt
+service routine yet might be accessed elsewhere.</p>
+<p>The main function initializes the RTI module, enables interrupts, and then
+runs in a loop that just waits for interrupts, just like the assembler
+version:</p>
+<pre>int main() {
+     /* Initialize the RTI */
+     count = 0;
+     RTICTL = 0x23;   /* Set RTI Rate to 1.024ms */
+     CRGINT |= 0x80;  /* Enable RTI interrupts */
+     /* Initialize the interrupt vector */
+     UserRTI = (unsigned int)&amp;rtiint;
+     __asm__ __volatile__ (&quot; cli &quot;); /* enable interrupts */
+     while (1) { /* repeat forever */
+           __asm__ __volatile__ (&quot; wai &quot;);
+     }
+     return 0; /* We never reach this */
+}</pre>
+<h2><a name="Power Up Reset"></a>Power Up Reset</h2>
+
+<p>A reset causes the microcontroller to load its power up state. Resets can occur because of power up, external request on the *RESET pin, or a COP or clock
+monitor reset. All except for the COP and clock monitor reset use the vector at $FFFE. When a reset occurs, the following initialization happens:</p>
+
+<div class="minor"><ul>
+  <li>Operating mode and memory map are reset. These will be described later, in the section on <a href="part021.html">memory interfacing</a>.</li>
+  <li>The PLL (described previously), COP and RTI are disabled. These are described <a href="part017.html">later</a>.</li>
+  <li>HPRIO register is initialized with $F2 so the external IRQ interrupt has highest priority</li>
+  <li>Ports are configured as inputs, except for those dedicated to memory interface. Pullup resistors may or may not be enabled -- see port description for details.</li>
+  <li>Timer, serial interfaces, and the analog to digital converter are turned off</li>
+  <li>CPU is initialized by setting the PC register to the value of the reset "interrupt" vector, and the X, I, and S bits of the CCR are set. All other registers are
+indeterminate, including the stack pointer.</li>
+</ul></div>
+
+<p>On the Dragon12-Plus evaluation board, the "Reset" switch is
+connected to the RESET input on the microcontroller. Since the
+Dragon12-Plus reset vector points to the D-Bug12 boot loader program,
+application programs do not start directly out of reset. A switch on
+the board can force execution to start in the EEPROM rather than
+D-Bug12. The boot loader also can be used to program the flash EEPROM
+or use the board as a BDM "pod" to debug a second 68HCS12 in-circuit.
+The simulator resets to the true power up state unless run in
+"student" mode, which simplifies usage by performing some initial
+configuration. </p>
+
+<p>There can be problems in resetting the microcontroller if there are spurious reset inputs during power-up. To solve this problem a circuit must be used on *RESET
+to hold it low until the power supply voltage is high enough for reliable operation. There are simple integrated circuits to accomplish this, such as the <a href="../motorola/mc34164rev1f.pdf">Freescale
+MC34164</a> or other family members. A similar MC34064 is used on the
+Dragon12-Plus board. The MC34064 or the Reset switch can assert *RESET.</p>
+<h2><a name="Software Interrupts and Traps"></a>Software Interrupts and Traps</h2>
+
+<p>There are two traps in the 68HC12. The first is the <a name="swi"><em>swi</em></a> instruction and the second is the unimplemented instruction trap which appears in the CPU12 reference
+manual as the <em><a name="trap">trap</a></em> instruction.<em> </em>There are 202 unimplemented instructions, each two bytes long. The <em>swi</em> instruction is a single byte. Both of these instructions
+work the same way - they never execute, but instead cause a trap to occur. The <em>swi</em> instruction causes the vector at $FFF6 to be used, while the unimplemented
+instructions cause the vector at $FFF8 to be used. In either case, after return from the interrupt service routine, execution continues with the instruction after the
+<em>swi</em> or unimplemented instruction. </p>
+
+<p>Debuggers, such as D-Bug12, use single byte software interrupt instructions to implement breakpoints. When breakpoints have been set and the debugger is told to
+proceed in execution, it replaces the first byte of all the breakpoint instructions with <em>swi</em> instructions. When the breakpoint is reached, the trap occurs, and program
+execution stops.</p>
+
+<p>D-Bug12 also uses the <em>swi</em> instruction as a general way to return to the monitor. It can be used to signify the end of programs during debugging. Application
+programs which specify an SWI interrupt vector lose the use of the SWI instruction for debugger operation. For this reason it is best for applications to use the
+<em>trap</em> instructions.</p>
+
+<p>So why would one want to use either of these in an application program? The major use is to implement a subroutine call when the target address is not known
+when the program is committed to ROM. It is the typical way to access monitors or operating systems. </p>
+
+<p><strong>Interesting side note</strong>: The "unimplemented instructions" are obviously really implemented; they cause a trap. However there are some truly unimplemented
+instructions, namely those with invalid operands. Execution of these instructions is undefined, however the simulator will catch them and stop execution.</p>
+
+<p><strong><a name="References">References</a>:</strong> <em><a href="../motorola/S12CPU15UG.pdf">HCS12 Core Users Guide</a></em>, sections 6 and 10, and <a href="../motorola/9S12DP256BDGV2.pdf"><em>MC9S12DP256B Device Users Guide</em></a>. </p>
+
+<p>Continue with <em><a href="part016.html">External Interrupts</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

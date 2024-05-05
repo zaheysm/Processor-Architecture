@@ -1,0 +1,26 @@
+
+as12, an absolute assembler for Motorola MCU's, version 1.2h
+
+                        ; Firs.asm
+                        ;
+                        ; Author:               Zahi Masarwa
+                        ; Student Number:       040985420
+                        ; Date:                 15 Oct 2021
+                        
+                        ; Purpose:              Program to add up the following values: $26 + $37 - $01
+                        ;
+1000                            org     $1000   ; Origin for Program data
+1000 81                 p:      db      $81     ; first addend is at memory location p
+1001 37                 q:      db      $37     ; second addend is memory location q
+1002                    r:      ds      1       ; sum will be stored at memory location r
+                        
+2000                            org     $2000   ; Origing for Program Instructions
+2000 b6 10 00                   ldaa    p       ; load value at p into accumulator a
+2003 bb 10 01                   adda    q       ; load value at q into accumulator a
+2006 43                         deca            ; subtract 1: A = A - 1
+2007 7a 10 02                   staa    r       ; store accumulator A at location r
+                                end             ; stop program exucation
+
+Executed: Tue Oct 12 21:24:53 2021
+Total cycles: 13, Total bytes: 12
+Total errors: 0, Total warnings: 0

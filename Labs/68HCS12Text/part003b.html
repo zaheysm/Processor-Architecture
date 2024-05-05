@@ -1,0 +1,154 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Central Processing Unit</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table border="1" width="100%" cellpadding="1" cellspacing="1">
+<tr><td><a href="part002.html">Previous Section</a></td>
+<td><a href="part004.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part003" target="q">Questions</a></td>
+<td>
+   <a href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>Central Processing Unit</h1>
+
+<ul>
+  <li><a href="part003.html">CPU Overview </a></li>
+  <li><a href="part003a.html">CPU Demonstration</a></li>
+  <li><span class="selected">68HC12 CPU Specifics</span>
+  <ul>
+    <li><a href="#CPU Programming Model">CPU Programming Model</a></li>
+    <li><a href="#Memory Interface">Memory Interface</a></li>
+    <li><a href="#Execution Phase Overlap">Execution Phase Overlap</a></li>
+    <li><a href="#Example Program Revisited">Example Program Revisited</a></li>
+  </ul>
+  </li>
+</ul>
+
+<p>The Freescale 68HC12 CPU is somewhat more complex than the example CPU
+described in the previous section. However the basics of how the CPU functions
+are the same.</p>
+
+<h2><a name="CPU Programming Model"></a>CPU Programming Model</h2>
+
+<p><img src="fig3b-1.gif" width="329" height="210" align=bottom alt="Programming model courtesy of Freescale"/></p>
+
+<p>For writing programs, the connections between registers are not important,
+since these details are handled by the CPU's control unit. What is important
+to the programmer are registers that are directly accessible via CPU instructions.
+These registers represent the Programmer's Model of the CPU. The 68HC12
+has five 16 bit registers and three 8 bit register as follows:</p>
+
+<div class="minor"><ul>
+  <li> Registers A and B are 8 bit accumulators, which are used to hold results of 8 bit calculations. Most instructions can select either A or B accumulators
+with equal ease and speed.</li>
+  <li> Register D is register A and B concatenated, so that the upper byte of D is A and the lower byte of D is B. Register D is used to hold results of 16 bit
+arithmetic calculations. Because the registers' latches are shared it is not possible to use register D independently from A and B.</li>
+  <li>Registers IX and IY are index registers. Index registers are mainly used to calculate memory addresses. Most instructions can select either the IX or IY
+index registers with equal ease and speed.</li>
+  <li>Register SP is the stack pointer. The stack pointer is used to implement a first-in last-out stack which is used for temporary data storage and to implement
+subroutine and interrupt routine control structures.</li>
+  <li>Register PC is the program counter.</li>
+  <li>The Condition Code Register contains eight Boolean flags that complete the processor "state". The H (half carry), N (negative), Z (zero), V (overflow),
+and C (carry) bits are loaded based on the results of instruction execution and are used for conditional program branching and will be discussed in the
+section <a href="part008.html">Condition Codes and Branch Instructions</a>. The S bit enables the STOP instruction. The X and I bits are used to enable and disable <a href="part015.html">interrupt
+processing</a>.</li>
+</ul></div>
+
+<h2><a name="Memory Interface">Memory Interface</a></h2>
+<p>The 68HC12 provides two alternative memory interfaces that trade off speed for simplicity. <em>Normal Expanded Narrow</em> mode has 16 address lines and 8 data
+lines, like the example. The 68HC12 has internal 16 bit data paths, so it automatically converts read and write requests for 16 bit words into two sequential
+byte requests.</p>
+
+<p>In <em>Normal Expanded Wide</em> mode, there are 16 address and 16 data lines. Memory is organized to be 16 bits wide, such that an even address byte and the next
+higher odd address byte will be read or written at the same time. Requests to access a single byte are implemented by an additional control line, <em>LSTRB</em>. If the
+processor wants to access a word starting at an odd byte, the memory interface performs two consecutive byte references. <em>Normal Expanded Wide</em> mode can
+access memory with twice the throughput (data rate) if the data is 16 bits and aligned on an even address. </p>
+
+<p>The processor has an instruction queue that reads instructions two bytes at a time, always at even addresses. It is the programmer's responsibility to align word data on even locations for optimal performance.</p>
+
+<p>The memory interface will be discussed thoroughly in <a href="part021.html">its own section</a>.</p>
+<h2><a name="Execution Phase Overlap">Execution Phase Overlap</a></h2>
+<p>The 68HC12 overlaps the execution phase with the fetch of the next instruction for maximum performance. Details of the operation of the instruction queue
+and execution overlap can be found in the<A
+HREF="../motorola/S12CPUV2.pdf"><em>S12CPUV2 Reference Manual</em></a> in chapter 4 as well as in the descriptions of the individual instructions in the
+instruction glossary, Appendix A.</p>
+<h2><a name="Example Program Revisited">Example Program Revisited</a></h2>
+
+<p>You can run the example program on the 68HCS12 simulator. This tool simulates the operation of a 68HCS12 and allows viewing registers and memory locations. </p>
+
+<p>Start the simulator by <a href="part3x.html">selecting this link</a>. When the simulator starts, the PC register is initialized to $2000, the start of the program. Note that all the display
+fields show values in hexadecimal by default. The Next Instruction window shows the next instruction to execute is LDAA $1000. The bottom of the display
+shows the contents of memory, starting at location $1000, which is the memory containing the data. The following processor state was copied to this
+textbook from the simulation using the simulator's "Snapshot" feature:</p>
+
+<table border="1" width="100%" cellpadding="1" cellspacing="1">
+<tr valign="top"><td>
+      <pre>A=00 B=00 (D=0000) X=0000 Y=0000 PC=2000 SP=0000 FLAGS=SX-I----
+
+2000  LDAA  $1000 (=$25)
+
+Addr  0  1  2  3  4  5  6  7   8  9  A  B  C  D  E  F   '0123456789ABCDEF'
+1000  25 37 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |%7              |</pre>
+      </td></tr></table>
+<p>Press the <strong>Step</strong> button once. The LDAA instruction
+will execute, and accumulator A will contain the data value that is
+location $1000. The value of the program counter has advanced to
+$2003, and the next instruction is now the ADDA instruction.</p>
+
+<table border="1" width="100%" cellpadding="1" cellspacing="1"><tr valign="top"><td>
+      <pre>A=25 B=00 (D=2500) X=0000 Y=0000 PC=2003 SP=0000 FLAGS=SX-I----
+
+2003  ADDA  $1001 (=$37)
+
+Addr  0  1  2  3  4  5  6  7   8  9  A  B  C  D  E  F   '0123456789ABCDEF'
+1000  25 37 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |%7              |</pre>
+      </td></tr></table>
+<p>Press the <strong>Step</strong> button three more times, and
+   observe the contents of the registers after each instruction step.
+   After the execution of ADDA:</p>
+
+<table border="1" width="100%" cellpadding="1" cellspacing="1"><tr valign="top"><td>
+      <pre>A=5c B=00 (D=5c00) X=0000 Y=0000 PC=2006 SP=0000 FLAGS=SX-I----
+
+2006  DECA
+
+Addr  0  1  2  3  4  5  6  7   8  9  A  B  C  D  E  F   '0123456789ABCDEF'
+1000  25 37 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |%7              |</pre>
+      </td></tr></table>
+<p>After the execution of DECA:</p>
+
+<table border="1" width="100%" cellpadding="1" cellspacing="1"><tr valign="top"><td>
+      <pre>A=5b B=00 (D=5b00) X=0000 Y=0000 PC=2007 SP=0000 FLAGS=SX-I----
+
+2007  STAA  $1002
+
+Addr  0  1  2  3  4  5  6  7   8  9  A  B  C  D  E  F   '0123456789ABCDEF'
+1000  25 37 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |%7              |</pre>
+      </td></tr></table>
+
+<p>The final instruction, the STAA instruction, will have stored
+      the final value of accumulator A into memory location $1002.
+      </p>
+
+<table border="1" width="100%" cellpadding="1" cellspacing="1"><tr valign="top"><td>
+      <pre>A=5b B=00 (D=5b00) X=0000 Y=0000 PC=200a SP=0000 FLAGS=SX-I----
+
+200a  BGND
+
+Addr  0  1  2  3  4  5  6  7   8  9  A  B  C  D  E  F   '0123456789ABCDEF'
+1000  25 37 5b 00 00 00 00 00  00 00 00 00 00 00 00 00  |%7[             |</pre>
+      </td></tr></table>
+   
+<p>The next instruction will be &quot;BGND&quot;, which is opcode 0.
+Since the memory has been initialized to zero before the program is loaded, any unused locations will appear to be BGND instructions. The BGND instruction indicates the end of the program. You can close the simulator window now. However if you wish to repeat the execution, select <em>Reset</em> from the <em>File</em> menu. Note that this resets the CPU, not the memory. To change the memory locations, you will need to use the <em>Edit Address</em> and <em>Value</em> fields and the <strong>Store</strong> button. </p>
+<p>Reference: <a href="../motorola/S12CPUV2.pdf"><em>S12CPUV2
+Reference Manual</em></a></p>
+<p>Continue with <em><a href="part004.html">Develoment Tools</a></em></p><p>Return to the <a href="index.html">Index</a>.</p></body></html> 

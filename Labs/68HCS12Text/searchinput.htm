@@ -1,0 +1,163 @@
+<!DOCTYPE HTML PUBLIC "-//SoftQuad//DTD HTML 2.0 + extensions for HoTMetaL Light 3.0 19960703//EN" "hmpro6.dtd">
+<HTML> 
+  <HEAD>
+<!--
+rainer eschen web.solutions
+                    
+W E B E T I S E R (tm) - More sex appeal for the Web.
+
+Copyright (c) 1997-2003 by rainer eschen web.solutions. All rights reserved.
+Version 7.0 (11/12/2002)
+Code can be changed.-->	 <TITLE>Webetiser&#153;: Advanced Client-side Search Engine (Input) </TITLE>
+	 <SCRIPT SRC="searchBaseFrame.js"></SCRIPT><SCRIPT SRC="searchDefinitions.js"></SCRIPT> <SCRIPT LANGUAGE="Javascript1.3"><!--
+if (navigator.appName.indexOf("Microsoft") > -1) {
+  var searchRef = parent.searchoutput.document.body.createTextRange();
+  var foundForward = false;
+  var foundBackward = false;
+  var searchoutputURL = parent.searchoutput.document.location.href;
+  window.onerror = errorMsg;
+}
+
+function errorMsg() {
+  searchoutputURL = "";
+  alert("I had an internal problem. It's fixed now. Try last function again.");
+}
+
+function forward() {
+  if (window.document.query.input.value == "") {
+    alert("Please, enter a keyword first.");
+  } 
+  else {
+    if (navigator.appName.indexOf("Microsoft") > -1) {
+		if (searchoutputURL != parent.searchoutput.document.location.href) {
+		  searchRef = parent.searchoutput.document.body.createTextRange();
+        foundForward = false;
+        foundBackward = false;
+        searchoutputURL = parent.searchoutput.document.location.href;
+      }
+      if (foundBackward == true) {
+        foundBackward = false;
+        searchRef.moveStart("character",1);
+      }
+      var caseSensitive = ((window.document.query.caseSensitive.checked == true) ? 4 : 0)
+      if (searchRef.findText(window.document.query.input.value,1000000000,caseSensitive) == true) {
+        foundForward = true;
+	     searchRef.select();
+        searchRef.scrollIntoView();
+        searchRef.moveStart("character",1);
+      }
+      else { 
+	     alert("No (additional) entry found.");
+      }
+	 }
+	 else {
+      if (parent.searchoutput.find(window.document.query.input.value,
+                               window.document.query.caseSensitive.checked,false) == false) {
+	     alert("No (additional) entry found.");
+		};
+    }
+  }
+}
+
+function backward() {
+  if (window.document.query.input.value == "") {
+    alert("Please, enter a keyword first.");
+  } 
+  else {
+    if (navigator.appName.indexOf("Microsoft") > -1) {
+		if (searchoutputURL != parent.searchoutput.document.location.href) {
+		  searchRef = parent.searchoutput.document.body.createTextRange();
+        foundForward = false;
+        foundBackward = false;
+        searchoutputURL = parent.searchoutput.document.location.href;
+      }
+      if (foundForward == true) {
+        foundForward = false;
+	     searchRef.moveEnd("character",-1);
+      }
+      var caseSensitive = ((window.document.query.caseSensitive.checked == true) ? 4 : 0)
+      if (searchRef.findText(window.document.query.input.value,-1000000000,caseSensitive + 1)==true) {
+        foundBackward = true;
+        searchRef.select();
+        searchRef.scrollIntoView();
+       searchRef.moveEnd("character",-1);
+      }
+      else { 
+	     alert("No (additional) entry found.");
+      }
+    }
+	 else {
+      if (parent.searchoutput.find(window.document.query.input.value,
+                              window.document.query.caseSensitive.checked,true) == false) {
+	     alert("No (additional) entry found.");
+	   };
+    }
+  }
+}
+
+function searchButton() {
+  var currentStatus = parent.defaultStatus;
+  parent.defaultStatus = "Creating hitlist...";
+  search(document.query.input,document.query.input.value,document.query.beginOfWord.checked,document.query.caseSensitive.checked,document.query.hitlist.checked,document.query.noInputForm.checked);
+  parent.defaultStatus = currentStatus;
+  searchoutputURL = "";
+}
+//--></SCRIPT> 
+  </HEAD> 
+  <BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#000000" VLINK="#606060"
+	ONLOAD="init()" BACKGROUND="background.jpg" ALINK="#C0C0C0"> 
+	 <FORM NAME="query" ONSUBMIT="searchButton(); return false"> 
+		<TABLE CELLPADDING="0" CELLSPACING="0" ALIGN="CENTER"> 
+		  <TR> 
+			 <TD><IMG SRC="pixel.gif" HSPACE="0" VSPACE="0" ALIGN="LEFT"
+				WIDTH="130" HEIGHT="1" BORDER="0"><INPUT TYPE="CHECKBOX" NAME="hitlist"><FONT
+				SIZE="1" FACE="Verdana,geneva,ARIAL,HELVETICA,Helv,Swiss">Keep
+				hitlist</FONT></TD> 
+			 <TD></TD> 
+		  </TR> 
+		  <TR> 
+			 <TD><IMG SRC="pixel.gif" HSPACE="0" VSPACE="0" ALIGN="LEFT"
+				WIDTH="100" HEIGHT="1" BORDER="0"><INPUT TYPE="CHECKBOX"
+				NAME="noInputForm"><FONT SIZE="1"
+				FACE="Verdana,geneva,ARIAL,HELVETICA,Helv,Swiss"> No input form</FONT></TD> 
+			 <TD></TD> 
+		  </TR> 
+		  <TR> 
+			 <TD><IMG SRC="pixel.gif" HSPACE="0" VSPACE="0" ALIGN="LEFT"
+				WIDTH="70" HEIGHT="1" BORDER="0"><INPUT TYPE="TEXT" NAME="input"
+				SIZE="50"></TD> 
+			 <TD><IMG SRC="pixel.gif" HSPACE="0" VSPACE="0" ALIGN="LEFT"
+				WIDTH="10" HEIGHT="1" BORDER="0"><INPUT TYPE="IMAGE" NAME="Start search"
+				SRC="search.gif" ALT="Start search" BORDER="0"><A HREF="searchhelp.htm"
+				TARGET="searchoutput"><IMG SRC="help.gif" ALT="Show help" BORDER="0"
+				HSPACE="10" WIDTH="26" HEIGHT="27"></A></TD> 
+		  </TR> 
+		  <TR> 
+			 <TD><IMG SRC="pixel.gif" HSPACE="0" VSPACE="0" ALIGN="LEFT"
+				WIDTH="40" HEIGHT="1" BORDER="0"><INPUT TYPE="CHECKBOX" NAME="beginOfWord"
+				CHECKED="CHECKED">
+				<FONT SIZE="1" FACE="Verdana,geneva,ARIAL,HELVETICA,Helv,Swiss">Begin of
+				word</FONT></TD> 
+			 <TD><IMG SRC="pixel.gif" HSPACE="0" VSPACE="0" ALIGN="LEFT"
+				WIDTH="10" HEIGHT="1" BORDER="0"><FONT SIZE="1"
+				FACE="Verdana,geneva,ARIAL,HELVETICA,Helv,Swiss">Tip: and, or, not, (
+				)</FONT></TD> 
+		  </TR> 
+		  <TR> 
+			 <TD><IMG SRC="pixel.gif" HSPACE="0" VSPACE="0" ALIGN="LEFT"
+				WIDTH="10" HEIGHT="1" BORDER="0"><INPUT TYPE="CHECKBOX"
+				NAME="caseSensitive"><FONT SIZE="1"
+				FACE="Verdana,geneva,ARIAL,HELVETICA,Helv,Swiss">Case-sensitive</FONT></TD> 
+			 <TD><SCRIPT LANGUAGE="Javascript1.3"><!-- //Works only with Netscape 4.x, MSIE >= 4.0
+  if ((navigator.userAgent.indexOf("Opera") == -1) && 
+      !((navigator.appName.indexOf("Netscape") > -1) && (navigator.appVersion.substring(0,1) > 4))) {
+    document.write('<IMG SRC="pixel.gif" HSPACE="0" VSPACE="0" ALIGN="LEFT" WIDTH="10" HEIGHT="1" BORDER="0">' +
+	                '<A HREF="javascript:forward()"><IMG SRC="forward.gif" ALT="First or next position in text"' +
+                   ' BORDER="0" HSPACE="0" WIDTH="19" HEIGHT="14"></A>' +
+                   '<A HREF="javascript:backward()"><IMG SRC="backward.gif" ALT="Last or previous position in text"' +
+                   ' BORDER="0" HSPACE="5" WIDTH="17" HEIGHT="14"></A>');
+  }
+//--></SCRIPT> </TD> 
+		  </TR> 
+		</TABLE> </FORM> </BODY>
+</HTML>

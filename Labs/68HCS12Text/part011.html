@@ -1,0 +1,325 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>The Stack and Subroutines</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table BORDER="1" WIDTH="100%">
+<tr><td><a href="part010.html">Previous Section</a></td>
+<td><a href="part012.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part011" target="q">Questions</a></td>
+<td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>The Stack and Subroutines</h1>
+
+<ul>
+  <li><a href="#Using the Stack for Temporary Data Storage">Using the Stack for Temporary Data Storage</a></li>
+  <li><a href="#Subroutines, and Why to Use Them">Subroutines, and Why to Use Them</a></li>
+  <li><a href="#Subroutine Parameters">Subroutine Parameters and Results</a></li>
+  <li><a href="#The Stack and High Level Languages">The Stack and High Level Languages</a></li>
+  <li><a href="#Accessing Subroutines in D-BUG12">Accessing Subroutines in D-BUG12</a></li>
+</ul>
+
+<p>A stack provides a fast and convenient means for temporarily saving data in memory. The fundamental feature of a stack is its <em>LIFO</em> (Last In First Out)
+access - data is removed from a stack in the opposite order from which the data was added.</p>
+
+<p>The 68HC12 has features to assist in the creation of a system stack. The stack pointer (SP) register contains the address of the topmost byte in the stack.
+There are instructions to add and remove data from the stack, as well as implement subroutines. These will be discussed later in this section.</p>
+
+<p>In the 68HC12, the stack grows toward lower memory locations. For this reason, the stack pointer is initialized with the address 1 + the last location in
+RAM. If the variable data is allocated locations starting at the lowest memory address and moving up, that will allow for the maximum space for the RAM.
+We will place program code starting at location $2000, which is RAM but we will consider it to be ROM for development purposes. The internal RAM from
+$1000 to $1FFF will be used as RAM, so we initialize the stack pointer to $2000:</p>
+<pre>    lds     #$2000</pre>
+
+<p>The illustration below shows the stack pointer with a value of $2000, so the stack is considered to be <em>empty</em>.</p>
+
+<p><img src="fig11-1.gif" width="301" height="142" align=bottom /></p>
+
+<p>When we save values on the stack, called a <em>push</em>, the stack pointer is decremented and the value is saved at the location pointed to by the decremented stack
+pointer value. Pushing $21 on the stack:</p>
+
+<p><img src="fig11-2.gif" width="301" height="143" align=bottom /></p>
+
+<p>Every push operation works the same way. Pushing $32 on the stack, the value gets stored at $1FFE:</p>
+
+<p><img src="fig11-3.gif" width="301" height="142" align=bottom /></p>
+
+<p>As values are pushed on the stack, the space taken by the stack increases, advancing toward lower addresses. If we allocate variables in memory starting at
+the lowest address, then the maximum possible stack space is obtained - the addresses between the last variable allocated and the top of RAM memory.</p>
+
+<p>Removing values from the stack is called a <em>pop</em> or <em>pull</em> operation. The value is fetched from the location pointed to by the stack pointer, then the stack
+pointer is incremented. Performing a pull:</p>
+
+<p><img src="fig11-4.gif" width="301" height="142" align=bottom /></p>
+
+<p>Note that the value at $1FFE remains the same, however it would be overwritten if we did a push at this time. Performing another pull fetches the last value
+from the stack, leaving the stack <em>empty</em>, our original state:</p>
+
+<p><img src="fig11-5.gif" width="301" height="142" align=bottom /></p>
+
+<p>Important points to remember about using a stack:</p>
+
+<div class="minor"><ul>
+  <li>Values are pulled off the stack in the opposite order they were pushed on the stack</li>
+  <li>Pushes and pulls must be balanced - there must be a pull for each push and a push for each pull.</li>
+  <li>The maximum number of values allowed on the stack at any one time is determined by the space between the last variable allocated in RAM and the
+original stack pointer value.</li>
+</ul></div>
+
+<h2><a name="Using the Stack for Temporary Data Storage"></a>Using the Stack for Temporary Data Storage</h2>
+
+<p>The following instructions are provided to push and pull values between the stack and registers:</p>
+
+<div class="boxed"><ul>
+  <li><em><a name="psha">psha</a></em> - Push accumulator A contents on the stack</li>
+  <li><em><a name="pshb">pshb</a></em> - Push accumulator B contents on the stack</li>
+  <li><em><a name="pshc">pshc</a></em> - Push the condition code register contents on the stack</li>
+  <li><em><a name="pshd">pshd</a></em> - Push accumulator D contents on the stack</li>
+  <li><em><a name="pshx">pshx</a></em> - Push index register X contents on the stack</li>
+  <li><em><a name="pshy">pshy</a></em> - Push index register Y contents on the stack</li>
+  <li><em><a name="pula">pula</a></em> - Pull accumulator A contents from the stack</li>
+  <li><em><a name="pulb">pulb</a></em> - Pull accumulator B contents from the stack</li>
+  <li><em><a name="pulc">pulc</a></em> - Pull the condition code register contents from the stack</li>
+  <li><em><a name="puld">puld</a></em> - Pull accumulator D contents from the stack</li>
+  <li><em><a name="pulx">pulx</a></em> - Pull index register X contents from the stack</li>
+  <li><em><a name="puly">puly</a></em> - Pull index register Y contents from the stack</li>
+</ul></div>
+
+<p>The push instructions involving 16 bit registers subtract two from the stack pointer before storing the value at the word location specified by the stack
+pointer. Likewise,  the pull instructions involving 16 bit registers add two to the stack pointer after fetching the value at the word location specified by the
+stack pointer. The <em>pulc</em> instruction has the restriction that it cannot cause the X bit to change from a zero to a one.</p>
+
+<p>Using the push and pull instructions provides a convenient way to save values that are in registers when that register is temporarily needed for another task.
+For example, consider the problem where all registers are being used, and it is necessary to multiply accumulator D by a constant value. However the <em>emul</em>
+instruction requires the use of register Y and does not allow an immediate operand. We can save the contents of index register Y on the stack (assuming the
+stack has been initialized):</p>
+<pre>    pshy               ; save value of Y
+    ldy     #const
+    emul               ; D &lt;- D*const
+    puly               ; restore value of Y</pre>
+
+<p>The pre/post increment/decrement indexed addressing modes along with the move instructions allow pushing and pulling byte or word values from memory,
+and pushing constant (immediate mode) values:</p>
+<pre>    movb    $800 1,-SP  ; Push contents of byte location $800
+    movw    2,SP+ $802  ; Pull word into byte location $802
+    movb    #27 1,-SP   ; Push constant byte 27</pre>
+
+<p>We can also use indexed addressing to "peek" at values in the stack, without pulling them off:</p>
+<pre>    ldaa    0,SP        ; Load accumulator A with top of stack byte</pre>
+
+<p>This gives the same results as:</p>
+<pre>    pula                ; Pull stack into A
+    psha                ; then push value back on stack</pre>
+<h2><a name="Subroutines, and Why to Use Them"></a>Subroutines, and Why to Use Them</h2>
+
+<p>Lets say we have a certain code sequence we use repeatedly in a program, for example this sequence that swaps the top four bits with the bottom four bits in
+accumulator A, which we will call nibbleswap:</p>
+<pre>    clrb    
+    lsla
+    rolb
+    lsla
+    rolb
+    lsla
+    rolb
+    lsla
+    rolb
+    aba</pre>
+
+<p>We could save memory by having only one copy of this code in memory. Then we could jump to the code when we wanted to execute it. However how
+would we get back to where we were afterwards? We need to tell the nibbleswap routine where to return. We can use register X to hold the return address.
+To invoke the nibbleswap routine we can use the following code:</p>
+<pre>    ldx     #rp1       ; Load X with return address
+    jmp     nibbleswap ; go to the nibbleswap routine
+rp1:</pre>
+
+<p>Then we modify the nibbleswap routine to jump back to the location specified in register X:</p>
+<pre>nibbleswap:
+    clrb    
+    lsla
+    rolb
+    lsla
+    rolb
+    lsla
+    rolb
+    lsla
+    rolb
+    aba
+    jmp     0,X</pre>
+
+<p>We haven't seen the <em>jmp</em> instruction used with indexed addressing before. The target of a <em>jmp</em> instruction is the effective address,  so in this case execution
+jumps to the location specified by the contents of register X.</p>
+
+<p>It doesn't matter how many places invoke the nibbleswap code. At the end of execution, the processor will jump back to the correct place.</p>
+<pre>    ldx     #rp1       ; Load X with return address
+    jmp     nibbleswap ; go to the nibbleswap routine
+rp1:                   ;  which will return HERE
+...
+    ldx     #rp2       ; Load X with return address
+    jmp     nibbleswap ; go to the nibbleswap routine
+rp2:                   ;  which will return HERE
+...
+    ldx     #rp3       ; Load X with return address
+    jmp     nibbleswap ; go to the nibbleswap routine
+rp3:                   ;  which will return HERE
+...</pre>
+
+<p>Routines which can be accessed from many locations are called <em>subroutines</em>. Most processors, including the 68HC12, provide special instructions to <em>call</em> (go
+to) subroutines and return from them. The return address is saved on the stack rather than in a register, so the stack pointer must be initialized before using
+these instructions.</p>
+
+<div class="boxed"><ul>
+  <li><em><a name="bsr">bsr</a></em> - branch to subroutine</li>
+  <li><em><a name="jsr">jsr</a></em> - jump to subroutine</li>
+  <li><em><a name="rts">rts</a> - </em>return from subroutine</li>
+</ul></div>
+
+<p>The <em>bsr </em>and <em>jsr</em> instructions first push the address of the following instruction on the stack, then they branch or jump to the location specified by the operand.
+In this respect, they behave like the <em>bra</em> and <em>jmp</em> instructions. The <em>rts</em> instruction pulls a word from the top of the stack and jumps to that location. </p>
+
+<p>There are two additional subroutine instructions, <em>call</em> and <em>rtc</em>,  which are used in the special circumstance of expanded (&gt;64k) memory. These will be
+discussed in the section <em><a href="part021e.html">External Memory/Peripheral Interfacing</a></em>.</p>
+
+<p>We can invoke the nibbleswap subroutine with either</p>
+<pre>    jsr     nibbleswap</pre>
+
+<p>or</p>
+<pre>    bsr     nibbleswap</pre>
+
+<p>if the address is in range. The final nibbleswap routine uses <em>rts </em>to return:</p>
+<pre>nibbleswap:
+    pshb             ; save B
+    clrb    
+    lsla
+    rolb
+    lsla
+    rolb
+    lsla
+    rolb
+    lsla
+    rolb
+    aba
+    pulb            ; restore B
+    rts</pre>
+
+<p>The <em>pshb</em> <em>pulb</em> pair of instructions save the original contents of accumulator B and restore them before returning. It is a good practice in subroutines to
+preserve the contents of all registers that aren't being used to pass data in and out of the subroutine. This brings us to the next topic.</p>
+<h2><a name="Subroutine Parameters"></a>Subroutine Parameters and Results</h2>
+
+<p>Most subroutines require either values passed to them (called <em>parameters</em>) or produce results that need to be passed back to the calling routine. There are
+three basic methods to pass this data between a subroutine and its calling routine: registers, memory, or the stack.</p>
+
+<p>When the amount of data is small enough to fit in the registers, the best method is using the registers to pass the data. This method tends to be simple and
+fast. The subroutine should start with a comment specifying which registers are to contain parameters and which will return results. All other registers should
+be unaltered by the subroutine to avoid potential corruption of data in the calling routines. The following subroutine multiplies the value in accumulator A by
+5/4, returning the result in D:</p>
+<pre>
+m54:    ; Multiply A by 5/4, returning result in D
+        ldab    #5
+        mul
+        pshx
+        ldx     #4
+        idiv
+        tfr     X D
+        pulx
+        rts</pre>
+
+<p>It saves and restore register X, so none of the registers not used for either parameters or results are altered. We can use this subroutine in this manner:</p>
+<pre>        ldaa    foo        ; Multiply foo by 5/4, putting result in word bar
+        bsr     m54
+        std     bar</pre>
+
+<p>Data can be passed to and from subroutines using memory. However it is difficult to manage memory in an efficient manner. Since memory is a limited
+resource, it is important that memory locations used for data passing be reused in many subroutines. The following example uses a byte location b1 and a
+word location w1 to pass data:</p>
+<pre>m54:    ; Multiply (b1) by 5/4, putting result in (w1)
+        pshd
+        ldab    #5
+        ldaa    b1
+        mul
+        pshx
+        ldx     #4
+        idiv
+        stx     w1
+        pulx
+        puld
+        rts
+...
+        movb    foo b1    ; multiply foo by 5/4, putting result in bar
+        bsr     m54
+        movw    w1 bar</pre>
+
+<p>There is basically no reason to use the memory method if the data fits within the registers. However it is also possible to use the stack to pass the additional
+data that doesn't fit in the registers. This approach is typically used by compilers. It can be tedious to use with assemblers because the position of the value on
+the stack must be calculated manually, and care must be taken to keep the stack balanced. In this example, the parameter is passed on the stack, while the
+result is passed in a register:</p>
+<pre>m54:   ; Multiply byte on stack by 5/4, putting result in D
+       ldab    #5
+       ldaa    2,SP      ; parameter on stack, under return address
+       mul
+       pshx
+       ldx     #4
+       idiv
+       tfr     X D
+       pulx
+       rts
+...
+       movb    foo 1,-SP  ; push foo on stack
+       bsr     m54
+       ins                ; correct stack pointer to remove foo
+       std     bar</pre>
+<h2><a name="The Stack and High Level Languages">The Stack and High Level Languages</a></h2>
+
+<p>All modern high level languages, such as C, provide semantics that implement subroutines. In most cases the parameters are passed to the subroutine on the
+stack, and a single value may be returned from the subroutine, which is typically passed in a register. However the exact implementation is determined by the
+compiler, and the user doesn't need to be concerned with the details.</p>
+
+<p>In the C language, variables declared inside of a subroutine are, in general, "temporary" variables that only exist during the execution of the subroutine. These
+temporary variables are typically implemented by storing their values on the stack. The variables are stored in a <em>stack frame</em> which is a sequence of memory
+locations allocated on the stack at the start of the subroutine. This technique can also be used by assembly language programmers. The allocation is
+accomplished by subtracting the number of bytes needed from the stack pointer (say 10 bytes):</p>
+<pre>    leas    -10,SP</pre>
+
+<p> Variables are accessed by using stack pointer plus offset indexed addressing mode:</p>
+<pre>    ldd     4,SP ; Load contents of the 4<sup>th</sup> and 5<sup>th</sup> bytes in the stack frame into D
+
+    staa    3,SP   ; Store accumulator A into 3<sup>rd</sup> byte into the stack frame.</pre>
+
+<p>At the end of the subroutine, the stack frame is deleted by adding to the stack pointer:</p>
+<pre>    leas    10,SP</pre>
+<h2><a name="Accessing Subroutines in D-BUG12"></a>Accessing Subroutines in D-Bug12</h2>
+
+<p>The D-Bug12 debugging program provides a number of subroutines which can be accessed from programs. Of course, if the program is to eventually be
+released as part of an embedded microcontroller without D-Bug12 present, these routines will not work. Thus they should only be used for development
+purposes. The routines and the interface to them is described in
+detail in the <em><a href="../motorola/DB12RG4.pdf">Reference Guide
+for D-Bug12</a></em> starting on page 79. The routines are designed so
+they can be accessed from either Freescale's C (not the one on the CD) or assembly code. Parameters are passed to the routines in registers and on the stack,
+with any return value in a register. Calling the subroutines is done through a table of the subroutine starting addresses. By using a table, different
+versions/releases of D-Bug12 can have the subroutines at different addresses. The only thing that must be kept constant is the address of the table entries. For
+example, the following sequence will write the character 'A' to the debugger console display:</p>
+<pre>    ldab    #'A      ; character to display
+    ldx     $EE86    ; Get address of subroutine
+    jsr     0,X      ; and call it</pre>
+
+<p>The use of index register X can be eliminated by using <em>jsr</em> with an indirect, indexed addressing mode:</p>
+<pre>    ldab    #'A             ; character to display
+    jsr     [$EE86-*-4,PC]  ; call subroutine</pre>
+
+<p>It is left as an exercise to show that these are equivalent.</p>
+
+<p>Those functions listed with the keyword <em>far</em> are accessed using the <em>call</em> instruction rather than the <em>jsr</em> instruction as they may be in a different memory bank
+than is currently selected. This will be explained in the section on <a href="part021e.html">Memory Expansion</a>.</p>
+
+<p>Continue with <em><a href="part012.html">Input/Output Overview</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

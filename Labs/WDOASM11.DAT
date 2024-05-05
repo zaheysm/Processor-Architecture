@@ -1,0 +1,30 @@
+rem Updated version of WDOASM11.BAT to work with new as11 commandline syntax
+rem Thanks go to Shu-Jen Chen of DeVry 
+rem ------------------------------------------------------------------------
+rem This batch file works with Eric Engler's AsmIDE only
+if not exist %1.asm goto no_such_file
+if exist %1.err del %1.err
+if exist %1.sym del %1.SYM
+if exist %1.lst del %1.lst
+AS11 %1.asm -o%1.s19 -L%1.lst -s%1.sym
+if errorlevel == 1 goto asmerror
+
+if exist %1.par goto done
+copy c:\Ep2IDE\default.par %1.par
+:done
+echo on
+rem  Assemble %1.asm successful
+goto end
+
+:asmerror
+copy %1.err %1.s19
+
+echo on
+rem  Error(s) found in the following line(s) of %1.asm 
+type %1.err
+goto end
+
+:no_such_file
+echo on
+rem  File %1.asm not found
+:end

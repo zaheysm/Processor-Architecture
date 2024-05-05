@@ -1,0 +1,487 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Alarm Clock Example</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table border="1" width="100%">
+<tr valign="top"><td><a href="part027e.html">Previous Appendix</a></td>
+<td><a href="c32.html">Next Appendix</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a HREF="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>Alarm Clock Example</h1>
+
+<p>The goal of this project is to design an alarm clock using the
+Dragon12-plus development board. It will also work on the older DRAGON12
+with one code change. Unlike the preceding examples, this one
+will be programmed in the C language. The features of the alarm clock
+are to be:</p>
+
+<div class="minor"><ul>
+  <li>4 digit LED display shows time in hours and minutes, choice of 24 hour or 12 hour AM/PM time formats. AM/PM indicator, alarm set indicator, and
+flashing (once per second) &quot;colon&quot; between the hours and minutes.</li>
+  <li>Brightness control potentiometer for the LED display.</li>
+  <li>Toggle switch to set AM/PM or 24 hour mode.</li>
+  <li>Clock flashes 88:88 when time not set.</li>
+  <li>Alarm switch (SW2) turns alarm set on and off, stops alarm if sounding, and changes display to show alarm time while depressed.</li>
+  <li>Time set switch (SW3) is held down to set the clock time.</li>
+  <li>Hour switch (SW4) will advance the hour of the time (SW3 pressed) or alarm (SW2 pressed). Auto-repeats every 1/4 second after initial ½ second.</li>
+  <li>Minute switch (SW5) will advance the minute of the time (SW3 pressed) or alarm (SW2 pressed). Auto-repeats as well.</li>
+</ul></div>
+
+<p align="center"><img src="DSD_1565_s.jpg" width="640" height="606"
+align=bottom /></p>
+
+<p>The brightness level is set via the potentiometer on the
+   Dragon12-plus board that is connected to ATD channel 7. The ATD is configured to continuously read that
+channel. The remainder of the clock functionality is implemented in timer channel interrupt service routines. Three timer channels are used:</p>
+
+<div class="minor"><ul>
+  <li>Channel 5, for which port T pin 5 is connected to the speaker on the board, is used to generate the speaker alarm tone.</li>
+  <li>Channel 6 is used to multiplex and refresh the LED display.</li>
+  <li>Channel 7 updates the time, checks for alarm time match, and handles the user interface (the switches).</li>
+</ul></div>
+
+<p>These interrupts are all time based, and not event driven. It would have been possible to perform all these functions within a single interrupt service routine,
+necessitating the use of only a single timer channel. It would have also been possible to use even more channels so that the time update and user interface had
+separate interrupt service routines. The "compromise" in this implementation was done solely for instructional reasons - as an example of how to use multiple
+interrupt service routines and as an example of how to combine functions into a single interrupt service routine. </p>
+
+<p>The final program can be seen <a href="clocke.c">here</a>. The S19
+   file is available <a href="clock.s19">here</a> which can be run on
+   the simulator but is best run on the Dragon12-plus board.</p>
+
+<p>The design will be examined as follows:</p>
+
+<div class="boxed"><ul>
+  <li><a HREF="#Hardware Assignments">Hardware Assignments</a> covers the electrical interface.</li>
+  <li><a HREF="#Data Declarations">Data Declarations</a> and Initialization will show how data structures are defined and initialized in C. (GNU C tools are used.)</li>
+  <li><a HREF="#The Function main">The Function <em>main</a></em> describes the use of the main function to initialize the I/O devices.</li>
+  <li><a HREF="#Speaker Operation">Speaker Operation</a> covers the timer channel 5 interrupt and how the alarm sound is controlled</li>
+  <li><a HREF="#LED Display">LED Display</a> discusses the timer channel 6 interrupt, and in particular how it is an enhancement of the example given in <a HREF="part017b.html">Time Multiplexed Displays</a>.</li>
+  <li><a HREF="#Keeping the Time">Keeping the Time </a>covers the time maintenance function of the timer channel 7 interrupt.</li>
+  <li><a HREF="#User Interface">User Interface</a> shows how to implement the button repeat as well as <em>chorded</em> buttons.</li>
+</ul></div>
+
+<h2><a NAME="Hardware Assignments">Hardware Assignments</a></h2>
+
+<p>The DIP switches and four push buttons are connected in parallel from the pins of port H to ground. The four push buttons connect to the four least significant
+bits of port H, and in order to use these, the corresponding DIP switches must be in their open (up) position. Pull-up resistors hold the voltage levels high unless
+a push button is depressed or a DIP switch is in its lower position. This means that the push buttons will appear logically inverted - a low, 0 level, means
+depressed while a high, 1 level, means released.</p>
+
+<p align="center"><img src="fig027f_3.gif" width="322" height="174"
+align=bottom /></p>
+
+<p>A small speaker is driven (via a buffer) from port T pin 5. A potentiometer on the board provides an adjustable voltage, 0 to 5 volts, to port AD pin 7 of the A
+to D converter.</p>
+
+<p>The LED display connects to ports B and P as described in the section <a HREF="part017b.html">Time Multiplexed Displays</a> and won't be discussed further here.</p>
+<h2><a NAME="Data Declarations">Data Declarations</a></h2>
+
+<p>The C language generates code to initialize all variables, except local variables (called <em>automatic</em> variables) when execution starts in the C runtime startup code
+that is automatically generated. By default, variables are initialized to zero. It is still necessary to initialize the I/O registers, which will do in the <em>main</em> function, the
+function that is invoked from the startup code.</p>
+
+<p>First there are macro definitions for various constants. These
+values are substituted for their names wherever they occur. The first group declares a mask for the
+four push buttons and then values for each of the four buttons.
+Because a zero means the button is depressed, these values appear inverted. But it will all be fine
+when the values get used later in the program.</p>
+<pre>#define PB_MASK  (0x0f)          // Mask for the push buttons
+#define ALARM_SW (PB_MASK &amp; ~8)  // Alarm switch
+#define TIME_SW  (PB_MASK &amp; ~4)  // Time set switch
+#define HOUR_SW  (PB_MASK &amp; ~2)  // Hour switch
+#define MINUTE_SW (PB_MASK &amp; ~1) // Minute Switch</pre>
+
+<p>The AMPM/24hour mode selection switch isn't inverted, so has a simple mask.</p>
+<pre>#define AMPM_SW  (0x80)</pre>
+
+<p>A decimal point in the display is the most significant bit. A
+   blank display value for the lookup table <em>segm_ptrn</em> is
+   0x20. (The value zero would display the numeral "0".) </p>
+<pre>#define POINT (0x80)
+#define BLANK (0x20) </pre>
+
+<p>Finally, some time constant macros are defined..</p>
+<pre>#define TB1MS ((unsigned)24000)    // 1ms time base of 24,000 instruction cycles
+				   // 24,000 x 1/24MHz = 1ms at 24 MHz bus speed
+#define INITIAL_REPEAT_DELAY (500) // 500ms to initial repeat
+#define REPEAT_DELAY (250)         // 250 ms repeat interval
+#define DEBOUNCE_DELAY (10)        // 10 ms debounce time</pre>
+
+<p>Unlike the <em>Time Multiplexed Displays</em> example which had a single 4-byte array to hold the LED display value (prior to conversion to segment values), the
+alarm clock will use four 4-byte arrays:</p>
+
+<p align="center"><img src="fig027f_1.gif" width="249" height="155"
+align=bottom /></p>
+
+<p>The two <em>TIME</em> arrays are for the current time while the two <em>ALARM</em> arrays are for the alarm time. The decimal point value is kept separate from the time value
+for ease of time calculations. The C declarations will actually declare the two <em>TIME </em>arrays as a single 8-byte array and the two <em>ALARM</em> arrays as a single
+8-byte array so that they each can be passed as a single argument to a function. Proper technique would be to define each as a structure containing two arrays,
+but this approach is simpler for a reader who might be "rusty" with
+the C language. Two macros are defined for the decimal point arrays, <em>disptdp</em> and
+<em>dispadp</em>, to be at 4 bytes into <em>dispt</em> and <em>dispa</em>, respectively. The display arrays are initialized for the time to be blank (it will flash between blank and 88:88) and
+the alarm time of 1:00. In addition, the two decimal points making the colon of the alarm time are turned on. They will always be on - they don't flash.</p>
+<pre>unsigned char select = 0; // current digit index being displayed
+unsigned char dispt[8] = {BLANK, BLANK, BLANK, BLANK}; // Time display digits
+#define disptdp ((unsigned char *)&amp;dispt[4]) // decimal points defined in last 4 locations
+unsigned char dispa[8] = {0, 1, 0, 0, 0, POINT, POINT, 0}; // Alarm display digits
+#define dispadp ((unsigned char *)&amp;dispa[4]) // decimal points defined in last 4 locations
+#define HOUR10    (0) // Some convenient aliases
+#define HOUR1     (1)
+#define MIN10     (2)
+#define MIN1      (3)
+#define PM        (4)
+#define flashsec  disptdp[1]
+#define flashsec2 disptdp[2]
+#define alarmon   disptdp[3]
+#define alarmon2  dispadp[3]</pre>
+
+<p>The variables are declared explicitly as unsigned or (where needed) signed and in as small as possible for their potential contents:</p>
+<pre>unsigned short millisecs;  // Millisecond counter (reset every second)
+unsigned char seconds;     // Seconds counter, reset every minute
+unsigned char debounce;    // time for debounce
+unsigned char lastButtons; // last button values
+signed short  repeat;      // repeat time
+signed short  repeatDelay; // Delay of next repeat
+unsigned char ledFraction; // counter for turning display on and off for brightness control
+unsigned char buzzing;     // The alarm is sounding</pre>
+
+<p>Tables are declared using the keyword <em>const</em>. The linker will put the tables in the EPROM memory rather than RAM:</p>
+<pre>//  Segment conversion table:
+const unsigned char segm_ptrn[] = {
+         0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,
+         0x7f,0x6f,0x77,0x7c,0x39,0x5e,0x79,0x71,
+         0x3d,0x76,0x74,0x1e,0x38,0x54,0x63,0x5c,
+         0x73,0x50,0x78,0x3e,0x1c,0x6e,0x08,0x40,
+         0x00,0x01,0x48,0x41,0x09,0x49};
+		
+// port value to select each LED digit   
+const unsigned char dspmap[] = {0x0e, 0x0d, 0x0b, 0x07};</pre>
+<h2><a NAME="The Function main">The Function <em>main</em></a></h2>
+
+<p>When the program is started, the variables and the stack are initialized, interrupts are enabled, and the function <em>main</em> is called. When <em>main</em> returns, there is a
+routine, an idle process, which executes. This routine is a simple loop-forever structure that executes the <em>WAI</em> instruction repeatedly. After disabling interrupts,
+the function initializes the PLL for a 24 MHz clock frequency.</p>
+<pre>int main(void) {
+    __asm__  __volatile__ (" sei ");    /* Disable interrupts */
+        
+    SYNR = 2;   /* This would be 5 for the older DRAGON12 */
+    while ((CRGFLG &amp; 0x8) == 0);
+    CLKSEL = 0x80;</pre>
+
+<p>Then the three interrupt vectors are initialized. If the vectors were in ROM, a different technique for initialization would be necessary - they would have be
+defined in a small assembly language file.</p>
+<pre>    UserTimerCh5 = (unsigned int) &amp;timer5;
+    UserTimerCh6 = (unsigned int) &amp;timer6;
+    UserTimerCh7 = (unsigned int) &amp;timer7;</pre>
+
+<p>Ports B, P, and H are initialized. Since the default port direction is input, initializing port H isn't necessary but is done here just to document the operation.</p>
+<pre>    PTP = 0xff;     // Turn off 7 segment display
+    DDRB = 0xff;    // portb = output
+    DDRP = 0xff;    // portp = output
+    DDRH = 0x00;    // porth = input</pre>
+
+<p>The timer has channels 5, 6, and 7 initialized as Output Compare Channels with interrupts enabled. The value stored in TCTL1 will be explained in the next
+section on speaker operation.</p>
+<pre>    TSCR = 0x80;   // enable the timer
+    TIOS = 0xe0;   // select t5, t6, t7 as an output compares
+    TMSK1 = 0xe0;  // enable interrupts for t5, t6, t7
+    TCTL1 = 0x0c;  // configure t5 for eventual toggling of PT5
+                   // when alarm sounds</pre>
+
+<p>The Analog to Digital converter is initialized to perform continuous 8-bit conversions of channel 7. By doing this, it will not require an interrupt service routine,
+and the most recent voltage value can be read at any time from ADR00H.</p>
+<pre>    ATD0CTL2 = 0x80; // Enable ATD operation
+    ATD0CTL3 = 0x08; // single conversion performed
+    ATD0CTL4 = 0x80; // 8 bit conversion
+    ATD0CTL5 = 0x27; // Continuously (SCAN=1) read channel 7</pre>
+
+<p>Initialization is complete, so interrupts can be re-enabled.</p>
+<pre>    __asm__  __volatile__ (" cli ");    /* Enable interrupts */
+}</pre>
+
+<p><a NAME="Speaker Operation"><h2>Speaker Operation</a></h2>
+
+<p>Timer channel 5, which drives the speaker, has this simple interrupt service routine:</p>
+<pre>void INTERRUPT timer5(void) {
+    TFLG1 &amp;= 0x20; // clear flag
+    TC5 += TB1MS*2;
+}</pre>
+
+<p>An interrupt will occur every two milliseconds. With <em>TCTL1</em> initialized to 0x0c, <em>OM5</em> and <em>OL5</em> are both 1, and the output latch will be set to 1 on each
+interrupt. Thus the output will not change and there will be no sound. The alarm is turned on by clearing OM5, so that the output will toggle on each interrupt.
+This will produce an output tone of 250 Hz. The function <em>alarmCheck</em> sees if the alarm is turned on and the alarm time matches the current time. In that case it
+turns the alarm on. The function is called every minute, and if the alarm condition is not met it turns the alarm off. This means the alarm will sound for at the
+maximum one minute.</p>
+<pre>void alarmCheck(void) {
+    if (alarmon &amp;&amp;
+          dispa[HOUR10]==dispt[HOUR10] &amp;&amp;
+          dispa[HOUR1]==dispt[HOUR1] &amp;&amp;
+          dispa[MIN10] == dispt[MIN10] &amp;&amp;
+          dispa[MIN1] == dispt[MIN1] &amp;&amp;
+          ((PTH&amp;AMPM_SW) == 0 || dispa[PM] == dispt[PM])) {
+        TCTL1 &amp;= ~8; // turn on alarm sound
+        buzzing++;
+    } else {
+        alarmOff();
+    }
+}</pre>
+
+<p>The user can also turn the alarm off from the user interface. Turning the alarm off requires setting OM5. This is done in the function <em>alarmOff:</em></p>
+<pre>void alarmOff(void) {
+    TCTL1 |= 8;  // turn off alarm sound
+    buzzing = 0;
+}</pre>
+
+<p>The variable <em>buzzing</em> provides a convenient way to know if the alarm is sounding without testing the timer channel control bit. This makes it easy to change the
+alarm method without having to change every place in the program that might want to know the alarm status.</p>
+<h2><a NAME="LED Display">LED Display</a></h2>
+
+<p>The basic operation of the LED display was described in the section <a HREF="part017b.html">Time Multiplexed Displays</a> and won't be discussed further here. However there are a
+couple differences in operation. First, here is the interrupt service routine:</p>
+<pre>void INTERRUPT timer6(void) {
+    TFLG1 &amp;= 0x40;                  // Next interrupt in 1ms
+    TC6 += TB1MS;
+    __asm__  __volatile__ (" cli ");    /* Enable interrupts */
+    select = (select+1) &amp; 3; // Go to next digit
+    PORTB = 0; // While we change, at least, we want display off
+    if (ledFraction + ADR00H &gt; 255) { // display
+        PTP = (PTP &amp; 0xf0) | dspmap[select];
+        if ((PTH &amp; PB_MASK &amp; ~ALARM_SW) == 0) { // Display Alarm Value
+            PORTB = segm_ptrn[dispa[select]] | dispadp[select];
+        } else { // Display current value
+            PORTB = segm_ptrn[dispt[select]] | disptdp[select];
+        }
+    } 
+    if (select==0) ledFraction += ADR00H; // Save updated fraction
+}</pre>
+
+<p>The difference from the earlier section is the addition of three <em>if</em> statements. Well, there is also a language difference, but the same basic algorithm is followed
+here. Look at the first <em>if</em>, "ledFraction + ADR00H &gt; 255". At the end of every cycle of four digits being displayed, <em>ADR00H</em> is added to <em>ledFraction</em>. Since
+this is a byte variable, <em>ledFraction+ADR00H&gt;255</em> represents overflow from adding <em>ADR00H</em>. The percentage of the time overflow occurs is proportional to
+the value of <em>ADR00H</em>, which is the voltage on the potentiometer. Since the <em>if</em> statement controls whether or not the LED display is illuminated, the potentiometer
+setting will control the level of illumination. For instance, if the potentiometer is 1/4 the span, the voltage will be 1.25 volts and the <em>ADR00H</em> value will be
+roughly 64. Overflow will occur once every four display cycles, so the display will be illuminated 1/4 of the time.</p>
+
+<p>The second <em>if</em> statement will display the alarm time if the Alarm Switch is depressed, otherwise it will display the current time. In either case the value stored in
+register <em>PORTB</em> is that of the time digit indexing <em>segm_ptrn</em> (the table that maps the digit values into display segments) OR'ed with the decimal point value.</p>
+<h2><a NAME="Keeping the Time">Keeping the Time</a></h2>
+
+<p>The timer channel 7 interrupt service routine does many things. The interrupt occurs every millisecond yet it manipulates the display to flash the colon (and
+perhaps 88:88) twice a second, update the time once a minute, check the alarm time once a minute, and poll the push buttons which repeat four times a second.
+Because of the complexity, let's start with a flow chart.
+<table WIDTH="100%" CELLPADDING="1" CELLSPACING="1">
+<tr><td><img src="fig027f_2.gif" width="436"
+height="703" align=left /></td>
+<td>A variable <em>millisecs</em> counts the millisecond interrupts. It can be seen that the
+function <em>halfSecond</em> only gets called if millisecs=500 or 1000. If
+millisecs=1000, it gets reset to zero.</p>
+
+<br /><br />
+<p>The 10 minute position is then checked for being either 8 or blank. Either of
+these means the clock isn't set but is flashing between 88:88 and blank. In this
+case we don't want to advance the time. Otherwise <em>seconds</em> is incremented.</p>
+
+<br /><br />
+
+<p>If seconds=60, one minute has passed, so seconds is reset to zero and the
+minutes are incremented in the function <em>incrementM</em>. This function returns a
+non-zero value if the minutes wrapped from 59 to 00. In that case <em>incrementH</em>
+is called to increment the hours.</p>
+
+<br /><br />
+
+<p>In any case, as long as the clock is set, <em>alarmCheck</em> is called to check the
+alarm status once a minute.</p>
+
+<br /><br />
+
+<p>Finally, once each interrupt, <em>buttonCheck </em>is called to check the user interface
+buttons.</td></tr></table>
+</p>
+<br /><br />
+<pre>void INTERRUPT timer7(void) {
+    TFLG1 &amp;= 0x80;                  // Next interrupt in 1ms
+    TC7 += TB1MS;
+    __asm__  __volatile__ (" cli ");    /* Enable interrupts */
+    millisecs++;     // Increment milliseconds
+    if (millisecs == 500) { // On the half second
+        halfSecond();
+    } else if (millisecs == 1000) { // On the second
+        millisecs = 0;
+        if (dispt[MIN10] != BLANK &amp;&amp; dispt[MIN10] != 8) { // clock is set
+            if (++seconds == 60) {  // On the minute
+                seconds = 0;
+                if (incrementM(dispt)) incrementH(dispt);
+                alarmCheck();
+            }
+        }
+        halfSecond();
+    }
+    buttonCheck();
+}</pre>
+
+<p>The code for <em>halfSecond</em> flashes the colon, and if the clock is not set will flash 88:88. It does this by exclusive-or'ing the display digit with the value for
+BLANK exclusive-or'ed with the value for 8. That means that if the value was 8 it will become BLANK and if it was BLANK it will become 8.</p>
+<pre>void halfSecond(void) {
+    flashsec2 = (flashsec ^= POINT); // flash the colon
+    if (dispt[MIN10] == BLANK || dispt[MIN10] == 8) { // clock not set (flashing 8's)
+        dispt[HOUR10] ^= (BLANK ^ 8);
+        dispt[HOUR1] ^= (BLANK ^ 8);
+        dispt[MIN10] ^= (BLANK ^ 8);
+        dispt[MIN1] ^= (BLANK ^ 8);
+    }
+}</pre>
+
+<p>The functions for incrementing the minutes and hours are used for both the time and alarm, so the address of the appropriate display array is passed as a
+parameter. The minute function returns a 1 if the time wrapped to 00, necessitating incrementing the hours when updating the time.</p>
+<pre>int incrementM(unsigned char *disp) {
+    if (++disp[MIN1] == 10) {
+        disp[MIN1] = 0;
+        if (++disp[MIN10] == 6) {
+            disp[MIN10] = 0;
+            return 1; // carry into next digit
+        }
+    }
+    return 0;
+}</pre>
+
+<p>The code for incrementing the hours is a bit more involved. When displaying 24-hour time, the display wraps from 23 to 00. When displaying AM/PM time, the
+display wraps from 12 to 1, with the ten hour digit blank until 10:00 is reached. In addition, in AM/PM mode the PM indicator is toggled when the wrap
+occurs.</p>
+<pre>void incrementH(unsigned char *disp) {
+    if (++disp[HOUR1] == 10) {
+        disp[HOUR1] = 0;
+        if (PTH &amp; AMPM_SW) {
+            disp[HOUR10] = (disp[HOUR10]+1) &amp; 0x0f; // we want blank to go to 1, 1 to 2
+        } else {
+            disp[HOUR10]++;
+        }
+    }
+    if (PTH &amp; AMPM_SW) {
+        if (disp[HOUR1] == 3 &amp;&amp; disp[HOUR10] == 1) { // Wrap at 13 o'clock
+            disp[HOUR10] = BLANK;
+            disp[HOUR1] = 1;
+        } else if (disp[HOUR1] == 2 &amp;&amp; disp[HOUR10] == 1) { // AMPM switches at 12
+            disp[PM] ^= POINT; // Toggle AMPM indicator
+        }
+    } else {
+        if (disp[HOUR1] == 4 &amp;&amp; disp[HOUR10] == 2) { // wrap at 2400
+            disp[HOUR10] = 0;
+            disp[HOUR1] = 0;
+        }
+    }
+}
+</pre>
+<h2><a NAME="User Interface">User Interface</a></h2>
+
+<p>As we have seen before with the <a HREF="part027c.html">16 button keypad</a>, it is necessary to de-bounce the buttons so that a single user press doesn't appear as a sequence of
+presses. In this project, there will be a wait of 10 milliseconds (defined in the constant <em>DEBOUNCE_DELAY</em>) before a new button state is considered valid. In
+addition, this project will have key repeat - if a button is kept depressed for 500 milliseconds (<em>INITIAL_REPEAT_DELAY</em>) it will behave as though it has been
+pressed a second time, and if the button is kept depressed for additional time it will repeat the behavior every 250 milliseconds (<em>REPEAT_DELAY</em>).</p>
+
+<p align="center"><img src="fig027f_4.gif" width="316" height="333"
+align=bottom /></p>
+
+<p>If the buttons haven't changed in 10 milliseconds, the various button combinations are tested. If a match occurs, the appropriate code is executed. The flow
+charts below show the operation of the Minute+Time buttons, for which the other combinations of buttons have similar implementation, and the Alarm button
+alone. The time button alone is also checked, and if it alone is pressed then powerOnCheck is called.</p>
+
+<p align="center"><img src="fig027f_5.gif" width="461" height="327"
+align=bottom /></p>
+
+<p>This is the entire C function, <em>buttonCheck</em>:</p>
+<pre>void buttonCheck(void) {
+    unsigned char temp = PTH &amp; PB_MASK; // only look at bottom switches
+    if (lastButtons != temp) { // new button combination
+        lastButtons = temp;
+        debounce = DEBOUNCE_DELAY; // wait before processing
+        repeat = -1;  // signify initial depression
+        repeatDelay = INITIAL_REPEAT_DELAY;
+        return;
+    }
+    if (debounce != 0) { // we are debouncing
+        debounce--;
+        return;
+    }
+    if (temp == (TIME_SW &amp; MINUTE_SW)) { // Minute Time set
+        if (repeat &gt; 0) { // waiting for repeat
+            repeat--;
+        } else {
+            repeat = repeatDelay;
+            repeatDelay = REPEAT_DELAY;
+            powerOnCheck();
+            seconds = 0;    // reset seconds
+            incrementM(dispt);
+        }
+    } else if (temp == (TIME_SW &amp; HOUR_SW)) { // Hour Time set
+        if (repeat &gt; 0) { // waiting for repeat
+            repeat--;
+        } else {
+            repeat = repeatDelay;
+            repeatDelay = REPEAT_DELAY;
+            powerOnCheck();
+            seconds = 0;    // reset seconds
+            incrementH(dispt);
+        }
+    } else if (temp == (ALARM_SW &amp; MINUTE_SW)) { // Minute Alarm set
+        if (repeat &gt; 0) { // waiting for repeat
+            repeat--;
+        } else {
+            repeat = repeatDelay;
+            repeatDelay = REPEAT_DELAY;
+            incrementM(dispa);
+        }
+    } else if (temp == (ALARM_SW &amp; HOUR_SW)) { // Hour Alarm set
+        if (repeat &gt; 0) { // waiting for repeat
+            repeat--;
+        } else {
+            repeat = repeatDelay;
+            repeatDelay = REPEAT_DELAY;
+            incrementH(dispa);
+        }
+    } else if (temp == TIME_SW) { // Just the Time button
+        powerOnCheck();
+    } else if (temp == ALARM_SW) { // Just the Alarm button
+        if (repeat &lt; 0) { // don't allow repeats
+            repeat = 0;
+            if (buzzing) {
+                alarmOff();
+            } else {
+                alarmon2 = (alarmon ^= POINT);
+            }
+        }
+    }
+}</pre>
+
+<p>Finally, here is the code for <em>powerOnCheck</em>. This function initializes the time display if it is currently flashing 88:88. The time is initialized to 1 AM. Note that the
+ten hour digit is the zero character for 24-hour time but blank for AM/PM time.</p>
+<pre>void powerOnCheck(void) {
+    if (dispt[MIN10] == BLANK || dispt[MIN10] == 8) { // clock not set
+        if (PTH &amp; AMPM_SW) {
+            dispt[HOUR10] = BLANK;
+            dispt[HOUR1] = 1;
+        } else {
+            dispt[HOUR10] = 0;
+            dispt[HOUR1] = 1;
+        }
+        dispt[MIN10] = 0;
+        dispt[MIN1] = 0;
+    }
+}
+</pre>
+
+<p>Continue with the <a href="c32.html">MC9S12C Family</a>.</p>
+
+<p>Return to the <a HREF="index.html">Index</a>.</p>
+
+</body>
+</html>

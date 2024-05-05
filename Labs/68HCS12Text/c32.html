@@ -1,0 +1,247 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>MC9S12C Family</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+<table border="1" width="100%">
+<tr valign="top"><td><a href="part027f.html">Previous Appendix</a></td>
+<td>Next Appendix</td>
+<td><a href="index.html">Index</a></td>
+<td><a HREF="search.htm" target="search">Search the Text</a></td></tr></table>
+
+<h1>MC9S12C Family</h1>
+
+<ul>
+<li><a href="#Introduction">Introduction</a></li>
+<li><a href="#Pinout Differences">Pinout Differences</a></li>
+<li><a href="#MC9S12C Ports">MC9S12C Ports</a></li>
+<li><a href="#Flash Memory Use">Flash Memory Use</a></li>
+<li><a href="#Development Tools">Development Tools</a></li>
+</ul>
+
+<h2><a name="Introduction"></a>Introduction</h2>
+<p>The MC9S12C family of 68HCS12 microcontrollers are much smaller
+   (Fewer pins) and lower cost than
+   the MC9S12DP256 discussed throughout this text. The 68HCS12
+   microcontroller is a modular design which allows Freescale
+   Semiconductor to produce many versions by adding or omitting
+   different modules. While the MC9S12C has fewer modules than the
+   MC9S12DP256,
+   what modules it does have work in the same way which makes it
+   fairly easy to switch among the variations to use what is available
+   or select the minimum cost device which meets the requirements
+   without requiring much, if any, rewriting of code.</p>
+
+<p>Various members of the MC9S12C family differ in the number of
+   package pins (48, 52, or 80), quantity of Flash EEPROM (16kB, 32kB,
+   64kB, 96kB, or 128kB), quantity of RAM (1kB, 2kB, or 4kB), and
+   presence of a CAN interface. One of the most popular variations is
+   the MC9S12C32 in the 48 pin package, with 32kB of Flash EEPROM, 2kB
+   of RAM, and the CAN interface. This microcontroller is used on (for
+   example) the
+   Wytec DRAGONfly12 and Technology Arts NanoCore12. The DRAGONfly12 and the Elektronik
+   Laden ChipS12 are available with the MC9S12C128 which has 128kB of
+   Flash EEPROM, and probably more important, 4kB of RAM. All of these
+   products consist of the microcontroller, crystal, and some
+   interfacing components mounted on a 40 pin DPI header, making them
+   convenient for inserting into projects.</p>
+
+<p>What's missing? Here's the list of missing modules:</p>
+<div class="boxed"><ul><li>No EEPROM (other than the Flash) which makes temporary
+   non-volatile storage more difficult.</li>
+<li>Except for the 80 pin package, no external memory bus, and even
+   then no extended memory addresses (XADDR pins).</li>
+<li>No IIC module, however the IIC interface can be implemented in
+   software.</li>
+<li>No BDLC module.</li>
+<li>Only one or, in some versions, no CAN module.</li>
+<li>Only one SPI module</li>
+<li>Only one SCI module</li>
+<li>Only one ATD module</li>
+<li>Fewer PWM channels</li>
+<li>The Timer module is missing the &quot;enhanced&quot; features,
+   none of which are discussed in the text, but might be useful in
+   some applications</li></ul></div>
+
+<p>For the details of the architecture, consult the Freescale
+   Semiconductor <a href="../motorola/MC9S12C128V1.pdf">MC9S12C
+      Family Data Sheet.</a></p> 
+
+<h2><a name="Pinout Differences"></a>Pinout Differences</h2>
+<p>The packages with reduced pin count (48 or 52 instead of 80) still
+   have the internal functions, but just are not brought out to the
+   pins. For this reason, the unavailable pins should be configured
+   as inputs with pull-ups enabled to minimize current. Two redundant
+   power pins, V<sub>DD2</sub> and V<sub>SS2</sub>, and the ATD low
+   reference, V<sub>RL</sub>, are also
+   missing from the reduced pin count packages.</p>
+
+<p>There is no usable external memory bus in the reduced pin count
+   packages because the signals R/*W, *LSTRB, MODA, MODB, and most of
+   ports A and B are not connected to pins. Some other port pins are
+   omitted as described in the next section, but the MODRR register is
+   used to route either PWM or timer module signals to port T to
+   regain some flexability lost by missing port P pins.</p>
+
+<h2><a name="MC9S12C Ports"></a>MC9S12C Ports</h2>
+
+<h3>Port AD</h3>
+
+<p>Port AD provides 8 multiplexed inputs to the single 10-bit analog
+   to digital converter module. But unlike the DP256 the port can also
+   be used as general purpose digital I/O -- the DP256 only allowed
+   digital input. Since the MC9S12C has far fewer available pins, this
+   allows any or all port AD pins to be used for digital outputs when
+   not being used as an analog to digital converter input pin.</p>
+
+<p>When used for digital input, the ATDDIEN register enables each
+   bit for digital operation. Additionally, Port AD has registers typical of the other general
+   purpose digital I/O ports -- PTAD, PTIAD, DDRAD, RDRAD, PERAD, and
+   PPSAD. When the DDRAD bit is 1, digital output from PTAD is
+   enabled. When the ATDDIEN bit is 1, then
+   digital input is enabled from PORTAD and PTIAD. When the ATDDIEN bit is 0, these bits will read as 1.</p>
+
+<p>No matter what the port AD settings, the analog to digital
+   converter input remains connected and will measure the voltage at
+   the pin. Pullup and pulldown is only available when ATDDIEN bit is
+   1.</p>
+		     <img src="figc32-1.gif"   />
+   
+<h3>Ports A, B, and E</h3>
+<p>While these ports are fully brought out to pins in the 80 pin
+   package, most are not brought out in the reduced pinout packages,
+   and in these packages it is not possible to use these ports for
+   external memory.</p>
+<p>
+In the reduced pinout packages, only the port E pins for *XIRQ (pin
+0), *IRQ (pin 1), ECLK (pin 4), and *XCLKS (pin 7) are available. This
+allows access to the two general external interrupts, the clock, and
+the configuration input as to whether there is an external clock
+source or crystal.</p>
+<p>Ports A and B are are only available on a few pins. In the 48 pin
+   package, only PA0 and PB4 are on pins. The 52 pin package also
+   brings out PA1 and PA2.</p>
+
+<h3>Ports T and P</h3>
+<p>The MC9S12C contains the timer module described in this
+   text (without the enhancements which aren't described in the text)
+   and 6 PWM channels, 0 through 5. In the 80 pin package, all timer and PWM functions can be accessed and used simultaneously.
+   However the 48 pin package has all the port T pins (timer)
+   but only the pin for bit 5 on port P (PWM). The 52 pin package adds
+   pins 3 and 4. Note that the 80 pin package has a full 8 pins for
+   port P even though there are only PWM channels for pins 0 through
+   5.</p>
+
+<p>To use the PWM channels in the reduced pinout packages, there is a
+   multiplexer so that either the timer or PWM channels can be
+   selected for pins 0 through 4 on port T. The MODRR register is used
+   for the selection, with bits 0 through 4 selecting the source for
+   pins 0 through 4. A 1 bit selects the PWM channel. The register is
+   initialized to 0.</p>
+
+
+<h3>Ports S and M</h3>
+<p>Port S is four bits wide (bits 0 through 3) and port M is 6 bits
+   wide (bits 0 through 5), with the remaining bit positions not
+   implmemented.</p>
+
+<p>These ports are traditionally for bus interface modules. In the
+   MC9S12C, port S has the single SCI module on pins 0 (RXD) and 1
+   (TXD), while port M has the single SPI on pins 2 (MISO), 3 (*SS),
+   4 (MOSI), 5 (SCK). The versions with the CAN interface use pin 0
+   (RXCAN) and pin 1 (TXCAN).</p>
+
+<p>On the reduced pin count packages,these signals are the only ones
+   brought out to pins. In the 80 pin package, PS2 and PS3 are also
+   brought out.</p>
+
+<h3>Port J</h3>
+
+<p>Port J supports the key interrupt function, but is only two bits
+   wide (bits 6 and 7), and only brought out to pins in the 80 pin
+   package.</p>
+
+<h2><a name="Flash Memory Use"></a>Flash Memory Use</h2>
+<p>The following flash memory resources are provided:</p>
+<table border="1" cellpadding="1" cellspacing="1">
+   <tr><th>Version</th><th>Flash
+      Size</th><th>Flash Pages</th><th>Page Window</th><th>Pages at
+      addresses<br />
+      $0000-$7FFF</th></tr>
+   <tr><td>GC16</td>
+      <td>16k</td>
+      <td>$3F</td>
+      <td>$3F when PPAGE odd</td>
+      <td>None</td>
+   </tr>
+   <tr><td>C32, GC32</td>
+      <td>32k</td>
+      <td>$3E, $3F</td>
+      <td>$3E (PPAGE even)<br /> $3F (PPAGE odd)</td>
+      <td>$3E at $4000-$7FFF</td></tr>
+   <tr><td>C64, GC64</td>
+      <td>64k</td>
+      <td>$3C - $3F</td>
+      <td>$3C + (PPAGE modulo 4)</td>
+      <td>$3D - $3E</td></tr>
+   <tr><td>C64, GC64</td>
+      <td>64k</td>
+      <td>$3C - $3F</td>
+      <td>$3C + (PPAGE modulo 4)</td>
+      <td>$3D - $3E</td></tr>
+   <tr><td>C96, GC96</td>
+      <td>96k</td>
+      <td>$3A - $3F</td>
+      <td>$30 + (PPAGE modulo 8)</td>
+      <td>$3D - $3E</td></tr>
+   <tr><td>C128, GC128</td>
+      <td>128k</td>
+      <td>$38 - $3F</td>
+      <td>$30 + (PPAGE modulo 8)</td>
+      <td>$3D - $3E</td></tr>
+</table>
+<p>Only the least significant bits of PPAGE are used to determine
+   which page appears in the windows at $8000-$BFFF. With PPAGE
+   defaulting to 0, that provides a very convenient default in the C32
+   version of having the upper 32k of address space be the full 32k
+   bytes of flash EEPROM.</p>
+<p>The ROMON and ROMHM bits determine if the pages at addresses $0000
+   through $7FFF will be visible on versions which support this. Note
+   that having flash memory visable at locations $0000-$3FFF was not
+   possible with the DP256 part, however that part usually has device
+   registers, EEPROM and RAM filling that range.</p>
+
+<h2><a name="Development Tools"></a>Development Tools</h2>
+<p>The D-Bug12 program is not available for this family because of the
+   small amount of memory available. But there are alternatives.
+   First, like the other HCS12 families, the BDM interface is
+   available, but even without the expense of a BDM pod development of MC9S12C
+   based systems can still be performed using the SCI interface and a
+   2K byte monitor program developed by Freescale Semiconductor. </p>
+<p>This monitor program supports loading of the Flash memory (except
+   for the monitor program itself). The monitor attempts to be
+   invisible to applications by relocating any interrupt vectors to
+   another area in the flash memory, and then re-vectoring the actual
+   interrupts as the occur (just like D-Bug12 does). The application
+   only sees additional interrupt latency.</p>
+<p>For debugging, the monitor supports a variation of the BDM
+   interface command set to allow reading/writing of memory and CPU
+   registers, and to issue GO, HALT, and single instruction trace
+   commands. Breakpoints are not supported.</p>
+<p>Typically, the system will use one of the port pins to implement a
+   run/load switch. When in the <em>run</em> position, the application
+   program will start immediately, but in the <em>load</em> position
+   the monitor program will start instead. The monitor program uses
+   the SCI interface exclusively -- to develop applications which use the
+   SCI port a BDM debugger should be used.</p>
+
+<p>Return to the <a HREF="index.html">Index</a>.</p>
+
+</body>
+</html>

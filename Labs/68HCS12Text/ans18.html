@@ -1,0 +1,27 @@
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>An Answwer for Designing with Microcontrollers -- The 68HCS12</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+<!--Version 4. Contents copyright 2007, Thomas Almy-->
+<h2>Question</h2>
+
+<p>Port M pin 3 is to be used as an input. There is to be no
+   internal pullup/pulldown used. What sequence of instructions will
+   configure port M to insure this operation? What instruction can be
+   used to test and branch to location <em>foo</em> on port M pin 3
+   being logical '1'?</p>
+
+<h2>Answer</h2>
+<p>To configure:</p><pre>
+    bclr ddrm #$8
+    bclr perm #$8</pre>
+<p>To test and branch:</p><pre>
+    brset ptim #$8 foo</pre>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Decision Trees and Logic Instructions</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+<table border="1" width="100%">
+<tr><td><a href="part009.html">Previous Section</a></td>
+<td><a href="part011.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part010" target="q">Questions</a></td>
+<td><a href="search.htm" target="search">Search the Text</a></td></tr></table>
+
+<h1>Decision Trees and Logic Instructions</h1>
+
+<ul>
+  <li><a href="part010.html">Boolean Logic Review</a></li>
+  <li><a href="part010a.html">Selection Control Structure</a></li>
+  <li><span class="selected">Bitwise Boolean Operations</span></li>
+  <li><a href="part010c.html">Advanced Bit Instructions</a></li>
+  <li><a href="part010d.html">Bitwise Boolean Summary</a></li>
+</ul>
+<h2><a name="Bitwise Boolean Operations"></a>Bitwise Boolean Operations</h2>
+
+<p>Instructions exist in the 68HC12 for bitwise AND, OR, and EOR:</p>
+
+<div class="boxed"><ul>
+  <li><em><a name="anda">anda</a></em> - AND accumulator A with memory</li>
+  <li><em><a name="andb">andb</a></em> - AND accumulator B with memory</li>
+  <li><em><a name="bita">bita</a></em> - Bit Test accumulator A with memory</li>
+  <li><em><a name="bitb">bitb</a></em> - Bit Test accumulator B with memory</li>
+  <li><em><a name="eora">eora</a> </em>- EOR accumulator A with memory</li>
+  <li><em><a name="eorb">eorb</a></em> - EOR accumulator B with memory</li>
+  <li><em><a name="oraa">oraa</a> - </em>OR accumulator A with memory</li>
+  <li><em><a name="orab">orab</a> - </em>OR accumulator B with memory</li>
+</ul></div>
+
+<p>These instructions allow immediate, direct, extended, and all indexed addressing
+modes. When immediate mode is used, the immediate operand is typically
+referred to as a <em>mask</em>. They all alter the N and Z condition code bits based on the result of the operation, clear the V bit, and leave the
+other bits unchanged.</p>
+
+<p>The <em>Bit Test</em> operation is an AND where the result is not stored. It is used to only set the condition codes based on the result of the operation, and
+has the same relationship to the AND instructions as the compare instructions have to the subtract instructions. The AND instructions can be used
+to clear selected accumulator bits, the ORA instructions can be used to set selected accumulator bits, and the EOR instructions can be used to
+complement (toggle) selected bits. The <a href="part010d.html"><em>Bitwise Boolean Summary</em></a> details these uses.</p>
+
+<p>Examples:</p>
+<pre>    bita    #4            ; branch if bit 2 (numbered from right)
+    bne     foo           ; in accumulator A is non-zero
+    anda    #~4           ; clear bit 2 in accumulator A
+    eora    #$80          ; complement the MSB of accumulator A
+    orab    loc1          ; OR accumulator B with contents of loc1,
+                          ;  which sets the bits in B which are set
+                          ;  in memory byte at location loc1.  </pre>
+
+<p>The AND and occasionally OR operations are also used for <em>bit fields</em>. A bit field is a sequence of adjacent bits in a byte that we want to treat as a
+(typically integer) value. For instance, using bit fields, we could store two 3 bit values, <em>A</em> and <em>B</em>, and a two bit value, <em>C</em>,  in a single byte. We could
+store the bits left to right: AAABBBCC, in other words, the three most significant bits are value A, the next three bits, bits 2 through 4, are value
+B, and the two least significant bits are value C. If the byte were in accumulator A, we could extract just the value C with an AND operation:</p>
+<pre>    anda    #3</pre>
+
+<p>We could extract the value B by shifting then using an AND operation:</p>
+<pre>    lsra
+    lsra
+    anda    #7</pre>
+
+<p>And we could extract the value C by shifting alone:</p>
+<pre>    lsra
+    lsra
+    lsra
+    lsra
+    lsra</pre>
+
+<p>If the values are stored in bytes VA, VB, and VC, we can combine them with the code:</p>
+<pre>    ldaa    VA     ; Accumulator A has value ?????AAA
+    lsla
+    lsla
+    lsla           ; Accumulator has value ??AAA000
+    ldab    VB
+    andb    #7     ; Accumulator B has value 00000BBB
+    aba            ; Accumulator A has value ??AAABBB
+                   ; (we could have used OR if it were available)
+    lsla
+    lsla           ; Accumulator A has value AAABBB??
+    ldab    VC
+    andb    #3     ; Accumulator B has value 000000CC
+    aba            ; Accumulator A has value AAABBBCC</pre>
+
+<p>See the  <a href="part010d.html"><em>Bitwise Boolean Summary</em></a> for an algorithm to insert and extract bit fields from bytes.    </p>
+
+<p>Three instructions for the bitwise NOT operation:</p>
+
+<div class="boxed"><ul>
+  <li><em><a name="com">com</a></em> - Complement memory byte</li>
+  <li><em><a name="coma">coma</a></em> - Complement accumulator A</li>
+  <li><em><a name="comb">comb</a></em> - Complement accumulator B</li>
+</ul></div>
+
+<p>These instructions alter the N and Z condition code bits based on the result of the operation. They clear the V bit and set the C bit. The <em>com</em>
+instruction allows extended or indexed addressing modes.</p>
+
+<p>Example:</p>
+<pre>; This instruction sequence will clear the bits in byte location U1
+; according the mask in M1 (a 1 bit means clear, a 0 bit means
+; unchanged)
+    ldaa    M1           ; Get mask
+    coma                 ; ~M1
+    anda    U1           ; U1&amp;~M1 - clear bits in U1
+    staa    U1</pre>
+
+<p>These instructions are used to set and clear bits in the condition code register:</p>
+
+<div class="boxed"><ul>
+  <li><em><a name="andcc">andcc</a></em> - AND CCR with mask</li>
+  <li><em><a name="orcc">orcc</a></em> - OR CCR with mask</li>
+  <li><em><a name="clc">clc</a></em> - Clear carry bit in CCR</li>
+  <li><em><a name="cli">cli</a></em> - Clear interrupt bit in CCR</li>
+  <li><em><a name="clv">clv</a></em> - Clear overflow bit in CCR</li>
+  <li><em><a name="sec">sec</a></em> - Set carry bit in CCR</li>
+  <li><em><a name="sei">sei</a></em> - Set interrupt bit in CCR</li>
+  <li><em><a name="sev">sev</a></em> - Set overflow bit in CCR</li>
+</ul></div>
+
+<p>The first two instructions have a single operand which acts as a mask (and requires the # prefix character). They are used to clear and set the bits in
+the condition code register, with the exception that the X bit cannot be set and clearing the I bit has a one clock cycle delay. The remaining
+instructions are aliases for <em>andcc</em> or <em>orcc</em> which clear or set individual bits. </p>
+
+<p>Examples:</p>
+<pre>    sec             ; Set carry bit then...
+    adca    W7      ; Add contents of W7, plus 1, to accumulator A
+    andcc   #~8     ; Clears the N bit in the CCR
+    orcc    #5      ; Sets the Z and C bits in the CCR</pre>
+
+<p>Continue with <em><a href="part010c.html">Advanced Bit Instructions</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

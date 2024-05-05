@@ -1,0 +1,101 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Designing with Microcontrollers -- The 68HCS12</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+<h1>Introduction</h1>
+
+<p>I've used this HTML based text and a predecessor covering the 68HC12 for a two term (20 week) Microcontroller Systems course sequence at Oregon Institute of Technology, Portland
+campus, since 1999. During that time it has had frequent revisions to clarify confusing issues and to cover topics students wanted. The resulting text is terse and no-nonsense but covers
+more material than a typical microcontroller text. While the text is
+specifically intended for the 68HCS12 and the Wytec Dragon12-Plus development board, it is still useful for the
+earlier 68HC12 family members, and information pertaining to both is marked as "68HC12".</p>
+
+<p>The sections (book chapters) of the text are intended to be covered
+in sequence. However section 23, <em>External Memory/Peripheral
+Interfacing</em> can be covered after section 27, <em>Other Serial
+Interfaces</em>. Individual sections can be skipped if there are time
+constraints -- there is more material here than can really be
+thoroughly covered in 20 weeks of classes. There are cross references
+and references to the Freescale Documentation, which is included for
+your convenience on this CD. In addition, there is an index of CPU
+instructions which makes a handy reference, and a search function.
+There are examples given for all the CPU instructions and addressing
+modes.</p>
+
+<p>I teach the sequence as basically four 5-week units. The first unit covers the basics of microcontrollers and programming. This corresponds to sections 1-11 of the text. I've found from
+earlier experience that it is difficult to have meaningful assignments involving the peripheral modules and interfacing if programming is not understood. The next two units cover the
+peripheral modules and interfacing (sections 12-21 then 22-27). Particular attention is placed on using interrupts. My approach is that interrupts are nothing to fear, and lead to simpler,
+more modular designs. The final unit returns to software (sections
+28-31 and appendices), covering advanced arithmetic and designing systems for applications. Practical experience is the
+best way to approach applications, and all students engage in a project of their own choosing using the microcontroller and external hardware.</p>
+
+<p>Here's a brief description of what is covered in each of the text sections:</p>
+
+<ol>
+  <li>Microcontroller Overview - the basics for those who don't know what a microcontroller is.</li>
+  <li>Binary Number Representation - basic arithmetic functions and base conversion. Negative number representation</li>
+  <li>The Central Processing Unit (CPU) - generic operation of ALU, CPU registers, memory interfaces, and specifics for HC12 family</li>
+  <li>Development Tools - survey of development tools. Introduction to flowcharts.</li>
+  <li>68HC12 Instruction Set Overview - instruction set classified, addressing modes, basics of instruction timing</li>
+  <li>Load, Store and Move Instructions</li>
+  <li>Arithmetic Instructions</li>
+  <li>Branching and Iteration - condition codes, loops with pre-test, loops with post-test</li>
+  <li>Using Tables and Arrays - defining and accessing tables and arrays. Interpolating between entries. Tables for format conversion.</li>
+  <li>Decision Trees and Logic Instructions - selection control structures, Boolean
+  logic and CPU instructions, handy summary</li>
+  <li>The Stack and Subroutines - stacks for data storage. Using subroutines. Passing parameters and results.</li>
+  <li>Input/Output Overview
+  <li>Electrical Characteristics - interfacing CMOS and TTL, timing considerations, power and ground.</li>
+  <li>General Purpose I/O Pins - use of general purpose I/O pins (ports)
+  <li>Parallel I/O Ports - parallel I/O. Handshaking techniques. Parallel I/O using the memory interface.</li>
+  <li>System Clocks - Using the phase-locked loop.</li>
+  <li>Interrupts, Traps, and Resets - basics of interrupts and operation in the 68HCS12</li>
+  <li>External Interrupts - IRQ, XIRQ, and key wake-ups.</li>
+  <li>The RTI and COP interrupts - Computer Operating Properly clock monitor, "watchdog" failure, and the "Real Time" interrupt.</li>
+  <li>The Timer Module -- using all the features of the Timer Module as common with the 68HC12
+  <li>Pulse Width Modulation - using the PWM module</li>
+  <li>The Analog to Digital Converter - covers all the features of the ATD module</li>
+  <li>External Memory/Peripheral Interfacing - first covers 8 and 16 bit modes of the 68HC12, which has a simpler interface and is intended for memory expansion, then covers the
+68HCS12 used on the DRAGON12 which is intended mainly for single chip operation. Chip selects, clock stretch, and memory expansion features are covered.</li>
+  <li>Serial Communications Interface - the history of serial communication from the telegraph to the RS232 computer interface, and, of course, how to use it in the 68HCS12. Interrupt
+driven buffering techniques for input, output, and a line-oriented interface for human interaction.</li>
+  <li>Serial Peripheral Interface - various ways to use the SPI</li>
+  <li>Inter-Integrated Circuit Interface - how to use the popular
+  I<sup>2</sup>C interface in the 68HCS12.</li>
+<li>Other Serial Interfaces - an overview of the other serial
+interfaces to the 68HCS12 -- BDLC, CAN, and BDM.</li>
+  <li>EEPROM Memory and Internal Resource Mapping</li>
+  <li>Scaled Integer Arithmetic - binary and fractional scaling of integers</li>
+  <li>Floating Point Arithmetic - floating point arithmetic design (IEEE standard short) and use. A simple library is provided for student use.</li>
+  <li>Fuzzy Logic - a basic introduction to fuzzy logic, from a hard logic point of view, and the supporting instructions in the 68HC12</li>
+</ol>
+
+<p>The following sections are provided in the appendix:</p>
+
+<ol>
+  <li>Assembler Program Template - by popular request, a template showing one way to organize an assembly language program</li>
+  <li>Time-Multiplexed Displays - an example program which drives a 4-digit 7-segment display. The digits are time multiplexed using an interrupt routine.</li>
+  <li>Multiple Processes - a quick introduction to multiprocessing and multitasking. Multitasking is effectively utilized in microcontroller programs which have multiple interrupt routines.</li>
+  <li>Implementing State Machines in Software - traffic light controller example</li>
+  <li>Implementing a Debounced Keyboard - example using an interrupt service routine to poll a keypad switch matrix</li>
+  <li>Putting an Application into EEPROM - general instructions and specifics for the DRAGON12 board</li>
+  <li>Frequency Meter Example - a frequency meter (to approaching 10MHz with 1Hz resolution) using the timer module and LCD panel display of frequency.</li>
+  <li>Alarm Clock Example - A C language impementation of an alarm
+  clock on the 68HCS12 using the DRAGON12 board.</li>
+</ol>
+
+<p>Of course, just reading the text is not particularly useful if the material cannot be put into practice. For that reason, the CD has an assembler, IDE (assembler interface, editor, and terminal
+emulator combination), and the 68HCS12 simulator. In addition, it is strongly recommended to purchase a development board such as the DRAGON12 to get experience with real
+hardware.</p>
+
+<p>Tom Almy</p>
+
+</body>
+</html>

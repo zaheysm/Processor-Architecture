@@ -1,0 +1,175 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Central Processing Unit</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table border="1" width="100%" cellpadding="1" cellspacing="1">
+<tr><td><a href="part002.html">Previous Section</a></td>
+<td><a href="part004.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part003" target="q">Questions</a></td>
+<td><a href="search.htm" target="search">Search the
+   Text</a></td></tr></table> 
+<h1>Central Processing Unit</h1>
+
+<ul>
+  <li><a href="part003.html">CPU Overview </a></li>
+  <li><span class="selected">CPU Demonstration</span>
+  <ul>
+    <li><a href="#Sample Program">Sample Program</a></li>
+    <li><a href="#Executing the LDAA instruction">Executing the LDAA instruction</a></li>
+    <li><a href="#Executing the ADDA instruction">Executing the ADDA instruction</a></li>
+    <li><a href="#Executing the DECA instruction">Executing the DECA instruction</a></li>
+    <li><a href="#Executing the STAA instruction">Executing the STAA instruction</a></li>
+  </ul>
+  </li>
+  <li><a href="part003b.html">68HC12 CPU Specifics</a></li>
+</ul>
+<h2><a name="Sample Program">Sample Program</a></h2>
+<p>The sample program used for this example adds the contents of the bytes at locations $1000 and $1001, subtracts one, and stores the result in location $1002. It is assumed that these addresses are of RAM memory. The program starts at location $2000. The first instruction, which has the name LDAA, loads accumulator A from a memory location. The memory location is specified by a 2 byte address which is an instruction operand. The LDAA instruction is therefore 3 bytes long. The second instruction, ADDA, adds the contents of a memory location to the accumulator. It has the same format as the LDAA instruction, and is three bytes long. The third instruction, DECA, decrements the contents of the accumulator and is a single byte instruction. The final instruction, STAA, stores the contents of accumulator A into a memory location. Again the instruction is three bytes long, including the two byte address. The order of the operand bytes in the instruction is high order byte first. This is called <em>big-endian</em>, and is the common
+order for Freescale processors. Intel processors have the least significant byte first, called <em>little-endian</em>. Here are the contents of the RAM memory starting at location $1000:</p>
+
+<table border="1" width="50%">
+<tr><th>Address</th>
+<th>Contents</th></tr>
+<tr><td>$1000</td>
+<td>$25</td></tr>
+<tr><td>$1001</td>
+<td>$37</td></tr>
+<tr><td>$1002</td>
+<td>(unknown)</td></tr></table>
+
+<p>We will initialize the contents of the first two locations so that we will be adding the values $25 and $37. Since the result will be stored into location
+$1002, we don't care about the value initially there. Upon  completion, the value should be $25 + $37 - 1 = $5B. The program is stored in memory,
+which could be ROM memory, starting at location $2000:</p>
+
+<table border="1" width="50%" cellpadding="1" cellspacing="1">
+<tr><th>Location</th>
+<th>Contents</th>
+<th>Instruction</th></tr>
+<tr><td>$2000</td>
+<td>$B6</td>
+<td>LDAA $1000</td></tr>
+<tr><td>$2001</td>
+<td>$10</td>
+<td></td></tr>
+<tr><td>$2002</td>
+<td>$00</td>
+<td></td></tr>
+<tr><td>$2003</td>
+<td>$BB</td>
+<td>ADDA $1001</td></tr>
+<tr><td>$2004</td>
+<td>$10</td>
+<td></td></tr>
+<tr><td>$2005</td>
+<td>$01</td>
+<td></td></tr>
+<tr><td>$2006</td>
+<td>$43</td>
+<td>DECA</td></tr>
+<tr><td>$2007</td>
+<td>$7A</td>
+<td>STAA $1002</td></tr>
+<tr><td>$2008</td>
+<td>$10</td>
+<td></td></tr>
+<tr><td>$2009</td>
+<td>$02</td>
+<td></td></tr></table>
+
+<h2><a name="Executing the LDAA instruction">Executing the LDAA instruction</a></h2>
+<p>When we start execution, the PC register contains the starting address of the program, $2000, and the other registers contain values we don't care
+about (shown here as 0):</p>
+
+<p><img src="fig3-3.gif" width="511" height="288" align=bottom /></p>
+
+<p>To perform the instruction fetch portion of the instruction cycle, the
+contents of PC is copied to the MAR (1), the contents of the memory location
+specified in the MAR, namely location $2000 are read and latched into the
+MDR (2). The contents of the MDR are copied into the IR (3), and the PC
+is incremented (4). At this point we have:</p>
+
+<p><img src="fig3-4.gif" width="511" height="288" align=bottom /></p>
+
+<p>The control unit now decodes the instruction in the Instruction Register and recognizes the LDAA (load accumulator A from memory) instruction. This
+instruction has a two byte operand, the <em>effective address</em> of the memory location containing the data to load. The goal is to fetch
+these two operand bytes and place them in the MAR to eventually fetch the
+operation data. Again, the PC is copied to the MAR (5) and the contents
+of the next instruction byte are read and latched into the MDR (6). The
+contents of the MDR are copied into register T (7), and the PC is incremented
+(8). The instruction decode is now half completed.</p>
+
+<p><img src="fig3-5.gif" width="511" height="288" align=bottom /></p>
+
+<p>The PC is copied to the MAR (9), the contents of the final operand byte
+are latched into the MDR (10), the contents of the MDR are copied into
+the low order byte of the MAR (11), the contents of register T are copied
+into the high order byte of the MAR (12), and the PC is incremented (13).</p>
+
+<p><img src="fig3-6.gif" width="512" height="288" align=bottom /></p>
+
+<p>At this point the processor is ready to enter the instruction execution phase, which is to load the accumulator from the memory byte at the effective
+address. The effective address is already in the MAR, so the data from memory location $1000 is latched into the MDR (14), then is copied to the
+accumulator A (15). The block diagram does not show a direct path from the MDR to A, however the data can travel through the ALU which is
+configured to pass through, unaltered, the data on its right-hand input. The execution of the LDAA instruction is complete.</p>
+
+<p><img src="fig3-7.gif" width="512" height="288" align=bottom /></p>
+<h2><a name="Executing the ADDA instruction">Executing the ADDA instruction</a></h2>
+<p>The instruction fetch phase for every instruction is the same. After fetching the first byte of the ADDA instruction we have:</p>
+
+<p><img src="fig3-8.gif" width="511" height="288" align=bottom /></p>
+
+<p>The Control Unit recognized $BB as the ADDA instruction, and fetches the two byte operand, just as it did with the LDAA instruction. After the two
+bytes are fetched and the PC has been incremented, we get:</p>
+
+<p><img src="fig3-9.gif" width="511" height="288" align=bottom /></p>
+
+<p>At this point the processor is ready to enter the instruction execution phase, which is to add the memory byte at the effective address to the
+accumulator. The effective address is already in the MAR, so the data from memory location $1001 is latched into the MDR (14), then is added to the
+accumulator A (15). The ALU is configured to add its two inputs together. The execution of the ADDA instruction is complete.</p>
+
+<p><img src="fig3-10.gif" width="512" height="288" align=bottom /></p>
+<h2><a name="Executing the DECA instruction">Executing the DECA instruction</a></h2>
+<p>After the instruction fetch phase of the third instruction at $2006, we get:</p>
+
+<p><img src="fig3-11.gif" width="512" height="288" align=bottom /></p>
+
+<p>The Control Unit recognizes opcode $43 as the DECA instruction, which has
+no operands. No action takes place during the instruction decode phase.
+In the final instruction execution phase, the contents of the accumulator
+are decremented using the ALU.</p>
+
+<p><img src="fig3-12.gif" width="512" height="288" align=bottom /></p>
+
+<h2><a name="Executing the STAA instruction">Executing the STAA instruction</a></h2>
+<p>Again the instruction fetch phase fetches the opcode byte of the next instruction, which is the STAA instruction.</p>
+
+<p><img src="fig3-13.gif" width="511" height="288" align=bottom /></p>
+
+<p>As was the case with the LDAA and ADDA instructions, the STAA instruction has a two byte operand, the effective address to store the contents of
+accumulator A. These two bytes are fetched from memory, placed in the MAR, and the PC is incremented by two.</p>
+
+<p><img src="fig3-14.gif" width="511" height="288" align=bottom /></p>
+
+<p>To store the contents of the accumulator A into memory, the data in accumulator A is first transferred to the MDR (14). In this example system design,
+the only path is through the ALU, which is set to pass through the data on the left input. Then the control unit signals a memory write operation, so the
+value $5B is stored in location $1002.</p>
+
+<p><img src="fig3-15.gif" width="511" height="288" align=bottom /></p>
+
+<p>At this point the example program execution is completed.  But this is just an example system design. What about the 68HC12? That's next!</p>
+
+<p>Continue with <em><a href="part003b.html">68HC12 CPU Specifics</a></em></p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

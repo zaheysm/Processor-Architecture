@@ -1,0 +1,64 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>External Memory/Peripheral Interfacing</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table BORDER="1" WIDTH="100%">
+<tr><td><a href="part020.html">Previous Section</a></td>
+<td><a href="part022.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part021" target="q">Questions</a></td>
+<td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>External Memory/Peripheral Interfacing</h1>
+
+<ul>
+  <li><a href="part021.html">Memory Timing</a></li>
+  <li><a href="part021a.html">Operation in Normal Expanded Narrow Mode</a></li>
+  <li><a href="part021b.html">Operation in Normal Expanded Wide Mode</a></li>
+  <li><span class="selected">Multiplexed Address and Data
+     Busses</span></li>
+  <li><a href="part021d.html">Using Chip Selects</a></li>
+  <li><a href="part021e.html">Memory Expansion</a></li>
+</ul>
+
+<p>In order to reduce the number of pins necessary on the microcontroller, many microcontrollers multiplex the address and data busses. In this arrangement, the address is
+presented on the bus and must be externally latched because the bus must then be used for data. The MC9S12DP256 microcontroller is primarily intended for use in single
+chip mode because it has a large amount of on-chip RAM and ROM. If it is desired to use this part in Expanded Narrow or Wide mode, the shared address and data bus
+design is employed.</p>
+
+<p>The following illustration shows the data and address connections to the microcontroller. In addition, port K provides 6 bits of extended addressing, described in the memory
+expansion section, and two chip selects, ECS and XCS. Port E provides *LSTRB, R/*W, and ECLK signals.</p>
+
+<p><img src="fig21c-1.gif" width="222" height="229" align=bottom /></p>
+
+<p>we see that there are 16 address lines, giving a 64k byte address space. But the lines are also used for data. In Expanded Wide Mode, all 16 lines are used, while in Expanded
+Narrow Mode only the most significant 8 are used. Looking in the Technical Specifications, we see:</p>
+
+<p><img src="fig21c-2.gif" width="446" height="534" align=bottom /></p>
+
+<p>The address must be latched on the leading edge of ECLK. A new control signal *XCS (External Chip Select) can be used in read operations to enable the memory device to
+drive the data bus - we can't simply connect *OE to *CE. (*XCS has the same timing as the *ECS signal in the diagram above.) However some designs simply enable the
+output when ECLK &amp; R/*W is true.</p>
+
+<p>A transparent latch is used to hold the address. The latch is transparent (Input connects to output) when the enable input is asserted, and the output is held when the enable
+input is low.  Using the Expanded Narrow Mode, our memory can be connected as shown in this partial schematic:</p>
+
+<p><img src="fig21c-3.gif" width="709" height="467" align=bottom /></p>
+
+<p>Timing considerations are very difficult with this part and design, so typically a low clock speed or clock stretch is used. The HCS12 also uses a memory expansion scheme
+which also must be taken into account in order to use the external interface. In a typical application, the internal Flash ROM would still be used and all external memory
+would appear in the $8000-$BFFF address range, the exact 16K memory "page" selected using port K.  See <a href="part021e.html">Memory Expansion</a> for details.</p>
+
+<p>Continue with <em><a href="part021d.html">Using Chip Selects</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

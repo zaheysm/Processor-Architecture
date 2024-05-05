@@ -1,0 +1,216 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>The Timer Module</title>
+<link rel="shortcut icon" href="icon.ico">
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table BORDER="1" WIDTH="100%">
+<tr><td><a href="part017.html">Previous Section</a></td>
+<td><A href="part018e.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part018" target="q">Questions</a></td>
+<td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>The Timer Module</h1>
+<p><em>This section is split among several pages because of its
+   length. The start of split sections have a table of contents
+   showing each page and the contents of the current page. The current
+   page is emphasized in <span class="selected">bold</span>.</em></p>
+<ul>
+  <li><span class="selected">Timer Count</span></li>
+  <li><a href="part018a.html">Input Capture</a></li>
+  <li><a href="part018b.html">Output Compare</a></li>
+  <li><a href="part018c.html">The Special Case of Channel 7</a></li>
+  <li><a href="part018d.html">Pulse Accumulator</a></li>
+</ul>
+
+<p>A virtual requirement of any microcontroller is to have counters and timers. The Timer Module in the 68HC12 consists of 8
+separate timer channels and a 16 bit clock-driven counter. The counter can be used for relative time measurements. Each
+timer channel is capable of <em>input capture</em>, where the time (counter value) of a signal edge at a pin is "captured" into a
+register. Input capture can be used to measure pulse widths or periods of external signals.  The channel can also be
+configured for <em>output compare</em>, where at a preset time an output pin will change levels. Output compare allows generating
+single pulses or pulse trains. It can also be used to generate a pulse width modulated signal for servo control, however many
+microcontrollers, including most in the 68HC12 family have specific modules to perform pulse width modulation. In
+addition, there is a 16-bit <em>pulse accumulator</em> which can be used as an input pulse counter or for measuring long periods. </p>
+
+<p>The HCS12 has an "enhanced" timer module with extra features, however only the basic, family wide features will be
+discussed here. In the HCS12, there are 4 8-bit pulse accumulators which may be used as buffers for input capture or as two
+16-bit pulse accumulators. There is also an additional interrupt generating timer. The enhanced timer module is described
+fully in the <a href="../motorola/S12ECT_16B8CV1.pdf"><em>ECT_16B8C Block Users Guide</em></a>, however it is extremely difficult to follow because of all the features available.</p>
+
+<p>The 8 pins, one for each of the timer channels, connect through Port T. Port T is one of the general purpose I/O ports
+discussed in an earlier <a href="part013a.html">section</a>. When the timer channel is configured to output to a pin (for output compare) it overrides the
+configuration of the DDRT register for that pin and the PTT, Port T data register, for that pin is not used.  Note that it is
+possible to have a Port T pin configured as an output pin yet be used for input compare simultaneously. It is also always
+possible to read the port T pin through the PTIT register.</p>
+<h2><a name="Timer Count"></a>Timer Count</h2>
+
+<p>The diagram below shows the counter portion of the module. The table shows the bits in the status and control registers
+which are used by the timer count circuit, TSCR1, TSCR2, and TFLG2. In addition, there is the 16-bit counter data register,
+TCNT.</p>
+
+<p><img src="fig18-1.gif" width="669" height="282" align=bottom /></p>
+
+<p>To enable timer operation, the TEN bit must be 1. The system clock is then passed through a programmable divider and the resulting clock used to increment the TCNT register. With the typical 24
+MHz system clock and with the prescaler set to divide by 1 (the default), the counter increments every 1/24 microsecond. Note: there is another source of clock to increment TCNT, which is described
+in <a href="part018d.html"><em>Pulse Accumulator</em></a>.</p>
+
+<p>TCNT cannot be written. However we are never interested in the absolute value of TCNT but are interested in the difference between two values, which gives us the elapsed time. Consider the
+following code segment:</p>
+<pre>    movw    TCNT start      ; start is a a 16 bit variable, holds start time
+    ; <em>Perform activity</em>
+    ldd     TCNT            ; Get finish time
+    subd    start           ; finish-start = execution time</pre>
+
+<p>At the conclusion, register D has the time (in units of 1/24 microsecond) of the execution time of the activity. The actual values in TCNT don't matter, nor does it matter if TCNT overflows, which
+happens when it goes from the count of 65535 to 0. The only limitation is that the difference will be in the range of 0 to 65535. To measure longer times requires that we extend the size of the counter,
+which we can do in software.</p>
+
+<table BORDER="1" WIDTH="100%" CELLPADDING="1" CELLSPACING="1">
+<tr><th colspan="9">Timer Count Control and Status Bits</th></tr>
+<tr><th>Register</th>
+<th>Bit 7</th>
+<th>Bit 6</th>
+<th>Bit 5</th>
+<th>Bit 4</th>
+<th>Bit 3</th>
+<th>Bit 2</th>
+<th>Bit 1</th>
+<th>Bit 0</th></tr>
+<tr><td>TSCR1</td>
+<td>TEN</td>
+<td>TSWAI</td>
+<td>TSFRZ</td>
+<td>TFFCA</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td></tr>
+<tr><td>TSCR2 (was called
+TMSK2)</td>
+<td>TOI</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>TCRE</td>
+<td>PR2</td>
+<td>PR1</td>
+<td>PR0</td></tr>
+<tr><td>TFLG2</td>
+<td>TOF</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td></tr></table>
+<br /><br />
+<table BORDER="1" WIDTH="50%" CELLPADDING="1" CELLSPACING="1">
+<tr><th>PR2</th>
+<th>PR1</th>
+<th>PR0</th>
+<th>Prescale Factor</th></tr>
+<tr><td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td></tr>
+<tr><td>0</td>
+<td>0</td>
+<td>1</td>
+<td>2</td></tr>
+<tr><td>0</td>
+<td>1</td>
+<td>0</td>
+<td>4</td></tr>
+<tr><td>0</td>
+<td>1</td>
+<td>1</td>
+<td>8</td></tr>
+<tr><td>1</td>
+<td>0</td>
+<td>0</td>
+<td>16</td></tr>
+<tr><td>1</td>
+<td>0</td>
+<td>1</td>
+<td>32</td></tr>
+<tr><td>1</td>
+<td>1</td>
+<td>0</td>
+<td>64 (not in original
+Timer Module)</td></tr>
+<tr><td>1</td>
+<td>1</td>
+<td>1</td>
+<td>128 (not in original
+Timer Module)</td></tr></table>
+
+<p>Every time the counter overflows, the TOF status bit will be set.
+The bit is normally reset by writing a 1 to the bit, in the typical
+68HC12 fashion. However if the TFFCA control bit is set, then reading
+TCNT will reset the TOF status bit, however writing a 1 to the TOF
+status bit <strong>will not</strong> reset the bit. This is usually
+not desirable, however we will later that TFFCA has other effects
+which are useful. </p>
+
+<p>We can use the interrupt system, by setting the TOI bit, so that an
+interrupt will occur whenever the timer overflows. The interrupt
+service routine can be used to increment higher order bytes in a
+counter we can extend to any size. Let's assume we have a 16 bit
+variable <a name="CNTEXT">CNTEXT</a> to hold the extension of the
+counter, and have initialized the timer circuit and interrupt
+vector:</p>
+<pre>    movb    #$80 TSCR1    ; TEN = 1
+    movw    #timscr UserTimerOvf   ; interrupt vector D-BUG12
+    movb    #$80 TSCR2    ; TOI = 1, prescale factor = 1</pre>
+
+<p>The following will suffice for our interrupt service routine:</p>
+
+<pre>timisr:
+    ldd     CNTEXT   ; increment high order count
+    addd    #1
+    std     CNTEXT
+    movb    #$80 TFLG2  ; Reset interrupt flag
+    rti</pre>
+
+<p>Now we have a 32 bit counter suitable for measuring times to 536 seconds
+(2^32 times 125nsec). But we aren't finished yet. Let's look at the code
+to get the current 32 bit time and store it in the 32 bit variable <em>start</em>.</p>
+<pre>    movw   CNTEXT start
+    movw   TCNT   start+2</pre>
+
+<p>If we used the two instructions above, we would find that it worked most of the time but failed occasionally. What is wrong? Suppose the current count is $0021FFFC when we reach the first
+instruction. We read CNTEXT as $0021. However the <em>movw</em> instruction takes 6 cycles to execute, so the interrupt occurs immediately after execution. Upon return from the interrupt, we execute the
+second <em>movw</em>, which reads TCNT as, say $0020 (the exact value is left as an exercise for the student!). So we've read the count as $00210020, which is off by 65536.</p>
+
+<p>Reversing the order of the two instructions does not help matters. If we read TCNT first, it is read as $FFFD. The interrupt occurs and upon return CNTEXT is read as $0022, giving us a count of
+$0022FFFD, off by 65536 in the other direction.</p>
+
+<p>An old programmer's &quot;trick&quot; allows us to read the value without
+problems. We read the upper word first, and then the lower, but we then
+check to see if the upper word has changed. If it has, we repeat reading
+the value.</p>
+<pre>r1: movw    CNTEXT start
+    movw    TCNT   start+2
+    ldd     CNTEXT
+    cpd     start
+    bne     r1</pre>
+
+<p>There are a few Timer Count control bits that haven't been mentioned in this section. TSWAI will cause the timer to stop while the <em>wai</em> instruction is being executed. If we are using TCNT to measure
+times and this bit is set, we will have incorrect measurements if the <em>wai</em> instruction is executed. So we probably would not want to set this bit. The advantage to setting the bit is that the power
+consumption during a wait is reduced more if the timer stops. The TSFRZ bit stops the timer during background debug mode. If we are using the background debugger, setting this bit can give more
+accurate results because the timer only runs when the processor is actually executing the program. Remember that the <em>stop</em> instruction will always stop the timer as it disables all internal clocks. We will
+look at the TCRE bit when we discuss pulse width modulation in <em><a href="part018c.html">The Special Case of Channel 7</a></em>.</p>
+
+<p>Continue with <em><a href="part018a.html">Input Capture</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

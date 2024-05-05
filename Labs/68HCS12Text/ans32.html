@@ -1,0 +1,33 @@
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>An Answwer for Designing with Microcontrollers -- The 68HCS12</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+<!--Version 4. Contents copyright 2007, Thomas Almy-->
+<h2>Question</h2>
+
+<p>The ADC in 8 bit integer mode produces a measured value (code)
+   of $0000 for an input voltage of 0 volts and a measured value of
+   $00FF for an input value of five volts. What is the scale factor in
+   volts? What is the scale factor in millivolts?</p>
+
+<h2>Answer</h2>
+
+<p>The scale factor in units of volts is the value you need to
+multiply the measured value by to get the voltage in units of volts.
+This means the scale factor would be 5/255 volts. This can be seen
+because if the measured value is 255 ($00ff), then 255*5/255 volts = 5
+volts. Note how we carry the units through the calculation (the
+measured values are "unitless", they just represent counts.)</p>
+
+<p>The scale factor in units of millivolts is the value you need to
+   multiply the measured value by to get the voltage in units of
+   millivolts. This would be 5000/255 millivolts, 1000 times larger
+   than the scale factor in volts.</p>
+
+</body> </html>

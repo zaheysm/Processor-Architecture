@@ -1,0 +1,74 @@
+
+as12, an absolute assembler for Motorola MCU's, version 1.2h
+
+                        ; FX.asm
+                        ;
+                        ; Author: Zahi Masrwa
+                        ; Course: CST8216
+                        ; Student Number: 040985420
+                        ; Date: 2021-11-15
+                        ;
+                        ; Purpose:      To illustrate how to solve an equation such as:
+                        ;               f(x) = 5x + 3 for x = 0 to 9, using 8-bit Multiplication
+                        ;               The calculated x in f(x) values will be placed into the X_Values array
+                        ;               The calculated f(x) values will be placed into the Results array
+                        ;
+000a                    ARRAY_LEN       equ     10      ; Number of values to calculate (10): x = 0 to 9
+2000                    STACK           equ     $2000   ; Need two arrays of length ARRAY_LEN
+0005                    Five            equ     5       ;constants
+0003                    Three           equ     3
+0000                    Start           equ     0
+                                                        ; - one holds x = 0 to 9
+                                                        ; - one holds f(x) results
+                        
+1020                            org        $1020                    ; org as per assignment instructions
+                        
+1020                    X_Values                ; Complete this line of code
+                                ;db      0, 1, 2, 3, 4, 5, 6, 7, 8, 9                             ; Value of x used in calculation stored here
+1020                            ds      ARRAY_LEN
+102a                    End_X_Values
+                        
+1030                            org        $1030                     ; org as per assignment instructions
+                                
+1030                    Results
+1030                            ds        ARRAY_LEN                      ; Complete this line of code
+                                                        ; Result of f(x) calculation stored here
+103a                    End_Results
+                        
+                        ; Expected Results
+                                 ;1020   1021    1022    1023    1024    1025    1026    1027    1028    1029
+                                 ;0      1       2       3       4       5       6       7       8       9
+                                 ;1030  1031    1032    1033    1034    1035    1036    1037    1038    1039
+                                 ;$03    $08     $0d     $12     $17     $1c     $21     $26     $2b     $30
+                        ;
+                        
+                        
+2000                            org     $2000           ;org to start code
+2000 cf 20 00                   lds     #STACK          ;load the stack
+2003 86 00                      ldaa    #start          ;load number to start from
+2005 ce 10 20                   ldx     #X_Values       ;load the array to x
+2008 6a 30              loop0   staa    1,x+               ;store num in A
+200a 42                         inca                    ;incarment A
+200b 8e 10 2a                   cpx     #End_X_Values   ;the end of the array
+200e 26 f8                      bne     loop0           ;if not equal branch to loop0
+                                ;ldx     #X_Values       ;load x with the array saved
+2010 ce 10 30                   ldx     #Results
+2013 a6 10              loop    ldaa    -16,x            ;load a on where x poninting
+2015 c6 05                      ldab    #Five           ;load b with 5
+2017 12                         mul                     ;multply B*A
+2018 cb 03                      addb    #Three          ;add 3 to B
+201a 6b 00                      stab    0,x            ;store result in Y
+201c 08                         inx
+201d 8e 10 3a                   cpx     #End_Results   ;the end of the array
+2020 26 f1                      bne     loop            ;if not equal branch to loop
+                        ;;	ldx     #Results
+                        ;loop2   ldaa    1,x+
+                        ;	staa    0,x
+                        ;        cpx     #End_Results
+                        ;        bne     loop2
+2022 3f                         swi                     ;intrupt
+                                end                     ;End of program
+
+Executed: Fri Nov 19 11:11:18 2021
+Total cycles: 46, Total bytes: 35
+Total errors: 0, Total warnings: 0

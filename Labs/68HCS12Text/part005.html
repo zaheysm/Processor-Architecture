@@ -1,0 +1,159 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>68HC12 Instruction Set Overview</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table border="1" width="100%" cellpadding="1" cellspacing="1">
+<tr valign="top"><td><a href="part004.html">Previous Section</a></td>
+<td><a href="part006.html">Next Section</a></td>
+<td><a HREF="index.html">Index</a></td>
+<td><a href="questions.html#part005" target="q">Questions</a></td>
+<td><a href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>68HC12 Instruction Set Overview</h1>
+<p><em>This section is split among several pages because of its
+   length. The start of split sections have a table of contents
+   showing each page and the contents of the current page. The current
+   page is emphasized in <span class="selected">bold</span>.</em></p>
+<ul>
+  <li><span class="selected">Classes of Instructions</span></li>
+  <ul>
+    <li><a href="#Load, Store, Move, and Transfer Instructions">Load, Store, Move, and Transfer Instructions</a></li>
+    <li><a href="#Arithmetic Instructions">Arithmetic Instructions</a></li>
+    <li><a href="#Compare and Test Instructions">Compare and Test Instructions</a></li>
+    <li><a href="#Boolean Logic and Bit Oriented Instructions">Boolean Logic and Bit Oriented Instructions</a></li>
+    <li><a href="#Shift and Rotate Instructions">Shift and Rotate Instructions</a></li>
+    <li><a href="#Branch and Jump Instructions">Branch and Jump Instructions</a></li>
+    <li><a href="#Subroutine, Interrupt, and Stack Instructions">Subroutine, Interrupt, and Stack Instructions</a></li>
+    <li><a href="#Other Instructions">Other Instructions</a></li>
+  </ul>
+  <li><a href="part005a.html">Addressing Modes</a></li>
+  <li><a href="part005b.html">Instruction Timing</a></li>
+</ul>
+
+<p>The 68HC12 instruction set is one of the most sophisticated in a microcontroller. We will first divide the instruction set into classes of
+instructions. This will make it easier to see what is available. Later in the text we will cover the instructions in more detail.</p>
+
+<h2><a name="Load, Store, Move, and Transfer Instructions"></a>Load, Store, Move, and Transfer Instructions</h2>
+
+<p>The most commonly used instructions are those that copy data from one location to another. These instructions are important because most
+instructions operate on data in registers, and there are a very limited number of registers available. Data is typically transferred from memory
+to registers for processing and then back to memory when finished. When data is copied, the source of the data is unchanged while the
+destination contents are changed to be the same as the source. These instructions fall into five basic categories:</p>
+
+<div class="minor"><ul>
+  <li><em>Load</em> instructions copy data from memory to a register</li>
+  <li><em>Store</em> instructions copy data from a register to memory</li>
+  <li><em>Transfer</em> instructions copy data from a register to another register</li>
+  <li><em>Move</em> instructions copy data from one memory location to another</li>
+  <li><em>Exchange</em> instructions are a special case of instruction where the contents of two registers exchange positions</li>
+</ul></div>
+
+<p>Load and store instructions exist for all of the registers: A, B, D, X, Y, and SP. In these instructions, an operand is used to specify the
+desired memory location. A transfer and an exchange instruction each have two operands allowing transferring (or exchanging) between any
+two registers. A move byte and a move word instruction copy data from one memory location to another. These instructions have two
+operands to specify each of the source and destination memory locations.</p>
+
+<p><em>Clear</em> instructions are used to clear memory bytes, accumulator A, or accumulator B. These can be considered move or load of 0 into the
+destination.</p>
+
+<p>These instructions are discussed in detail in the section <a href="part006.html">Load, Store and Move Instructions</a>.</p>
+<h2><a name="Arithmetic Instructions"></a>Arithmetic Instructions</h2>
+
+<p>Arithmetic in the 68HC12 is performed primarily with results placed in the accumulators A, B, and the 16 bit accumulator D which is A and
+B concatenated. The index registers are also used in multiply and divide instructions since the accumulators do not have sufficient size to
+hold the  results.  Arithmetic with the index registers, and stack pointer register as the primary destination is limited to address calculation
+(LEAX, LEAY, and LEAS instructions) and incrementing/decrementing. Single bytes in memory can be incremented and decremented.
+Instructions are:</p>
+
+<div class="minor"><ul>
+  <li>Add/Subtract to A from memory</li>
+  <li>Add/Subtract to A from memory with carry/borrow (used to implement multi-byte addition)</li>
+  <li>Add/Subtract to B from memory, or from A</li>
+  <li>Add/Subtract to B from memory with carry/borrow</li>
+  <li>Add/Subtract to D from memory</li>
+  <li>Increment/Decrement A, B, X, Y, SP, memory byte.</li>
+  <li>Negate (2's complement) A, B, memory byte</li>
+  <li>Multiply and Divide in registers</li>
+</ul></div>
+
+<p>These instructions are discussed in detail in the section <a href="part007.html">Arithmetic Instructions</a>.</p>
+<h2><a name="Compare and Test Instructions"></a>Compare and Test Instructions</h2>
+
+<p>A compare instruction compares two values and is used along with the conditional branch instruction to implement control structures such
+as decision trees and loops. A test instruction compares a single value to zero. These instructions set bits in the condition code register
+(CCR) that are then tested by the conditional branch instructions.</p>
+
+<p>Instructions exist to compare any register (A, B, D, X, Y, or SP) with a value in memory, as well as compare register A to B. Instructions
+exist to test register A, B, or a byte in memory for being zero or negative.</p>
+
+<p>These instructions are discussed in detail in the section <a href="part007c.html">Test and Compare</a>.</p>
+<h2><a name="Boolean Logic and Bit Oriented Instructions"></a>Boolean Logic and Bit Oriented Instructions</h2>
+
+<p>In a microcontroller data is often treated as a set of bits rather than as an integer value. The bit oriented instructions allow manipulation of
+data as a set of bits and to manipulate individual bits within a byte.</p>
+
+<p>In this category are instructions to AND, OR, or Exclusive OR a memory location into accumulator A or B, and AND or OR a constant
+value into the condition code register, CCR. A bit test instruction works like the AND instruction but does not save the results - it is used to
+set condition codes for a following branch. Complement instructions exist to complement a memory location, accumulator A, or
+accumulator B. Bit set and bit clear instructions allow setting or clearing of individual bits in memory.</p>
+
+<p>These instructions are discussed in detail in the section <a href="part010.html">Decision Trees and Logic Instructions</a>.</p>
+<h2><a name="Shift and Rotate Instructions"></a>Shift and Rotate Instructions</h2>
+
+<p>There are instructions to shift the bits in the accumulators or a memory location to the left or right. These are used for extracting or inserting
+bit fields within a byte, or as simple ways to multiply or divide by powers of two.</p>
+
+<p>These instructions are discussed in detail in the section <a href="part007b.html">Shifting</a>.</p>
+<h2><a name="Branch and Jump Instructions"></a>Branch and Jump Instructions</h2>
+
+<p>Normally instructions are executed out of sequential memory locations. Jump instructions are used to specify the location of the next
+instruction to execute. Branch instructions are like jump instructions but allow specifying a condition which must exist for the jump to occur.
+The conditions are based on the contents of the condition code register, which typically reflects the arithmetic result of the previous
+instruction.</p>
+
+<p>Jump instructions can target any location in the 64k address space. Branch instructions are limited to roughly +/- 128 bytes from the branch
+instruction. Long branch instructions are branch instructions which can target any location in the 64k address space. Branch conditions
+include greater than, less than, greater than or equal to, less than or equal to, equal, not equal, overflow, no overflow, zero, and non-zero.
+Separate instructions exist for signed and unsigned operations where appropriate. There is also a branch always instruction for which the
+branch is always taken, and a branch never for which the branch is never taken. The latter instruction is referred to as a <em>no-op</em> because no
+operation takes place.</p>
+
+<p>These instructions are discussed in detail in the section <a href="part008.html">Branching and Iteration</a>.</p>
+
+<p>The 68HC12 has a number of special branch instructions. These instructions combine a memory bit test, a register increment, a register
+decrement or a register test with a conditional branch. These instructions are particularly useful for implementing program loops. They are
+described in detail in the section <a href="part008a.html">Iteration Examples</a> and in <a href="part010.html">Decision Trees and Logic Instructions</a>.</p>
+<h2><a name="Subroutine, Interrupt, and Stack Instructions"></a>Subroutine, Interrupt, and Stack Instructions</h2>
+
+<p>A subroutine allows a section of code to be jumped to from anywhere in the program, and have the execution return back to the calling point
+when finished. Subroutines can be invoked by the program or by a hardware condition known as an <em>interrupt</em>. The processor state (the
+register contents) is typically saved at the start of the subroutine and restored at the end. The state is saved using a software structure called
+a stack. </p>
+
+<p>Instructions that implement subroutines and the stack will be described later in section <a href="part011.html">The Stack and Subroutines</a>.</p>
+<h2><a name="Other Instructions"></a>Other Instructions</h2>
+
+<p>The 68HC12 has a number of instructions useful for fuzzy logic systems, linear programming, and table lookup. These will be discussed in
+various places in the text. In particular, the instructions for fuzzy logic have their own <a href="part026.html">section</a>.</p>
+
+<p>Reference: Everything you would want to know about the
+instructions in the 68HCS12 is in the <a href="../motorola/S12CPUV2.pdf"><em>S12CPUV2
+Reference Manual</em></a>. Section 5 is a
+more detailed version of this page, while Section 6 covers each
+instruction to the detail of one instruction per page. Appendix A lists
+instructions in tabular form. The <a href="instindx.html">instruction index</a> of this text allows finding the discussion of any of the instructions if you know the
+mnemonic.</p>
+
+<p>Continue with <a href="part005a.html"><em>Addressing Modes</em></a>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

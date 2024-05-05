@@ -1,0 +1,218 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Branching and Iteration</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table border="1" width="100%">
+<tr valign="top"><td><a href="part007.html">Previous Section</a></td>
+<td><a href="part009.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part008" target="q">Questions</a></td>
+<td><a href="search.htm" target="search">Search the
+   Text</a></td></tr></table>
+
+<h1>Branching and Iteration</h1>
+<p><em>This section is split among several pages because of its
+   length. The start of split sections have a table of contents
+   showing each page and the contents of the current page. The current
+   page is emphasized in <span class="selected">bold</span>.</em></p>
+
+<ul>
+  <li><span class="selected">Condition Codes and Branching</span>
+  <ul>
+    <li><a href="#Condition Codes in Detail">Condition Codes in Detail</a></li>
+    <li><a href="#Conditional Branch Instructions">Conditional Branch Instructions</a></li>
+    <li><a href="#The Long Branch Instructions">The Long Branch Instructions</a></li>
+    <li><a href="#Branching">Branching Using High Level Languages</a></li>
+    <li><a href="#Summary">Summary</a></li>
+  </ul>
+  </li>
+  <li><a href="part008a.html">Iteration Examples</a></li>
+</ul>
+
+<p>Control structures affect the ordering of instruction execution. There are four basic control structures in programming: <em>sequential</em>, <em>iterative</em>, <em>selection</em>,
+and <em>modular</em>. So far we have seen the sequential control structure, which is to execute instructions in sequence. This can be considered the default
+control structure. The modular control structure is handled with subroutines, which will be discussed in a <a href="part011.html">later section</a>. The iterative control structure
+allows an instruction (or sequence of instructions using the sequential control structure) to be executed repeatedly. This is commonly called a program
+<em>loop</em>. The selection structure allows program alternatives. Both the iterative and selection structures require an instruction that alters program flow.
+These are called jump or branch instructions. In most cases, the branching must be <em>conditional</em>. The branch is taken only if some condition is true, and
+if the condition is not true, execution continues sequentially.</p>
+<h2><a name="Condition Codes in Detail"></a>Condition Codes in Detail</h2>
+
+<p>All conditional branching is based on condition codes, bits which are within the condition code register, or CCR. Different instructions alter different
+combinations of bits, depending on the result of the instruction. A conditional branch instruction can branch on various combinations of condition code
+bits. It is important to remember that the last instruction to alter a particular condition code bit determines the result of a conditional branch (branch
+taken or not taken). This may or may not be the last instruction executed.</p>
+
+<p>Of the eight bits in the condition code register, four are used for conditional branching.</p>
+
+<div class="minor"><ul>
+  <li><strong>N</strong> bit, is set if the result of the instruction is negative, cleared if it is non-negative. This bit is altered by load, store, <em>tab</em> and <em>tba</em>, and most arithmetic
+and logical instructions, with the particular exception of the <em>inx/dex</em> and <em>iny/dey</em> instructions.</li>
+  <li><strong>Z</strong> bit, is set if the result of the instruction is zero, cleared if it is non-zero. This bit is altered by load, store, <em>tab</em> and <em>tba</em>, and most arithmetic and
+logical instructions.</li>
+  <li><strong>V<em> </em></strong>bit, is set if the result of the instruction overflowed (signed values), and cleared if there was no overflow. This bit is cleared by the load, store,
+logical,  <em>tab</em> and <em>tba</em> instructions. It is altered by most arithmetic instructions, with the particular exception of the <em>inx/dex</em> and <em>iny/dey</em> instructions.</li>
+  <li><strong>C</strong> bit, is set if there is a carry or borrow out in the instruction, and cleared if there is no carry or borrow out. In an addition or subtraction
+operation, carry out implies overflow if the values are unsigned. It is altered by most arithmetic instructions, with the particular exception of
+increment/decrement instruction.</li>
+</ul></div>
+
+<p>To be certain which condition code bits are altered by an instruction, it is a good idea to check the <a href="../motorola/S12CPUV2.pdf"><em>S12CPUV2
+Reference Manual</em></a>. Each instruction has the
+following table in its description:</p>
+
+<p><img src="fig8-1.gif" width="449" height="184" align=bottom /></p>
+
+<p>The triangle symbol indicates that the particular condition code is altered based on the result of the instruction execution. A specific value (0 or 1)
+indicates the code is set or cleared. The dashes indicate the bit is not altered. The text explains how the new value is determined.</p>
+<h2><a name="Conditional Branch Instructions"></a>Conditional Branch Instructions</h2>
+
+<p>There are 16 conditional branch instructions. The best way to understand them is to look at any of them in the Users Guide and examine the branch
+table:</p>
+
+<p><img src="fig8-2.gif" width="653" height="316" align=bottom /></p>
+
+<p>The table has been colored to emphasize that there are four groups of instructions, for each of signed and unsigned comparison, "simple" branch
+conditions, and unconditional. All of these branch instructions use PC relative addressing and allow branching to targets in the range -128 to +127
+bytes from the end of the instruction.</p>
+
+<p>The <strong>Unconditional</strong> branches are special in that the condition codes are not examined. The <em>bra</em> instruction always takes the branch. It is used instead
+of the more general <em>jmp</em> (Jump) instruction when the branch target is within the range of a conditional branch to save an instruction byte. An
+unconditional branch is used to specify the location of the next instruction if it is not the next sequential instruction. </p>
+
+<p>The <em>brn</em> instruction never branches. It is a two byte long <em>no-op</em> (No Operation) instruction. There is also a single byte no-op instruction, called <em><a name="nop">nop</a></em>.
+These instructions are used primarily for time delay.</p>
+
+<p>There is a capability of the <em><a name="jmp">jmp</a></em> instruction which the <em>bra</em> instruction does not have, and that is choice of addressing modes. While the <em>bra </em>(and <em>lbra</em>
+described below)<em> </em>have only relative addressing mode<em>, </em>extended and all indexed modes are available for <em>jmp</em>. The branch target for <em>jmp</em> is the effective
+address of the operand, so, for example, <em>jmp 0,X</em> can be used to jump to the location specified in index register X.</p>
+
+<p>The <strong>Signed<em> </em></strong>and <strong>Unsigned</strong> conditional branches are used after compare or subtract instructions and allow branching based on comparing the value in
+the register with the one in memory. In the case of the <em>sba</em> and <em>cba</em> instructions, the contents of accumulator B is treated like the "memory" operand.
+Both the signed and unsigned instructions offer the same set of 10 comparisons, providing every relational operation. It is important to use the correct
+set of instructions depending on the data being signed or unsigned. Examples:</p>
+<pre>    cmpa  #$10    ; Compare contents of accumulator A, with #$10
+    bge   t1      ; Branch to t1 if A&gt;=$10. This assumes A is signed:
+                  ; A = $11, branch taken    A = $10, branch taken
+                  ; A = $0f, branch not taken  A = $ff, branch not taken
+    bhs   t2      ; Branch to t2 if A&gt;=$10. This assumes A is unsigned:
+                  ; A = $11, branch taken    A = $10, branch taken
+                  ; A = $0f, branch not taken  A = $ff, branch TAKEN
+
+    cpx   ABC     ; Compare contents of index register X contents of word ABC
+    beq   t3      ; Branch if X = (ABC) Test is same for signed or unsigned
+    bhi   t6      ; Branch if X &gt; (ABC). Value in X and at ABC are unsigned
+
+    cmpb  #0      ; Compare contents of accumulator B with zero
+    blt   t4      ; Branch to t4 if B &lt; 0. Certainly, B must be unsigned!
+    blo   t5      ; Branch to t5 if B &lt; 0. An unsigned comparison is being
+                  ; used - this doesn't make any sense, and in fact the
+                  ; branch will never be taken because B can't be less than
+                  ; zero if it is an unsigned value</pre>
+
+<p>The <strong>Simple<em> </em></strong>conditional branches are "simple" only in that they are based on testing a single condition code bit, one of the C, N, V, or Z bits, for being
+0 or 1.</p>
+
+<p><em>Bvs</em> and <em>bvc</em> will branch on the V bit being 1 or 0, respectively. They provide a way to test and branch based on the occurrence of overflow in a signed
+addition or subtraction, or any division instruction except for <em>idiv</em>.</p>
+
+<p><em>Bcs</em> and <em>bcc</em> will branch on the C bit being 1 or 0, respectively. The carry bit indicates overflow of unsigned addition, subtraction, and left shift
+operations, as well as being used for multi-precision addition, subtraction, and shifting.</p>
+
+<p><em>Bmi</em> and <em>bpl </em>will branch on the N bit being 1 or 0, respectively. The N bit is set based on the sign bit of a load, store, <em>tab</em>, <em>tba</em>, arithmetic (except
+<em>inx/dex/iny/dey</em>) or logical instruction. The negative bit indicates that a signed value is negative, or that the most significant bit of an unsigned or
+logical value is 1. Note that <em>bpl</em> is a branch based on the value being non-negative, and not positive. However since these instructions will set all of the
+condition code bits N, Z, and V, all of the branch conditions for signed comparisons are available and behave as though the result of the condition
+code setting instruction was compared with zero. This means that <em>bgt</em> can be used to branch on the signed value being greater than zero.</p>
+
+<p><em>Beq</em> and <em>bne</em> will branch on the Z bit being 1 or 0, respectively. The Z bit is set based on the result being zero in a load, store, <em>tab </em>or <em>tba</em>, arithmetic
+(including <em>inx/dex/iny/dey</em>) or logical instruction.</p>
+<h2><a name="The Long Branch Instructions">The Long Branch Instructions</a></h2>
+
+<p>How can one do a conditional branch when the branch target is out of range? The traditional solution involved changing the branch condition to its
+complement, and branch around a jump instruction which goes to the intended branch target. For an example, say that target t1 in the following
+example is out of range:</p>
+<pre>    cpx     ABC       ;
+    bhi     t1        ; branch to t1 if (X) &gt; (ABC), unsigned</pre>
+
+<p>The complement of <em>bhi</em> is <em>bls </em>(as seen in the table), so we can do the following:</p>
+<pre>    cpx     ABC       ;
+    bls     b1        ; branch around jump if (X) &lt;= (ABC)
+    jmp     t1        ; jump to t1 if (X) &gt; (ABC)
+b1:</pre>
+
+<p>There is a better solution in the 68HC12, and that is to use the long branch instructions. The long branch instructions work identically to the traditional
+branch instructions except they can branch to any location within 32k bytes. Considering the addressing is modulo 64k, this allows branching to any
+location. The downside is that the instructions are two bytes longer, take an extra cycle if the branch is taken, and take two extra cycles if the branch is
+not taken. Use these instructions only if they are really necessary, and particularly note that there is never any reason to use the unconditional long
+branch, <em>lbra</em>, instead of the smaller and faster <em>jmp</em>. Here is the table of long branch instructions, from the reference manual. This table gives the
+instruction names as well as the mnemonics:</p>
+
+<table border="0" width="100%"><tr>
+   <td>
+<table border="1"><th>Long Branch</th><th>Equivalent Short Branch</th></tr>
+   <tr><td>LBRA</td><td>BRA</td></tr>
+   <tr><td>LBRN</td><td>BRN</td></tr>
+   <tr><td>LBCC</td><td>BCC</td></tr>
+   <tr><td>LBCS</td><td>BCS</td></tr>
+   <tr><td>LBEQ</td><td>BEQ</td></tr>
+   <tr><td>LBMI</td><td>BMI</td></tr>
+   <tr><td>LBNE</td><td>BNE</td></tr>
+   <tr><td>LBPL</td><td>BPL</td></tr>
+   <tr><td>LBVC</td><td>BVC</td></tr></table>
+   </td>
+   <td>
+<table border="1"><tr><th>Long Branch</th><th>Equivalent Short Branch</th></tr>
+   <tr><td>LBVS</td><td>BVS</td></tr>
+   <tr><td>LBHI</td><td>BHI</td></tr>
+   <tr><td>LBHS</td><td>BHS</td></tr>
+   <tr><td>LBLO</td><td>BLO</td></tr>
+   <tr><td>LBLS</td><td>BLS</td></tr>
+   <tr><td>LBGE</td><td>BGE</td></tr>
+   <tr><td>LBGT</td><td>BGT</td></tr>
+   <tr><td>LBLE</td><td>BLE</td></tr>
+   <tr><td>LBLT</td><td>BLT</td></tr></table>
+   </td></tr></table>
+
+
+<h2><a name="Branching">Branching Using High Level Languages</a></h2>
+<p>When using a high level language, such as C, branching is always based on a comparison operation. It is not possible to branch on the result of an
+arithmetic operation, such as a branch on overflow. On the other hand, the high level language will always pick the correct (signed or unsigned)
+compare operation, and is capable of comparing values of different types and sizes because it will convert data as necessary. In general, programs
+which have many branching operations are much easier to write and read in a high level language, and have much less chance of error than those
+written using an assembler.</p>
+<h2><a name="Summary">Summary</a></h2>
+
+<p>Selecting the correct branch operation can be a confusing task. The following summary should be helpful:</p>
+
+<div class="minor"><ul>
+  <li>Conditional branches are taken if the condition being tested is true. Execution continues with the instruction following the conditional branch if the
+condition is false.</li>
+  <li>Branching is always based on the values of the C Z N and V bits of the condition code register.</li>
+  <li>The nearest (in time) instruction preceding the branch which sets the condition code bits being tested determines the outcome of the conditional
+branch instruction.</li>
+  <li>Condition codes based on comparing two values are set by the compare or subtract instructions.</li>
+  <li>Comparisons of a single value with respect to zero (&gt;0, &gt;=0, =0, et cetera) are based on the results of a preceding load, store, arithmetic, or logical
+instruction.</li>
+  <li>After a decrement or increment operation of unsigned value, the only valid comparisons are =0 and !=0. Any comparison to zero is allowed for 8
+bit decrement or increment of a signed value.</li>
+  <li>The correct set of branch instructions must be used depending on the value(s) being signed or unsigned. Comparisons between a signed and an
+unsigned value are, in general, not valid.</li>
+  <li>Only use the long branch instructions if the short branch is out of range. Use <em>jmp</em> in preference to <em>lbra</em>, however <em>bra</em> should be used in preference to
+<em>jmp</em> when permissible.</li>
+</ul></div>
+
+<p>Continue with <em><a href="part008a.html">Iteration Examples</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>External Interrupts</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table BORDER="1" WIDTH="100%">
+<tr><td><a href="part015.html">Previous Section</a></td>
+<td><a href="part017.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part016" target="q">Questions</a></td>
+<td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>External Interrupts</h1>
+
+<ul>
+  <li><a href="#IRQ Interrupt">IRQ Interrupt</a></li>
+  <li><a href="#XIRQ Interrupt">XIRQ Interrupt</a></li>
+  <li><a href="#Key Wakeups">Key Wakeups</a></li>
+</ul>
+
+<p>Interrupts can be requested from either internal or external devices. This section covers the provisions for external interrupts. The IRQ interrupt is a general purpose interrupt feature
+typical of that found on every microcontroller. The XIRQ interrupt is a high priority, non-maskable interrupt intended when fast response is critical. This is similar to the NMI (non-maskable interrupt) found in most microcontrollers. The Key Wakeups are lower priority interrupts with multiple pins capable of generating a single interrupt request.</p>
+<h2><a name="IRQ Interrupt"></a>IRQ Interrupt</h2>
+
+<p>The IRQ interrupt is requested via the *IRQ pin. The IRQEN bit (bit 6) of the IRQCR register must be set to 1, the default, to enable the *IRQ pin. The IRQE bit (bit 7) of the IRQCR
+register configures the *IRQ pin to be either falling edge (1) or level sensitive (0). By default the pin is level sensitive, however the application program can configure the pin to be
+edge sensitive. The IRQE bit can only be written to one time after reset. This prevents the settings from accidentally changing.</p>
+
+<p>When there is only a single device which will assert the IRQ interrupt, it is easiest to configure the *IRQ pin for edge sensitive operation. Remember that the interrupt service routine
+must remove the condition that is causing the interrupt request to be invoked. In the case of edge sensitive input mode, the resetting is accomplished automatically by servicing the
+IRQ.</p>
+
+<p>The level sensitive input mode allows multiple sources to assert the IRQ interrupt with open collector drivers, relying on the internal pull-up resistor internal to the *IRQ pin. As
+shown in the figure below, any of devices 1, 2, or 3 can assert the IRQ interrupt by turning on the respective driver. When level sensitive input is used, the condition causing the
+interrupt request must be removed, otherwise the interrupt routine will be re-entered when the I condition code bit is cleared. If multiple devices are requesting an interrupt, they all can
+be serviced in one invocation of the interrupt service routine, or the interrupt routine will be re-entered to handle the additional requests. Note that if the IRQ input were edge sensitive,
+only one interrupt request would be seen (because only one edge would be generated), and the interrupt routine would have to take care to service all devices requesting the interrupt in
+the single invocation.</p>
+
+<p><img src="fig16-4.gif" width="406" height="74" align=bottom /></p>
+
+<p>For microcontrollers which do not have edge sensitive interrupt request inputs, a type D flip-flop with asynchronous reset can be used to make the level sensitive input edge sensitive.</p>
+
+<p><img src="fig16-1.gif" width="381" height="188" align=bottom /></p>
+
+<p>The IRQ edge sets the latch, asserting the IRQ input. The interrupt service routine must then clear the interrupt request by pulsing (negative) the output port pin to reset the latch. Let's
+revisit the problem of the parallel input port with handshaking. The cross-connected NOR gates have been replaced with a flip-flop which drives both the busy input to the input device
+and the *IRQ pin. The NAND gate insures that Busy will be asserted during the asynchronous reset of the flip-flop. Port H is being used for an input port while pin 7 on Port J is being
+used as an output pin to reset the flip-flop.</p>
+
+<p><img src="fig16-2.gif" width="485" height="388" align=bottom /></p>
+
+<p>The interrupt service routine could be the following:</p>
+<pre>irqint:
+    ldaa    PTIH         ; Get the input data
+    bclr    PTJ #$80     ; pulse PJ7
+    bset    PTJ #$80
+    nop
+    cli                  ; safe to re-enable interrupts
+    <em>Process the input data in accumulator A
+</em>    rti
+</pre>
+<h2><a name="XIRQ Interrupt"></a>XIRQ Interrupt</h2>
+
+<p>The XIRQ interrupt request pin replaces what in many microcomputers is called the "non-maskable interrupt request." The problem with a true non-maskable interrupt request is that if
+it is being asserted when the system is powered on, the request will be handled before the microcontroller has initialized the system. The XIRQ request, on the other hand, is maskable
+<strong>once<em>. </em></strong>The X bit in the condition code register is used to mask XIRQ. It is initialized to 1. The program can clear the bit, but once it is cleared it can only be set by an XIRQ being
+serviced.</p>
+
+<p>To clear the X bit, execute the instruction:</p>
+<pre>    andcc   #~$40</pre>
+
+<p>When an XIRQ is serviced, both the X and I bits in the condition code register are set. This masks off both maskable and XIRQ interrupts. However servicing a maskable interrupt
+does not set the X bit, allowing an XIRQ to occur. XIRQ is considered to be at a higher<em> priority</em> <em>level</em> than IRQ in that an XIRQ request will always interrupt the execution of an IRQ
+service routine while an IRQ request will not interrupt the execution of an XIRQ service routine unless specifically enabled by executing the <em>cli</em> instruction.</p>
+
+<p>The XIRQ interrupt is asserted via the  *XIRQ pin. The input is level sensitive and is active low. As with the level sensitive *IRQ interrupt, the input must go back to the high state
+before the interrupt service routine can return.</p>
+
+<p>In the Dragon12-Plus board and most other evaluation boards, the *XIRQ pin is connected to the Program Abort switch and causes execution to return to D-Bug12.</p>
+
+<p>The following example program is an extension of the previous Real
+Time Interrupt program described in
+<a href="part015.html#Writing Interrupt Service Routines">
+Writing Interrupt Service Routines.</a> This time there are three
+separate interrupt service routines, one for the RTI interrupt, one
+for the IRQ interrupt, and one for the XIRQ interrupt. Separate
+variables hold the counts of each interrupt. In addition, resetting
+the microcontroller will reset the counts to zero. The full program
+can be viewed <a href="ints.asm">here</a> or executed in the simulator
+<a href="intsx.html">here</a>. Three interrupt vectors as well as the
+reset vector are set in the vector table:</a>
+<pre>        org     $FFF0
+        dw      rtiisr
+        org     $FFF2
+        dw      irqisr
+        org     $FFF4
+        dw      xirqisr
+        org     $FFFE
+        dw      start
+</pre>
+<p>The program initialization resets the counters, configures the
+real time interrupt, clears the X and I bits in the CCR, then goes
+into a loop waiting for interrupts:</p>
+<pre>start:  lds     #DATAEND
+        movw    #0 ticks                ; reset all counters
+        movw    #0 irqs
+        movw    #0 xirqs
+        movb    #$23 RTICTL  ; M=2, N=3, 1 KHz rate (roughly)
+        bset    CRGINT #$80     ; RTIE = 1
+        andcc   #~$50           ; Clear X and I bits in CCR
+loop:   wai                     ; Everything happens in
+        bra     loop            ; an ISR
+</pre>
+
+<p>The two new interrupt service routines will work fine in the
+simulator, but in the "real" microcontroller, some action would need
+to be taken to remove the interrupt request.</p>
+<pre>irqisr: ; IRQ in the simulator resets automatically!
+        ldd     irqs
+        addd    #1
+        std     irqs
+        rti
+
+xirqisr: ; XIRQ in the simulator resets automatically!
+        ldd     xirqs
+        addd    #1
+        std     xirqs
+        rti
+        end
+</pre>
+
+<h2><a name="Key Wakeups"></a>Key Wakeups</h2>
+
+<p>Ports H, J and P, discussed earlier under <a href="part013.html">General Purpose I/O Pins</a>, have an additional feature in that they can be configured so that a rising or falling signal edge on any pin can cause
+an interrupt request. Pins on port J causes an interrupt request using the vector at $FFCE, while port H uses the vector at $FFCC. Port P has the lowest priority vector at $FF8E. The
+interrupt service routine must check the status register bits to determine which pin is causing the interrupt request. Note that since these pins are edge sensitive, they are not suitable for
+the wired-OR operation described for level sensitive interrupts at the start of this section, and typically pull-up resistors would not be used. </p>
+
+<p>All three ports are configured the same way; we will use Port H as the example. We have previously seen that port H has a data register, named PTH, and a control register DDRH to
+set the direction of each pin. In addition there is a control register, PIEH which contains interrupt enable bits for each pin of port H, and a status register, PIFH  which contains the
+interrupt flags for each pin. The pull-up polarity register PPSH also selects the edge on each pin that will cause the interrupt flag to be set. A 1 bit means the rising edge will set the
+flag bit, while a 0 bit, the default, means the falling edge will set the flag bit.</p>
+
+<p><center><img src="fig16-3.gif" width="493" height="355" /></center>For each pin, the edge that sets the flag bit can be generated by an input signal if the pin is configured as an input pin, or by writing to the data register if the pin is configured as an
+output pin. For an interrupt request to be generated, the corresponding bit in the interrupt enable register must be set. </p>
+
+<p>The interrupt flag can be cleared by writing a one to the bit. It is not cleared by writing a zero. The flags should not be cleared using the <em>bset</em> instruction. The reason is that the <em>bset
+</em>instruction performs an OR operation on the location. Using <em>bset</em> will cause all the flags that are set to be reset, not just the selected flag. The correct procedure is to use <em>bclr</em>, with a
+mask that is 0 for each flag that is to be reset, and a 1 for those that are to be unchanged.</p>
+
+<p>It is desired to count the number of 1-&gt;0 transitions on pin PH0 (using byte location $1000 to hold the count) and on PH4 (using byte location $1001). The following code configures
+Port H to generate an interrupt when the transition occurs:</p>
+<pre>    movb    #$11 PIEH      ; Enable interrupts for port H pins 0 and 4</pre>
+
+<p>The interrupt vector at $FFCC is set to point to the following interrupt routine:</p>
+<pre>kwhint:
+    brclr   PIFH #$1 not0  ; Branch if port H pin 0 didn't have falling
+                           ; edge
+    bclr    PIFH #~$1      ; Clear the interrupt flag
+    inc     $1000          ; increment the count
+not0:
+    brclr   PIFH #$10 not4 ; Branch if pin 4 didn't have falling edge
+    bclr    PIFH #~$10     ; Clear the interrupt flag
+    inc     $1001          ; Increment the count
+not4:
+    rti</pre>
+
+<p>Note that the interrupt flag is only cleared if it was sensed to be 1. Let's consider the case where bit 4 flag is set followed shortly by the bit 0 flag. The bit 4 flag being set will cause the
+interrupt request, the first <em>brclr</em> will take the branch, and the second <em>brclr</em> will not be taken. Say that at this point the bit 0 flag is set. The <em>bclr </em>instruction will clear only the bit 4 flag,
+and only the count of bit 4 edges will be incremented. When the <em>rti</em> is executed, the interrupt request will still be asserted because the bit 0 flag is set, and the interrupt service routine
+will be immediately reentered. This time the first <em>brclr</em> will not be taken, and the bit 0 flag will be cleared, unasserting the interrupt request.</p>
+
+<p><strong>Reference:</strong> <a href="../motorola/S12CPU15UG.pdf"><em>HCS12 Core Users Guide</em></a> for IRQ and XIRQ operation, <a href="../motorola/S12DP256PIMV2.pdf"><em>MC9S12DP256 Port Integration Module Block Users Guide</em></a> for key interrupts, <a href="../motorola/9S12DP256BDGV2.pdf"><em>MC9S12DP256B Device Users
+Guide</em></a> for interrupt vector table and pinouts.</p>
+
+<p>Continue with <em><a href="part017.html">The RTI and COP Interrupts</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

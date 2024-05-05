@@ -1,0 +1,319 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Time Multiplexed Displays</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table border="1" width="100%">
+<tr valign="top"><td><a href="part027a.html">Previous Appendix</a></td>
+<td><a href="part027b.html">Next Appendix</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>Time Multiplexed Displays</h1>
+
+<ul>
+  <li><a href="#The LED Display Character">The LED Display Character</a></li>
+  <li><a href="#multiplecharacterdisplays">Multiple Character Displays</a></li>
+  <li><a href="#Example Program">Example Program</a> </li>
+</ul>
+<h2><a name="The LED Display Character">The LED Display Character</a></h2>
+
+<p>The seven-segment LED (<em>L</em>ight <em>E</em>mitting <em>D</em>iode) display is a common part used to display information to the user.
+The seven segments each contain an LED, plus an eighth diode is used for
+a decimal point. Eight signal lines are used to illuminate the segments
+individually. A typical connection that which is on the Dragon12-Plus board
+used in this section, is shown below:</p>
+
+<p><img src="fig17b-1.gif" width="185" height="127" align=bottom /></p>
+
+<p>The anodes of the diodes are connected to a port with weights (values)
+as shown. The cathodes are connected in common to ground. Series resistors
+are required between the display and the microcontroller port to limit
+current in the lit, forward-biased diodes. By selecting different combinations
+of bits, the numerals '0' through '9' are easily displayed. Certain other
+characters can be displayed as well, although in some cases a certain amount
+of imagination is needed to realize what character the display represents.
+The segment mapping table below shows what values display which characters.
+The index column represents a table index - in the program at the end of
+this section, a table is used with these values. By having table indices
+0 through 9 correspond to display values 0 through 9 it's easy to use the
+displays to show numeric information. Some displays have built-in logic
+to display digits based on a provided 4 bit BCD value, however we will
+use the simpler, basic display here.</p>
+
+<table border="1" width="100%" cellpadding="1" cellspacing="1">
+<tr><th>Index</th>
+<th>Value</th>
+<th>Displays as</th>
+<th bgcolor="#000000" WIDTH="10"></th>
+<th>Index</th>
+<th>Value</th>
+<th>Displays as</th></tr>
+<tr><td>0</td>
+<td>$3F</td>
+<td>0</td>
+<td bgcolor="#000000"></td>
+<td>17</td>
+<td>$76</td>
+<td>H</td></tr>
+<tr><td>1</td>
+<td>$06</td>
+<td>1</td>
+<td bgcolor="#000000"></td>
+<td>18</td>
+<td>$74</td>
+<td>h</td></tr>
+<tr><td>2</td>
+<td>$5B</td>
+<td>2</td>
+<td bgcolor="#000000"></td>
+<td>19</td>
+<td>$1E</td>
+<td>J</td></tr>
+<tr><td>3</td>
+<td>$4F</td>
+<td>3</td>
+<td bgcolor="#000000"></td>
+<td>20</td>
+<td>$38</td>
+<td>L</td></tr>
+<tr><td>4</td>
+<td>$66</td>
+<td>4</td>
+<td bgcolor="#000000"></td>
+<td>21</td>
+<td>$54</td>
+<td>n</td></tr>
+<tr><td>5</td>
+<td>$6D</td>
+<td>5</td>
+<td bgcolor="#000000"></td>
+<td>22</td>
+<td>$63</td>
+<td>o (raised)</td></tr>
+<tr><td>6</td>
+<td>$7D</td>
+<td>6</td>
+<td bgcolor="#000000"></td>
+<td>23</td>
+<td>$5C</td>
+<td>o</td></tr>
+<tr><td>7</td>
+<td>$07</td>
+<td>7</td>
+<td bgcolor="#000000"></td>
+<td>24</td>
+<td>$73</td>
+<td>P</td></tr>
+<tr><td>8</td>
+<td>$7F</td>
+<td>8</td>
+<td bgcolor="#000000"></td>
+<td>25</td>
+<td>$50</td>
+<td>r</td></tr>
+<tr><td>9</td>
+<td>$6F</td>
+<td>9</td>
+<td bgcolor="#000000"></td>
+<td>26</td>
+<td>$78</td>
+<td>t</td></tr>
+<tr><td>10</td>
+<td>$77</td>
+<td>A</td>
+<td bgcolor="#000000"></td>
+<td>27</td>
+<td>$3E</td>
+<td>U</td></tr>
+<tr><td>11</td>
+<td>$7C</td>
+<td>b</td>
+<td bgcolor="#000000"></td>
+<td>28</td>
+<td>$1C</td>
+<td>u</td></tr>
+<tr><td>12</td>
+<td>$39</td>
+<td>C</td>
+<td bgcolor="#000000"></td>
+<td>29</td>
+<td>$6E</td>
+<td>Y</td></tr>
+<tr><td>13</td>
+<td>$5E</td>
+<td>d</td>
+<td bgcolor="#000000"></td>
+<td>30</td>
+<td>$08</td>
+<td>_</td></tr>
+<tr><td>14</td>
+<td>$79</td>
+<td>E</td>
+<td bgcolor="#000000"></td>
+<td>31</td>
+<td>$40</td>
+<td>-</td></tr>
+<tr><td>15</td>
+<td>$71</td>
+<td>F</td>
+<td bgcolor="#000000"></td>
+<td>32</td>
+<td>$00</td>
+<td>blank</td></tr>
+<tr><td>16</td>
+<td>$3D</td>
+<td>G</td>
+<td bgcolor="#000000"></td>
+<td></td>
+<td></td>
+<td></td></tr></table>
+
+<p>Here's an example showing displaying '4' and '2' from the segment mapping table, above. Adding $80 (setting the most significant bit) of the value will light the decimal point.</p>
+
+<p><img src="fig17b-2.gif" width="315" height="121" align=bottom /></p>
+
+
+
+<h2><a name="multiplecharacterdisplays" id="multiplecharacterdisplays"></a>Multiple Character Displays</h2>
+<p>There are four seven-segment display units on the Dragon12-12 board, allowing the display of 4 characters of information. The schematic for the anode connections is shown below. Note that two of
+  the characters are upside down. The connections compensate for this. The reason for the upside down characters is to place the decimal point LEDs so that there are two central decimal points that
+  can be used as a colon when implementing a clock display.</p>
+<p><img src="fig17b-3.gif" width="626" height="301" align=bottom /></p>
+
+<p>If we drive port B (which connects to the anodes) with the value $66, we get:</p>
+
+<p><img src="fig17b-5.gif" width="254" height="117" align=bottom /></p>
+
+<p>We have a problem in that all four displays show the same character! To solve this problem, the cathodes are driven from four pins on port P:</p>
+
+<p><img src="fig17b-4.gif" width="275" height="141" align=bottom /></p>
+
+<p>By driving a single pin of port P low, with the remaining three driven high, we can select a single display at a time and show a different value in each display. In the example below, we can display
+"4567":</p>
+
+<p><img src="fig17b-6.gif" width="369" height="429" align=bottom /></p>
+
+<p>Of course we really want to have all digits lit at the same time, like this:</p>
+
+<p><img src="fig17b-7.gif" width="245" height="91" align=bottom /></p>
+
+<p>While this is not possible, if we drive each character sequentially at a fast enough rate, the users eyes will perceive all the characters being displayed at the same time. The is the same principal that is
+used with CRT displays and motion pictures. To eliminate "flicker" each character must be lit at least 60 times a second. This means that we must switch from character to character at least 240 times
+per second. The best way to accomplish this is to use an interrupt routine to display each character in turn, and have that routine executed at least every 4 milliseconds. We can use the Real Time
+Interrupt to accomplish this! </p>
+<h2><a name="Example Program">Example Program </a></h2>
+
+<p>This program is on the CD <a href="part017b.asm">here</a>. It will
+   display the word "HELP" on the LED display of the Dragon12-Plus board. </p>
+<pre>
+#include        registers.inc   ; include register equates and memory map
+        org     DATASTART
+;
+char:          ds      1        ; Character last displayed (index 0, 1, 2, 3)
+disptn:        ds      4        ; These four bytes will be displayed
+                                ; Using the segment values shown below in segm_ptrn</pre>
+
+<p>There is very little data for this program. One byte is used to indicate the character being lit (0 for the left-most through 3 for the right-most). A 4 byte array holds the bytes to be displayed. The
+values of the bytes are the indices into the segment mapping table <em>segm_ptrn</em> which is the same as shown at the start of this section. If we were displaying a numeric value, the four bytes would each
+contain a BCD digit of the decimal value. </p>
+<pre>        org     PRSTART
+;
+start:
+        lds     #DATAEND        ; initialize the stack
+        movw    #rtiisr UserRTI ; initialize the int vetctor
+        ldaa    #$ff            ; 
+        staa    DDRB            ; portb = output
+        staa    DDRP            ; portp = output
+        staa    PTP             ; turn off 7-segment display</pre>
+
+<p>This is straightforward initialization.</p>
+<pre>        movb    #$17 RTICTL     ; RTI divider is 8192, about 1 mSec
+        bset    CRGINT #$80     ; enable RTI interrupts</pre>
+
+<p>For the Real Time Interrupt, we want an interrupt roughly every  1
+   millisecond. This means dividing the 8 MHz crystal clock by 8192.
+   There are several settings that will do this. The value $17 gives
+   a divide by 8 cascaded with a divide by 1024. We enable RTI
+   interrupts, but none can occur until we clear the I bit in the
+   condition code register.</p>    
+<pre>        ldx     #disptn         ; Address of display field
+        movb    #$11+$80 1,X+   ; binary code for the letter 'H' 
+                                ; (set decimal point as well)
+        movb    #$0E 1,X+       ; binary code for the letter 'E'
+        movb    #$14 1,X+       ; binary code for the letter 'L'
+        movb    #$18 0,X        ; binary code for the letter 'P'</pre>
+
+<p>The display array is initialized for the characters HELP. The values here are the indices into the table. We will also set the decimal point LED on the first character.  </p>
+<pre>        cli                     ; Start interrupts
+
+idle:   wai                     ; idle process
+        jmp     idle</pre>
+
+<p>Everything happens in the interrupt service routine <em>rtiisr</em>, so all we do in the idle process is wait for the next interrupt.  Now we get the interrupt service routine:</p>
+<pre>rtiisr:
+        bclr    CRGFLG #~$80    ; clear RTI flag
+        ldab    char            ; character selection
+        cli                     ; allow other interrupts to occur </pre>
+
+<p>We clear the RTI flag, allowing the program to eventually return from the interrupt service routine. After a one instruction delay, the interrupt flag is cleared so other interrupts can be handled. In this
+program there are no other interrupts, but this is good programming practice nonetheless. </p>
+<pre>        incb                    ; char+1 modulo 4
+        andb    #3
+        stab    char</pre>
+
+<p>The value in <em>char</em> is incremented, modulo 4. This will advance to the next character.</p>
+<pre>        tfr     b x             ; character selection in X
+        ldaa    disptn,x        ; get desired display value</pre>
+
+<p>We use the <em>char</em> value to index the array of characters to display, and fetch that value, which is an index into the segment mapping table. </p>
+<pre>        tfr     a b
+        anda    #$7f            ; mask off the decimal point
+        ldy     #segm_ptrn      
+        ldaa    a,y             ; look up segments to light in table</pre>
+
+<p>We mask off the most significant bit when indexing the table since the most significant bit isn't a table index but is the decimal point indicator.</p>
+<pre>        andb    #$80            ; mask off all but the decimal point
+        aba                     ; merge decimal point into segment value
+        staa    PORTB           ; light the segments</pre>
+
+<p>The decimal point bit is merged back into the segment mapping table value, and the correct segments are lit. But the segments are of the wrong character position, so we need to change the value in
+port P as well. </p>
+<pre>        ldaa    PTP             ; only alter port p bits we are using
+        anda    #$f0
+        oraa    dspmap,x        ; light up correct char
+        staa    PTP</pre>
+
+<p>We must be careful to only alter the four least significant bits of port P since the other bits might be used for other features. The table <em>dspmap</em> is used to select the correct character to light given the
+index to the character position. </p>
+<pre>        rti</pre>
+
+<p>And we are done with the code. What remains are the tables:</p>
+<pre>dspmap: db      $0e,$0d,$0b,$07 ; Selects the correct character for lighting
+segm_ptrn:                                              ; segment pattern
+        db     $3f,$06,$5b,$4f,$66,$6d,$7d,$07          ; 0-7
+;                0,  1,  2,  3,  4,  5,  6,  7
+        db     $7f,$6f,$77,$7c,$39,$5e,$79,$71          ; 8-15
+;                8,  9,  A,  b,  C,  d,  E,  F
+        db     $3d,$76,$74,$1e,$38,$54,$63,$5c          ; 16-23
+;                G,  H,  h,  J   L   n   o   o
+        db     $73,$50,$78,$3e,$1c,$6e,$08,$40          ; 24-31
+;                P,  r,  t,  U,  u   Y   _   -
+        db     $00                                     ; 32
+;               blk
+;
+        end
+</pre>
+
+<p>Continue with <a href="part027b.html"><em>Multiple Processes</em></a></p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

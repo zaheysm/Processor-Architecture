@@ -1,0 +1,155 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Decision Trees and Logic Instructions</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table border="1" width="100%">
+<tr><td><a href="part009.html">Previous Section</a></td>
+<td><a href="part011.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part010" target="q">Questions</a></td>
+<td><a href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>Decision Trees and Logic Instructions</h1>
+
+<ul>
+  <li><a href="part010.html">Boolean Logic Review</a></li>
+  <li><a href="part010a.html">Selection Control Structure</a></li>
+  <li><a href="part010b.html">Bitwise Boolean Operations</a></li>
+  <li><a href="part010c.html">Advanced Bit Instructions</a></li>
+  <li><span class="selected">Bitwise Boolean Summary</span>
+  <ul>
+    <li><A href="#Setting Bits">Setting Bits (making them &quot;1&quot;)</a></li>
+    <li><A href="#Clearing BIts">Clearing Bits (making them &quot;0&quot;)</a></li>
+    <li><A href="#Toggling Bits">Toggling Bits (complementing them)</a></li>
+    <li><A href="#Testing Bits">Testing Bits For Conditional Branching</a></li>
+    <li><A href="#Extracting">Extracting Bit Fields</a></li>
+    <li><A href="#Inserting">Inserting Bit Fields</a></li>
+    <li><A href="#Bit Manipulation">Bit Manipulation In The C Language</a></li>
+  </ul>
+  </li>
+</ul>
+
+<p>The preceding descriptions of bitwise Boolean operations deserves a summary, and this one is oriented toward practical use - how to set, clear, toggle, and
+test bits, and extract and insert bit fields. But first we will present a method that will simplify specifying bits in a byte.</p>
+
+<p>Bits are numbered from the least significant (bit 0) to the most significant (bit 7 in a byte). In the 68HC12, all boolean operations work only on bytes. You
+can give symbolic names to the bits with <em>EQU</em> assembler directives:</p>
+<pre>B0 equ %00000001
+B1 equ %00000010
+B2 equ %00000100
+B3 equ %00001000
+B4 equ %00010000
+B5 equ %00100000
+B6 equ %01000000
+B7 equ %10000000</pre>
+
+<p>When we set/clear/toggle bits, we specify the bits we want to alter using a <em>bit mask</em>, which is a value that is (usually) 1 in bit positions we want to alter and
+0 in all other bit positions. So a mask for bit 1 would be B1 and a mask for bits  2, 4, and 7 would be B2+B4+B7.</p>
+<h2><A name="Setting Bits">Setting Bits</a> (making them &quot;1&quot;)</h2>
+
+<p>Setting bits is done with an OR operation. If we OR with a 1, we set the bit. If we OR with a 0 the bit is unchanged. Setting bits in accumulators A or B:</p>
+<pre>    oraa #B3        ; set bit 3 in accumulator A
+    orab #B1        ; set bit 1 in accumulator B</pre>
+
+<p>The <em>oraa</em> and <em>orab</em> instructions can be used with memory arguments as well as immediate mode. This also applies to the <em>anda</em>, <em>andb</em>, <em>eora</em>, and <em>eorb</em>
+instructions discussed below. Only the immediate mode is used for these examples.</p>
+
+<p>We can set bits in a memory byte with the <em>BSET</em> instruction:</p>
+<pre>    bset $1000 #B2    ; set bit 2 in location $1000
+    bset FOO #B4+B5   ; set bits 4 and 5 in location FOO</pre>
+<h2><A name="Clearing BIts">Clearing Bits</a> (making them &quot;0&quot;)</h2>
+
+<p>Clearing bits is done with an AND operation. IF we AND with a 0, we clear the bit. If we AND with a 1 the bit is unchanged. We use the ~ operator in the
+assembler instruction to complement the mask bits, making it convenient to specify a mask where 0 bits indicate the action is to be performed. Clearing bits
+in accumulators A or B:</p>
+<pre>    anda #~B3        ; clear bit 3 in accumulator A
+    andb #~B1        ; clear bit 1 in accumulator B</pre>
+
+<p>We can clear bits in a memory byte with the <em>BCLR</em> instruction. The mask bits are 1 in positions we want cleared:</p>
+<pre>    bclr $1000 #B2    ; clear bit 2 in location $1000
+    bclr FOO #B4+B5 ; clear bits 4 and 5 in location FOO</pre>
+<h2><A name="Toggling Bits">Toggling Bits</a> (complementing them)</h2>
+
+<p>Toggling bits is done with an EXOR (exclusive or) operation. If we EXOR with a 1, the bit will be toggled. If we EXOR with a 0 the bit is unchanged.
+Toggling bits in accumulators A or B:</p>
+<pre>    eora #B3        ; toggle bit 3 in accumulator A
+    eorb #B1        ; toggle bit 1 in accumulator B</pre>
+
+<p>We can't toggle bits in memory - we need to load them into an accumulator:</p>
+<pre>    ldaa $1000       ; toggle bit 2 in location $1000
+    eora #B2
+    staa $1000</pre>
+<h2><A name="Testing Bits">Testing Bits</a> For Conditional Branching</h2>
+
+<p>The <em>oraa, orab, anda, andb, eora,</em> and <em>eorb</em> instructions set condition codes based on their results, allowing use of conditional branches. The <em>bita</em> and <em>bitb</em>
+instructions perform an AND operation on an accumulator, like the anda and andb instructions, but they do not store their result, they just set the condition
+codes. This allows the following type of operations:</p>
+<pre>    bita #B1       ; test bit 1 of accumulator A
+    bne r1         ; branch to r1 if bit 1 of accumulator A is 1
+    
+    bitb #B1+B2    ; test bits 1 and 2 of accumulator B
+    beq r2         ; branch if bits 1 and 2 of accumulator B are both 0.
+
+    bitb #B3+B4    ; test bits 3 and 4 of accumulator B
+    bne r3         ; branch if bit 3 or bit 4 of accumulator B is 1.</pre>
+
+<p>There are special instructions for testing memory bits because this is done frequently. These instructions combine a test (AND with mask) and conditional
+branch.</p>
+<pre>    brset FOO #B4 r4      ; branch to r4 if bit 4 of location FOO is 1.
+    brset FOO #B3+B5 r5   ; branch to r5 if bits 3 and 5 of location FOO are both 1
+                     (NOTE that the logic is not the same as bit followed by bne!)
+    brclr $1002 #B6 r6    ; branch to r6 if bit 6 of location $1002 is 0.
+    brclr $1002 #B1+B7 r7 ; branch to r7 if bits 1 and 7 of location $1002 are both 0</pre>
+<h2><A name="Extracting">Extracting</a> Bit Fields</h2>
+
+<p>To extract a bit field with rightmost bit number <em>N</em> and length <em>M</em>, we shift right N times then AND with (2<sup>M</sup>-1). The AND step is not necessary if the field is
+left justified in the byte (the leftmost bit of the field is the leftmost bit of the byte). For example, to extract the bit field from bit 3 to bit 6 (4 bits total) that is
+in accumulator A, we would execute the code:</p>
+<pre>    lsra            ; shift right 3 bits
+    lsra
+    lsra
+    anda #15       ; M=4, 2^4 - 1 = 15</pre>
+<h2><A name="Inserting">Inserting</a> Bit Fields</h2>
+
+<p>To insert a bit field with the rightmost bit number N and length M, we shift left N times then AND with ((2<sup>M</sup>-1)2<sup>N</sup>). We AND the target byte with ~((2<sup>M</sup>-1)2<sup>N</sup>) and OR (or add) the two bytes together to get the target byte with the field inserted. For example, to insert the bit field in accumulator A into the byte
+in accumulator B in bits 3 through 6, we would execute the code:</p>
+<pre>    lsla            ; shift left 3 bits
+    lsla
+    lsla
+    anda #120      ; M=4, N=3, (2^4 - 1)*(2^3)=15*8=120
+    andb #~120
+    aba             ; add together (easer than ORing in this case)</pre>
+<h2><A name="Bit Manipulation">Bit Manipulation</a> In The C Language</h2>
+
+<p>The following code segments show how to set, clear, complement, and test bits using the C language. C supports bit fields directly, but not in a way that is
+particularly useful for hardware programming in that the actual bit positions of a field cannot be explicitly specified.</p>
+<pre>#define B0 (0x1)    /* Define some bit positions */
+#define B1 (0x2)
+#define B2 (0x4)
+...
+#define foo *((unsigned char *) 0x1010) /* Declare foo to be an unsigned byte at location $1010 */
+unsigned char bar; /* Declare bar to be unsigned byte at location assigned by C compiler */
+...
+    foo |= B2;      /* Set bit 2 of foo */
+    foo &amp;= ~B0;     /* Clear bit 0 of foo */
+    foo ^= B1;      /* Toggle bit 1 of foo */
+    if (foo &amp; B1) { <em>stuff</em> } /* Execute <em>stuff</em> if bit 1 of foo is set */
+...
+    /* extract bit field from bits 3 to 6 of foo and store in bar */
+    bar = (foo &gt;&gt; 3) &amp; 15;
+    /* insert value in bar back into bit field in foo */
+    foo = ((bar &lt;&lt; 3) &amp; 120) | (foo &amp; ~120);</pre>
+
+<p>Continue with <em><a href="part011.html">The Stack and Subroutines</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

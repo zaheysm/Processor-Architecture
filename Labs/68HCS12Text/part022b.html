@@ -1,0 +1,228 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Serial Communications Interface and Buffering</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table BORDER="1" WIDTH="100%">
+<tr><td><a href="part021.html">Previous Section</a></td>
+<td><a href="part023.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part022" target="q">Questions</a></td>
+<td><A href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>Serial Communications Interface and Buffering</h1>
+
+<ul>
+  <li><a href="part022.html">Serial Communications Overview</a></li>
+  <li><a href="part022a.html">Configuring the Serial Communications Interface</a></li>
+  <li>Polled Operation of the Serial Communications Interface
+  <ul>
+    <li><a href="#Transmitter Operation">Transmitter Operation</a></li>
+    <li><a href="#Receiver Operation">Receiver Operation</a></li>
+  </ul>
+  </li>
+  <li><a href="part022c.html">Buffering</a></li>
+</ul>
+
+<p>The transmitter and receiver of the SCI operate independently, except for the baud rate (bit rate) generator.</p>
+<h2><a name="Transmitter Operation">Transmitter Operation</a></h2>
+<p>The transmitter uses the following bits in the control, status, and data registers for operation after configuration:</p>
+
+<table border="1" width="100%" cellpadding="1">
+<tr><th>Register</th>
+<th>Bit 7</th>
+<th>Bit 6</th>
+<th>Bit 5</th>
+<th>Bit 4</th>
+<th>Bit 3</th>
+<th>Bit 2</th>
+<th>Bit 1</th>
+<th>Bit 0</th></tr>
+<tr><td>SC<em>n</em>CR2</td>
+<td>TIE</td>
+<td>TCIE</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>SBK</td></tr>
+<tr><td>SC<em>n</em>SR1</td>
+<td>TDRE</td>
+<td>TC</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td></tr>
+<tr><td>SC<em>n</em>DRH</td>
+<td></td>
+<td>T8</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td></tr>
+<tr><td>SC<em>n</em>DRL</td>
+<td>R7T7</td>
+<td>R6T6</td>
+<td>R5T5</td>
+<td>R4T4</td>
+<td>R3T3</td>
+<td>R2T2</td>
+<td>R1T1</td>
+<td>R0T0</td></tr></table>
+
+<p>The transmitter consists of a one byte transmit data register (TDR) which parallel loads a shift register. The serial output of the shift register drives the
+TD pin. In normal use, SC<em>n</em>SR1<em> </em>is read, then T8 is loaded with the ninth data bit (if used) then the remaining 8 bits of the TDR are loaded by storing to
+location SC<em>n</em>DRL. It should be noticed that the DRH/DRL addresses connect to the TDR register only on writes. On reads the addresses are for the
+receive data register, described under <a href="#Receiver Operation">receiver operation</a>.</p>
+
+<p>By first reading SC<em>n</em>SR1<em> </em>then writing to the TDR, the transmitter is started. This clears the TDRE bit, indicating the TDR register is in use, and the TC
+bit, indicating that the transmitter is busy. The first thing the transmitter does is transfer the data from the TDR to the shift register. At this point the TDR
+register is considered to be empty, and the TDRE bit is set. The transmitter sends a start bit followed by shifting out the data bits, then sending a stop bit.
+When the stop bit has been sent, and if the TDR is still empty, the transmitter enters its idle state and sets the TC (transmit complete) bit. Otherwise it
+transfers the data from the TDR to the shift register and process repeats.</p>
+
+<p>The SBK bit will cause break frames to be sent when set. The break frames will continue to be sent until SBK is reset to zero.</p>
+
+<p>The microcontroller may store new data into the TDR for transmission as long as the TDRE bit is set. Therefore it must always check the TDRE bit
+before storing into the TDR. This checking is also a requirement for the transmitter to transmit the data in the TDR. A code sequence which transmits the
+byte in accumulator A through SCI0 would be:</p>
+<pre>L1: brclr  SC0SR1 #$80 L1     ; loop until TDRE is set
+    staa   SC0DRL             ; store data byte into TDR</pre>
+
+<p>Note that at 9600 bps it take roughly one millisecond to transmit a character
+byte. Several thousand instructions may execute during the time it takes
+to transmit that character. If the program stops or the transmitter is
+disabled before the full byte is transmitted then the character is lost.
+For this reason, it is sometimes necessary to have a loop which waits until
+the transmission is finished. This can be accomplished with a single instruction
+loop:</p>
+<pre>L2: brclr  SC0SR1 #$40 L2     ; loop until TC is set</pre>
+
+<p>The TDRE and TC flags can also cause an interrupt to be requested. The TIE and TCIE control bits are the interrupt enable bits for TDRE and TC
+respectively. Use of interrupts with the serial ports will be discussed thoroughly in the <a href="part022c.html">next section</a>.</p>
+<h2><a name="Receiver Operation">Receiver Operation</a></h2>
+
+<p>The receiver uses the following bits in the control, status, and data registers for operation after configuration:</p>
+
+<table border="1" width="100%" cellpadding="1">
+<tr><th>Register</th>
+<th>Bit 7</th>
+<th>Bit 6</th>
+<th>Bit 5</th>
+<th>Bit 4</th>
+<th>Bit 3</th>
+<th>Bit 2</th>
+<th>Bit 1</th>
+<th>Bit 0</th></tr>
+<tr><td>SC<em>n</em>CR2</td>
+<td></td>
+<td></td>
+<td>RIE</td>
+<td>ILIE</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td></tr>
+<tr><td>SC<em>n</em>SR1</td>
+<td></td>
+<td></td>
+<td>RDRF</td>
+<td>IDLE</td>
+<td>OR</td>
+<td>NF</td>
+<td>FE</td>
+<td>PF</td></tr>
+<tr><td>SC<em>n</em>SR2</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>RAF</td></tr>
+<tr><td>SC<em>n</em>DRH</td>
+<td>R8</td>
+<td></td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td></tr>
+<tr><td>SC<em>n</em>DRL</td>
+<td>R7T7</td>
+<td>R6T6</td>
+<td>R5T5</td>
+<td>R4T4</td>
+<td>R3T3</td>
+<td>R2T2</td>
+<td>R1T1</td>
+<td>R0T0</td></tr></table>
+
+<p>The receiver consists of a shift register which serially shifts in the data from RD then loads the data into a receive data register, RDR. The receive data
+register can be read by reading the addresses SC<em>n</em>DRH and SC<em>n</em>DRL<em>. </em>In almost all cases, only SC<em>n</em>DRL<em> </em>will be used as only 8 data bits need to be read.
+The shift register starts after receipt of the start bit. The SCI's clock rate is 16 times the data rate, as shown in the figure, below. When a low input level
+(space) is detected, the input is also sampled on the third, fifth, and seventh clock. If at least two of the three are low, then the start bit is deemed to be
+detected, otherwise the process of looking for the start bit repeats. Each data bit, as well as the stop bit, is sampled on the eight, ninth, and tenth SCI clock
+within the data period. The majority of the bit values determine the value accepted for that data or stop bit. </p>
+
+<p><img src="fig22b-1.gif" width="296" height="164" align=bottom /></p>
+
+<p>When the stop bit has been detected, the data is transferred into the RDR and the RDRF (Receive Data Register Full) status bit is set. There are four error
+bits that might be set as well at that time. PF indicates a parity error which is that the wrong parity bit was read if parity is enabled. FE indicates a framing
+error, which means the stop bit was read as a 0. This happens if the transmitter and receiver frequencies do not match or the transmitter sends a break. NF
+is set if there is noise; this means that the sampled data for at least one of the bits was not unanimous. </p>
+
+<p>The microcontroller must read the contents of the RDR (after reading SC<em>n</em>SR1) to reset the RDRF and error bits. If the microcontroller fails to read the
+RDR before a new byte is shifted in and loaded into the RDR an overrun error occurs and the OR bit is set.</p>
+
+<p>For most reliable operation, the microcontroller should check all the error bits with each byte read. Here is a sample program to read a character byte
+from SCI0:</p>
+<pre>L3:  brclr SC0SR1 #$20 L3    ; Wait for RDRF to be set
+     ldaa  SC0DRL            ; Then read the data</pre>
+
+<p>To check for errors, we must examine the error bits before reading the data. Here are two alternative approaches. The first:</p>
+<pre>L4:  brclr SC0SR1 #$20 L4    ; Wait for RDRF to be set
+     brset SC0SR1 #$1 Parity ; branch to Parity if parity error
+     brset SC0SR1 #$2 Frame  ; branch to Frame if framing error
+     brset SC0SR1 #$4 Noise  ; branch to Noise if noise error
+     brset SC0SR1 #$8 Ovr    ; branch to Ovr if overrun error
+     ldaa  SC0DRL            ; Everything OK - read the data</pre>
+
+<p>Each error routine must read SC0DRL to clear the error condition and prevent an overrun when the next byte arrives. The second alternative is more
+efficient when there is no error, and handles the reading of SC0DRL:</p>
+<pre>L5:  ldab  SC0SR1            ; load status register into B
+     bitb  #$20              ; RDRF?
+     beq   L5                ;  no - try again
+     ldaa  SC0DRL            ; Read the data
+     bitb  #$0f              ; Any errors?
+     bne   Errors            ;  yes - go to error routine, which can
+                             ;  determine error by checking individual
+                             ;  bits in accumulator B</pre>
+
+<p>There is an additional receiver status bit, IDLE, which is set when the receiver is idle for at least one frame time after a character is received. This bit is
+not set if the wake-up facility is being used. Both RDRF and IDLE can cause interrupt requests when the interrupt enable bits, RIE and ILIE respectively,
+are set. </p>
+
+<p>Because data can come in at any time, it is important to poll RDRF frequently to avoid losing data (overrun errors). It is generally much easier to use the
+interrupt system and have an interrupt driven routine handle the receiver. Data is held in an array called a <em>buffer</em> until the program wants it. Design and
+operation of buffered, interrupt-driven I/O is described in the next section.</p>
+
+<p>Continue with <em><a href="part022c.html">Buffering</a></em>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

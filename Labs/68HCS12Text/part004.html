@@ -1,0 +1,234 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Development Tools</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+<table border="1" width="100%" cellpadding="1" cellspacing="1">
+<tr valign="top"><td><a href="part003.html">Previous Section</a></td>
+<td><a href="part005.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part004" target="q">Questions</a></td>
+<td><a href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>Development Tools</h1>
+<p><em>This section is split among several pages because of its
+   length. The start of split sections have a table of contents
+   showing each page and the contents of the current page. The current
+   page is emphasized in <span class="selected">bold</span>.</em></p>
+<ul>
+  <li><span class="selected">Assemblers and Compilers</span>
+  <ul>
+    <li><a href="#Assemblers">Assemblers</a></li>
+    <li><a href="#C compilers">C compilers</a></li>
+    <li><a href="#The Freeware 68HC12 Assembler">The Freeware 68HC12 Assembler</a></li>
+  </ul>
+  </li>
+  <li><a href="part004a.html">Debuggers and Interpreters</a></li>
+  <li><a href="part004b.html">Simulators, Evaluation Boards, and In-circuit Emulation</a></li>
+  <li><a href="part004c.html">Flowcharts and Pseudocode</a></li>
+</ul>
+<h2>Assemblers and Compilers</h2>
+
+<p>It is possible to program a microcontroller by writing the actual processor code, however this is rarely done because it is
+difficult for the following reasons:</p>
+
+<ul>
+  <li>There are over 200 operation codes (opcodes) that must be either memorized or looked up.</li>
+  <li>Operand encoding can be complex. It wasn't in the example we've seen, but take a look at sections 4.5 through 4.8 in
+the<a href="../motorola/S12CPU15UG.pdf"><em> HCS12 Core Users Guide</em></a> if you want to get frightened.</li>
+  <li>If the program changes code and data move, so addresses often need to be recalculated.</li>
+  <li>There is no convenient way to document the program.</li>
+</ul>
+
+<p>Alternatives to writing the machine code exist, in fact they have existed for over 45 years. These include assemblers and
+compilers.</p>
+<h2><a name="Assemblers"></a>Assemblers</h2>
+
+<p>An assembler takes a symbolically represented program and converts it into machine code. The assembler itself is a
+program that either runs on the target system (there is a small one built into the evaluation boards used in the lab) or run on
+development systems, such as personal computers. The latter are often referred to as <em>cross-assemblers</em>. Opcodes are
+referred to by their mnemonics as shown in the Reference Manual. Memory locations of data and code can be <em>labeled</em>,
+giving that location a symbolic name whose value changes automatically if the target location moves. The assembler
+evaluates algebraic expressions, saving hand calculations, and generates correctly formatted operands. Comment text can
+be placed in the assembler source file to document the program.</p>
+
+<p>Assemblers maintain a <em>location counter</em> and assemble code and data at the memory location equal to the location counter
+value. As code and data is assembled, the location counter advances automatically to the next available location.</p>
+
+<p>The basic syntax of all assemblers is similar, although they do vary in
+details. The free AS12 assembler, provided on the CD, is used in this text.
+Here is the assembler source code for the example program we have seen:</p>
+<pre>   org    $1000   ; Set current location to start of RAM
+p: db     $25     ; First addend is at location p
+q: db     $37     ; Second addend is at location q
+r: ds     1       ; Sum will be stored at location r
+   org    $2000   ; Set current location to start in ROM
+   ldaa   p       ; load value at p into accumulator a
+   adda   q       ; add value at q into accumulator a
+   deca           ; decrement a
+   staa   r       ; store accumulator a at location r
+   end            ; signify end of source code</pre>
+<p>There is only one statement per line, where a statement is either an <em>assembler directive</em> or a CPU instruction. If the location is to be labeled, the symbol name
+appears in the first column of the statement, otherwise the first column
+is blank. The label ends with a colon. The next field in a statement is
+either the assembler directive or cpu instruction mnemonic. This is then
+followed the operand field which consists of any operands separated by
+commas if there is more than one. All fields are separated by spaces or
+tab characters. </p>
+<p>Comments appear at the end of lines, following a semicolon character. A line can also be blank, consist of only a comment, or contain only a label.</p>
+
+<p>In the example above, the <em>org</em> <em>db ds</em> and <em>end</em> mnemonics are assembler directives. <strong>Assembler directives are instructions for the assembler program and are
+not microcontroller instructions. </strong>These will be described <a href="#The Freeware 68HC12 Assembler">later</a> in this section.</p>
+
+<p>Most assemblers have a <em>macro</em> facility. This provides a method so that a single statement, the macro invocation or call, can expand into any number of
+assembler statements. Using macros can reduce the amount of work required to write larger programs.</p>
+
+<p>For particularly large programs, it can be a nuisance to have the entire program in a single source file. This is particularly the case in projects which involve
+more than one programmer. A <em>linker</em> program can be used to combine the output of several assembled files. The linker can resolve references to labels
+between separate files.</p>
+<h2><a name="C compilers"></a>C compilers</h2>
+
+<p>It is also possible to program a microcontroller using a "high level language", of which the language "C" is by far the most common. What makes the
+language "high level" is that programs can be written without knowing the underlying processor architecture or operation codes. Even for one familiar with
+the target microcontroller, using a compiler saves time because a single high level language statement can be the equivalent of a dozen machine instructions.</p>
+
+<p>The negatives about a compiler center mainly about the efficiency of the generated code. An experienced assembly language programmer can write faster and
+more compact programs than a C compiler can generate. In microcontrollers, memory is often limited and the processors are slow. This often mandates the
+use of an assembler for at least the time-critical parts of a program.</p>
+
+<p>The program example we have seen could be reduced to the following two statements in C:</p>
+<pre>char p=0x25, q=0x37, r;
+r = p+q-1;</pre>
+
+<p>Another disadvantage of using a compiler can be cost. Because sales volume
+is low, a good C compiler for a microcontroller can cost thousands of dollars.
+This expense can be justified based on engineering time saved on medium
+to large scale projects, but can be difficult for small projects and, needless
+to say, personal use.</p>
+
+<p>A free C compiler and IDE (<em>Integrated Development Environment</em>) is available from <a href="http://www.geocities.com/englere_geo">Eric Engler's website</a>. You might find it interesting to look at this compiler once you have
+become knowledgeable about the operation of the 68HC12. The remainder of
+this text assumes all programs will be written using an assembler, in particular
+the freeware assembler described next. For those who know the C language,
+the text will occasionally show C equivalent code for assembler constructs
+to aid in the adoption of C in microcontroller programming.</p>
+<h2><a name="The Freeware 68HC12 Assembler"></a>The Freeware 68HC12 Assembler</h2>
+
+<p>The Freeware 68HC12 Assembler, AS12, provided on the CD is based on a free
+program originally from Freescale. There is also an IDE on the CD that
+uses this assembler and incorporates a source code editor and terminal
+program for communicating with the microcontroller. The assembler doesn't
+have many features of advanced assemblers; however it is perfectly suitable
+for use in this course or in small development projects. This assembler
+has no macro capability, nor can it be used with a linker. Expression evaluation
+is also limited to simple expressions. The complete documentation is available
+from the <em>Start</em> menu after the software is installed, however the most important features are described below.</p>
+
+<p>Syntax is somewhat relaxed over what was described earlier. The colon after
+the symbol in a label is optional. The  assembler allows having operands
+separated by spaces as well as by commas. That is the convention taken
+in this text because it makes the instructions easier to read as some operands
+have commas within them. The AS12 assembler does not allow spaces within
+operands since this is taken as the separator between operands. Other assemblers
+do not have this restriction.</p>
+<p>There is an additional full-line comment format which consists of an asterisk
+(&quot;*&quot;) in the first column, followed by the comment. Some assembler
+directives start with a # symbol in the first column. The syntax of instruction
+operands is deferred to the <a href="part005a.html">section covering addressing modes</a>.</p>
+<p>Symbols (labels) can be 1 or more characters long, where the first character is alphabetic and any additional characters are alphanumeric. Symbols are case
+insensitive. <em>Foo</em> and <em>foo</em> are the same symbols. <em>c123</em> is a symbol, while $c123 is not, it is a <em>constant </em>which is a numeric literal. <em>1foo</em> isn't a symbol either,
+since it starts with a numeral. All symbols are defined by using them as a label. Symbols may only be defined once in a program, except a symbol may be
+redefined with the <em>redef</em> assembler directive.</p>
+
+<p>A special symbol, <em>*, </em>has the value of the location counter.</p>
+
+<p>Literal values, or constants, can be of several formats:</p>
+
+<div class="boxed"><dl>
+  <dt>'</dt>
+    <dd>followed by ASCII character, example <em>'A</em> has the decimal value 65</dd>
+  <dt>$</dt>
+    <dd>followed by hexadecimal value, example <em>$10</em> has the decimal value 16</dd>
+   <dt>@</dt>
+    <dd>followed by octal value, example <em>@10</em> has the decimal value 8</dd>
+   <dt>%</dt>
+    <dd>followed by binary value, example <em>%100000</em> has the decimal value 32</dd>
+   <dt>digit</dt>
+    <dd>a string of digits is a decimal constant</dd>
+</dl></div>
+
+<p>Expressions consist of symbols, constants, and the following arithmetic operators:</p>
+
+<table border="1" cellpadding="1" cellspacing="1">
+<tr><th>Operator</th>
+<th>Operation</th></tr>
+<tr><td> +</td>
+<td>Addition </td></tr>
+<tr><td>-</td>
+<td>Subtraction</td></tr>
+<tr><td> *</td>
+<td>Multiplication</td></tr>
+<tr><td>/</td>
+<td>Division</td></tr>
+<tr><td>%</td>
+<td>Remainder</td></tr>
+<tr><td>&amp;</td>
+<td>Bitwise AND</td></tr>
+<tr><td>|</td>
+<td>Bitwise OR</td></tr>
+<tr><td>^</td>
+<td>Bitwise Exclusive OR</td></tr>
+<tr><td>-</td>
+<td>Unary Minus</td></tr>
+<tr><td>~</td>
+<td>Unary Complement</td></tr></table>
+
+<p>Expressions are evaluated from left to right. This means <em>4+3*5</em> would be 35 and not 19. Parentheses&nbsp;can be used to alter the order of evaluation, for instance
+<em>4+(3*5)</em> would evaluate to 19. The unary operations are only valid before a symbol or constant, so the expression <em>-(4+5)</em> would be invalid, however <em>0-(4+5)</em> would be valid. Remember that no spaces are allowed within expressions!</p>
+<p><strong>It is important to realize that these expressions are evaluated by the
+assembler when the program is assembled and are constant values if part
+of a microcontroller instruction.</strong> For instance, if variable ABC is at location $1000, <em>&quot;ldaa ABC+1&quot; </em>won't load accumulator A with the contents of ABC added to 1. It will,
+instead, load accumulator A with the contents of memory location $1001.</p>
+<p>This assembler evaluates expressions and represents symbol values with 32 bit arithmetic, however when a value gets used, it is truncated to 16 bits. </p>
+
+<p>The following assembler directives are particularly useful:</p>
+
+<div class="minor"><dl>
+  <dt>org <em>expr</em></dt>
+    <dd>Set the location value to <em>expr</em>, the value of the operand expression.</dd>
+
+<dt>ds <em>expr</em></dt>
+<dd>Allocate <em>expr</em> bytes of memory, particularly useful for variable data in RAM. For instance, <em>foo: ds 1</em> would allocate memory for a single byte
+variable named foo. <em>bar: ds 2</em> would allocate memory for a 16 bit variable named bar.</dd>
+
+   <dt>db <em>expr</em></dt>
+
+    <dd>Allocates space for a single byte, and gives it the value of <em>expr</em>. Can be used for initialized variables in RAM, however in real applications RAM
+cannot be initialized this way but must be initialized with processor instructions at the start of the program. Multiple bytes can be initialized by
+having more than one expression separated by commas.</dd>
+
+    <dt>dw <em>expr</em></dt>
+    <dd>Allocates space for a 16 bit word, and gives it the value of <em>expr</em>. Same comments apply as in <em>db</em>.</dd>
+
+   <dt><em>label </em>equ<em> expr</em></dt>
+    <dd>The label symbol is assigned the value of <em>expr</em> rather than the current location counter value. This can be used to assign symbolic constants. For
+examples, see the file <a href="registers.inc">registers.inc</a>.</dd>
+
+   <dt>end</dt>
+    <dd>Marks the end of the source file. The use of this directive is optional.</dd>
+
+    <dt>#include <em>filename</em></dt>
+    <dd>This directive starts in column 1. The file <em>filename</em> is read at this point as though it is part of the current source file. A common use is to add the
+statement <em>#include registers.inc</em> to the start of the program to have all the symbolic constants in the file registers.inc available to the program.</dd>
+</dl></div>
+
+<p>Continue with <a href="part004a.html"><em>Debuggers and Interpreters</em></a>.</p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>

@@ -1,0 +1,717 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Binary Number Representation</title>
+<link rel="shortcut icon" href="icon.ico" />
+<link type="text/css" rel="stylesheet" href="main.css"  />
+</head>
+<body>
+
+
+<table BORDER="1" WIDTH="100%" CELLPADDING="1" CELLSPACING="1">
+<tr><td><a href="part001.html">Previous Section</a></td>
+<td><a href="part003.html">Next Section</a></td>
+<td><a href="index.html">Index</a></td>
+<td><a href="questions.html#part002" target="q">Questions</a></td>
+<td><a href="search.htm" target="search">Search the Text</a></td></tr></table>
+<h1>Binary Number Representation</h1>
+
+<p>Subtopics to be covered:</p>
+
+<ul>
+  <li><a href="#Unsigned Integers">Unsigned Integers</a></li>
+  <li><a href="#Addition of Unsigned Integers">Addition of Unsigned Integers</a></li>
+  <li><a href="#Subtraction of Unsigned Integers">Subtraction of Unsigned Integers</a></li>
+  <li><a href="#Signed Integer Representation">Signed Integer Representation</a></li>
+  <li><a href="#Addition of Signed Integers">Addition of Signed Integers</a></li>
+  <li><a href="#Subtraction of Signed Integers">Subtraction of Signed Integers</a></li>
+  <li><a href="#Multiplication of Integers">Multiplication of Integers</a></li>
+  <li><a href="#Division of Integers">Division of Integers</a></li>
+  <li><a href="#Hexadecimal Numbers">Hexadecimal, Octal, and Binary Coded Decimal Numbers</a></li>
+  <li><a href="#Conversion from Value to Text">Conversion from Value to Digits</a></li>
+  <li><a href="#Conversion from Text to Value">Conversion from Digits to Value</a></li>
+</ul>
+<h2><a name="Unsigned Integers"></a>Unsigned Integers</h2>
+
+<p>We have seen that a byte consists of 8 bits, each with two values, allowing a byte to represent 256 different values. While we could give our own meanings to each of the 256 values (and indeed,
+sometimes that is a sensible thing to do), most often we are dealing with numeric values and want a representation, or <em>encoding</em>, that the processor can recognize and perform arithmetic. </p>
+
+<p>In a microcontroller, the most common representation is of <em>unsigned integers</em>. These are integer values starting at 0 and increasing to the limitation of the size of the data. With a byte, we have the
+values 0 to 255, while with a 16 bit word the range of values is 0 through 65,535. The rule is that for data size of <em>N</em> bits, the range is 0 through 2<sup>N</sup>-1. Each bit of the data is given a weight. If the bit is high, it is considered to be a "1" and the weight of the bit is added to the value. If the bit is low, it is considered to be a "0" and the weight of the bit
+is not added to the value. This is called  <em>binary</em> radix because each digit (or bit) has two possible values. The left-most  bit, bit N-1, has a weight of 2<sup>(N-1)</sup> and is called the <em>most significant bit</em> or <em>MSB</em>.
+The right-most bit, bit 0, has a weight of 2<sup>0</sup> or 1, and is called the <em>least significant bit</em> or <em>LSB</em>. All the bits in-between have values related by a power of two to their neighbors. Here is the
+representation of byte data:</p>
+
+<table BORDER="1" WIDTH="794" CELLPADDING="1" CELLSPACING="1">
+<tr><td width="116">Bit Number:</td>
+<td width="82">7 (MSB)</td>
+<td width="67">6</td>
+<td width="88">5</td>
+<td width="88">4</td>
+<td width="88">3</td>
+<td width="88">2</td>
+<td width="88">1</td>
+<td width="89">0 (LSB)</td></tr>
+<tr><td>Significance:</td>
+<td>2<sup>7</sup> </td>
+<td>2<sup>6</sup></td>
+<td>2<sup>5</sup></td>
+<td>2<sup>4</sup></td>
+<td>2<sup>3</sup></td>
+<td>2<sup>2</sup></td>
+<td>2<sup>1</sup></td>
+<td>2<sup>0</sup></td></tr></table>
+
+<p>A byte that contained the bit pattern 00101100 would represent what integer value?  Knowing the significance of each bit, we get the equation 0*2<sup>7</sup> + 0*2<sup>6</sup> + 1*2<sup>5</sup> + 0*2<sup>4</sup> + 1*2<sup>3</sup> + 1*2<sup>2</sup> + 0*2<sup>1</sup> +
+0*2<sup>0</sup>. This simplifies to 32 + 8 + 4, or 44.</p>
+
+<p>You might want to practice. It's easy to do this on your own with the help of a calculator such as the one that comes with Microsoft Windows. Create patterns of 8 bits  (or more!) and calculate
+their integer value. Check your results by entering the binary value into the calculator with the calculator in binary mode. Change the calculator to decimal mode and it will convert for you. </p>
+
+<p>Now, surprise, you have been doing these calculations since elementary school, but using the decimal (10) radix.  In this system each digit has 10 values (0 through 9) and each digit is given a weight
+which is a power of 10. Here's the familiar representation for an 8 digit decimal number:</p>
+
+<table BORDER="1" WIDTH="794" CELLPADDING="1" CELLSPACING="1">
+<tr><td width="116">Digit:</td>
+<td width="82">7 (MSB)</td>
+<td width="67">6</td>
+<td width="88">5</td>
+<td width="88">4</td>
+<td width="88">3</td>
+<td width="88">2</td>
+<td width="88">1</td>
+<td width="89">0 (LSB)</td></tr>
+<tr><td>Significance:</td>
+<td>10<sup>7</sup> </td>
+<td>10<sup>6</sup></td>
+<td>10<sup>5</sup></td>
+<td>10<sup>4</sup></td>
+<td>10<sup>3</sup></td>
+<td>10<sup>2</sup></td>
+<td>10<sup>1</sup></td>
+<td>10<sup>0</sup></td></tr></table>
+
+<p>The 8 digits can represent values from 0 to (10<sup>8</sup>)-1, or 99999999. </p>
+<h2><a name="Addition of Unsigned Integers">Addition of Unsigned Integers</a></h2>
+
+<p>Unsigned binary integers are added just like one adds decimal integers. Let's go back to the second grade and review addition! Say we want to add 293 and 452. We first add digits in the units (10<sup>0</sup>)
+position, 3 + 2 = 5. We put down the five in the units position of the sum and have no carry. Then we add the 10's digits. 9 + 5 = 14 tens, or 1 hundred and 4 tens. We put down the four in the tens
+position of the sum and have a carry of 1 (hundred). Then we add the hundreds position. 1 + 2 + 4 = 7. We put down the seven and have no carry. The calculation looks like this:</p>
+
+<table WIDTH="399" CELLPADDING="1" CELLSPACING="1">
+<tr><td width="258">Carry:</td>
+<td width="36">0</td>
+<td width="35">1</td>
+<td width="35">0</td>
+<td width="35"></td></tr>
+<tr><td>Addend:</td>
+<td></td>
+<td>2</td>
+<td>9</td>
+<td>3</td></tr>
+<tr><td>Addend:</td>
+<td></td>
+<td>4</td>
+<td>5</td>
+<td>2</td></tr>
+<tr><td>Sum:</td>
+<td></td>
+<td>7</td>
+<td>4</td>
+<td>5</td></tr></table>
+
+<p>The sum is 745.</p>
+
+<p>For binary addition, we have a very simple addition table:</p>
+
+<table BORDER="1" WIDTH="30%" CELLPADDING="1" CELLSPACING="1">
+<tr><td> +</td>
+<td>0</td>
+<td>1</td></tr>
+<tr><td>0</td>
+<td>0</td>
+<td>1</td></tr>
+<tr><td>1</td>
+<td>1</td>
+<td>10</td></tr></table>
+
+<p>Let's add the four binary digit (bit) numbers 0110 and 0101. These represent the decimal values 6 and 5. Adding the unit position, 0 + 1 = 1. We put down the sum bit 1, there is no carry. Adding the
+2<sup>1</sup> position, 1 + 0 = 1. We put down the sum bit 1, there is no carry. Adding the 2<sup>2</sup> position, 1 + 1 = 10. We put down the sum bit 0, there is a carry of 1. Adding the 2<sup>3</sup> position, 1 + 0 + 0 = 1. We
+put down the sum bit 1, there is no carry. Note that in the "worst case" of 1 + 1 + 1, we would get a sum of 1 and a carry of 1. The carry cannot be greater than 1. The calculation looks like this:</p>
+
+<table WIDTH="400" CELLPADDING="1" CELLSPACING="1">
+<tr><td width="258">Carry:</td>
+<td width="36">0</td>
+<td width="36">1</td>
+<td width="35">0</td>
+<td width="35">0</td>
+<td width="35"></td></tr>
+<tr><td>Addend:</td>
+<td></td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>0</td></tr>
+<tr><td>Addend:</td>
+<td></td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td></tr>
+<tr><td>Sum:</td>
+<td></td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>1</td></tr></table>
+
+<p>The sum, 1011, is the representation of 11, which is indeed 6 + 5.</p>
+
+<p>Now we will add 1011 and 0101. These represent the decimal values 11 and 5. We get this calculation:</p>
+
+<table WIDTH="399" CELLPADDING="1" CELLSPACING="1">
+<tr><td width="258">Carry:</td>
+<td width="36">1</td>
+<td width="36">1</td>
+<td width="35">1</td>
+<td width="35">1</td>
+<td width="35"></td></tr>
+<tr><td>Addend:</td>
+<td></td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>1</td></tr>
+<tr><td>Addend:</td>
+<td></td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td></tr>
+<tr><td>Sum:</td>
+<td></td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>0</td></tr></table>
+
+<p>In each digit we have a sum of zero and a carry of one. The final sum, 0000, is the value zero! Certainly not 11 + 5 = 16. What went wrong? Well, remember that we can only represent unsigned
+integers in the range 0 to 2<sup>N</sup>-1. In this problem, N=4, so 2<sup>N</sup>-1 = 15. We cannot represent the value 16. The operation is said to have <em>overflowed</em>. But the addition process tells us that the sum will be
+wrong - there is a carry out of the most significant bit. <em>A carry out of the most significant bit as the result of an unsigned addition indicates an overflow</em>.</p>
+<h2><a name="Subtraction of Unsigned Integers"></a>Subtraction of Unsigned Integers</h2>
+
+<p>Subtraction can be done in a similar fashion to addition, only there are
+borrows rather than carries. The processor actually does subtraction using
+a different technique described later. However it appears to the programmer
+to be subtracting via the traditional means. Let's take the value 1011
+and subtract 0101. In the digits position, we have 1 - 1 = 0, so we put
+down the difference bit of zero and have no borrow. In the 2<sup>1</sup> position, we have 1 - 0 = 1, so we put down the difference bit of one and have no borrow. In the 2<sup>2</sup> position, we have 0 - 1. So we will borrow a 2<sup>3</sup> from the next bit
+position, and subtract 10 - 1 = 1, and put down the difference bit of 1. In the 2<sup>3</sup> position, we have borrowed the 1, so we have 0 - 0 = 0, and put down the difference bit of 0. There is no borrow.</p>
+
+<table WIDTH="399" CELLPADDING="1" CELLSPACING="1">
+<tr><td width="258">Borrow:</td>
+<td width="36">0</td>
+<td width="36">1</td>
+<td width="35">0</td>
+<td width="35">0</td>
+<td width="35"></td></tr>
+<tr><td>Minuend:</td>
+<td></td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>1</td></tr>
+<tr><td>Subtrahend:</td>
+<td></td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td></tr>
+<tr><td>Difference:</td>
+<td></td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>0</td></tr></table>
+
+<p>Analogous to the addition case, if the subtrahend is larger than the minuend, the result <em>underflows</em> and we get an incorrect result because values less than zero cannot be represented as unsigned
+integers. There will be a borrow out of the most significant bit in these circumstances.</p>
+<h2><a name="Signed Integer Representation"></a>Signed Integer Representation</h2>
+
+<p>There are three accepted techniques to represent signed integers. The three approaches are summarized in the table below:</p>
+
+<table BORDER="1" WIDTH="100%" CELLPADDING="1" CELLSPACING="1">
+<tr><th>Representation</th>
+<th>Positive Values</th>
+<th>Negative Values</th>
+<th>Range</th></tr>
+<tr><td>Sign/Magnitude</td>
+<td>MSB=0, other bits are magnitude</td>
+<td>MSB=1, other bits are magnitude</td>
+<td>-2<sup>(n-1)</sup> + 1 to 2<sup>(n-1)</sup> - 1</td></tr>
+<tr><td>Ones Complement</td>
+<td>MSB=0, other bits are magnitude</td>
+<td>MSB=1, other bits are (Boolean) complement of
+magnitude</td>
+<td>-2<sup>(n-1)</sup> + 1 to 2<sup>(n-1)</sup> - 1</td></tr>
+<tr><td>Twos Complement</td>
+<td>MSB=0, other bits are magnitude</td>
+<td>MSB=1, other bits are complement of
+magnitude-1</td>
+<td>-2<sup>(n-1)</sup> to 2<sup>(n-1)</sup>-1</td></tr></table>
+
+<p>The Sign/Magnitude representation is the easiest for humans to read. It's the same approach we used for decimal arithmetic. It's the toughest for a computer to perform addition and subtraction. It
+also suffers from two representations of zero (+0 and -0), which makes comparisons difficult. Sign/Magnitude is rarely used for representing integers in computers, but is used for floating point
+numbers (described in <a href="part025.html">section 25</a>).</p>
+
+<p>Ones Complement representation is easy for the computer to perform addition and subtraction, and just as easy to perform negation. It still suffers from two representations of zero. For this reason
+Ones Complement has been entirely supplanted by Twos Complement.</p>
+
+<p>Twos Complement representation has only one representation for zero, which is the positive zero. To negate a number, the number is complemented and then incremented by one. All numbers can
+be negated except for the maximum negative number, 2<sup>(n-1)</sup>,  which has no positive representation. Addition and subtraction are identical except for overflow indication with the unsigned arithmetic.</p>
+
+<p>We will use Twos Complement representation in this text, which is the method used in all modern processors for signed integer representation.</p>
+
+<p>To best understand Twos Complement representation, we will look at how a byte value is constructed:</p>
+<table WIDTH="299" CELLPADDING="1" CELLSPACING="1">
+<tr><td width="116">Bit Number:</td>
+<td width="82">7 (MSB)</td>
+<td width="67">6</td>
+<td width="88">5</td>
+<td width="88">4</td>
+<td width="88">3</td>
+<td width="88">2</td>
+<td width="88">1</td>
+<td width="89">0 (LSB)</td></tr>
+<tr><td>Significance:</td>
+<td>-2<sup>7</sup> </td>
+<td>2<sup>6</sup></td>
+<td>2<sup>5</sup></td>
+<td>2<sup>4</sup></td>
+<td>2<sup>3</sup></td>
+<td>2<sup>2</sup></td>
+<td>2<sup>1</sup></td>
+<td>2<sup>0</sup></td></tr></table>
+
+<p>All the bits have the same significance, except for the MSB, which is now -2<sup>7</sup> instead of 2<sup>7</sup>. The MSB has the same weight but the opposite sign. Positive numbers can be represented by having the
+MSB be zero, then the remaining seven bits give values of 0 to 2<sup>7</sup>-1 or 127. For negative values, the MSB is one (-2<sup>7</sup>), and the remaining seven bits can have the value of 0 to 2<sup>7</sup>-1 as before.
+However the sum of all eight bits is (-2<sup>7</sup>)+0 to (-2<sup>7</sup>)+(2<sup>7</sup>)-1 or -128 to -1.</p>
+
+<p>As was stated earlier, negation is accomplished by complementing all the bits and then adding one. Let's start with the decimal value 20, which is binary value 00010100 or 2<sup>4</sup> + 2<sup>2</sup>. When we
+complement all the bits, all the 0's become 1's and 1's become 0's, so the value becomes -2<sup>7</sup> + 2<sup>6</sup> + 2<sup>5</sup> + 2<sup>3</sup> + 2<sup>1</sup> + 2<sup>0</sup>, then we add 1 to get -2<sup>7</sup> + 2<sup>6</sup> + 2<sup>5</sup> + 2<sup>3</sup> + 2<sup>1</sup> + 2<sup>0</sup> + 2<sup>0</sup>. Realizing that 2<sup>0</sup> + 2<sup>0</sup> is 2<sup>1</sup>,
+and then that 2<sup>1</sup> + 2<sup>1</sup> is 2<sup>2</sup>, we simplify to the result, -2<sup>7</sup> + 2<sup>6</sup> + 2<sup>5</sup> + 2<sup>3</sup> +2<sup>2</sup>, or the binary value 11101100. Is this correct? Let's check: -128 + 64 + 32 + 8 + 4 = -20. </p>
+<h2><a name="Addition of Signed Integers"></a>Addition of Signed Integers</h2>
+
+<p>An amazing feature of Twos Complement representation is that we can add two numbers with the same algorithm used for unsigned integers. Consider the following 4 bit addition of  -5 and 6 :</p>
+
+<table WIDTH="399">
+<tr><td width="258">Carry:</td>
+<td width="36">1</td>
+<td width="36">1</td>
+<td width="35">1</td>
+<td width="35">0</td>
+<td width="35"></td></tr>
+<tr><td>Addend:</td>
+<td></td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>1</td></tr>
+<tr><td>Addend:</td>
+<td></td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>0</td></tr>
+<tr><td>Sum:</td>
+<td></td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td></tr></table>
+
+<p>Following the same algorithm that we used for unsigned integers, we get
+a sum of 1. However there is a carry out, which if this were an addition
+of unsigned values (11 and 6) would indicate that an overflow had occurred.</p>
+
+<p>When we add the bits in the 2<sup>2</sup> column, we get a sum of 2<sup>3</sup>, indicating a carry of 1 and sum bit of 0. However the MSB has a weight of -2<sup>3</sup>, so we are really adding 2<sup>3</sup> + -2<sup>3</sup> = 0. Because of the
+toggling action of binary addition, the sum bit will indicate the same change if we add 1 or subtract 1, namely the bit will change to its other state. </p>
+
+<p>So how do we know if we have overflow if we cannot rely on the carry bit to indicate it? If the two numbers being added have opposite sign, then there cannot be overflow. The sum must have a
+value within the range of the two numbers being added. If the two numbers have the same sign, then we have overflow if the sign of the sum is not the same as the sign of the addends. For instance,
+our original unsigned addition problem of 6 + 5 will produce an overflow if we treat the numbers as signed:</p>
+
+<table WIDTH="299">
+<tr><td width="258">Carry:</td>
+<td width="36">0</td>
+<td width="36">1</td>
+<td width="35">0</td>
+<td width="35">0</td>
+<td width="35"></td></tr>
+<tr><td>Addend:</td>
+<td></td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>0</td></tr>
+<tr><td>Addend:</td>
+<td></td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>1</td></tr>
+<tr><td>Sum:</td>
+<td></td>
+<td>1</td>
+<td>0</td>
+<td>1</td>
+<td>1</td></tr></table>
+
+<p>The sign bit of the sum is 1, indicating an overflow since both addends have a sign bit of 0.</p>
+<h2><a name="Subtraction of Signed Integers"></a>Subtraction of Signed Integers</h2>
+
+<p>With the capability to easily complement numbers, processors don't subtract directly but instead add the minuend to the complement of the subtrahend, with a carry into the calculation of 1.
+Consider the calculation of 6 - 3. The minuend is 0110 and the subtrahend is 0011, with a complement of 1100:</p>
+
+<table WIDTH="399" CELLPADDING="1" CELLSPACING="1">
+<tr><td width="258">Carry:</td>
+<td width="36">1</td>
+<td width="36">1</td>
+<td width="35">0</td>
+<td width="35">0</td>
+<td width="35">1</td></tr>
+<tr><td>Minuend:</td>
+<td></td>
+<td>0</td>
+<td>1</td>
+<td>1</td>
+<td>0</td></tr>
+<tr><td>Complement of subtrahend:</td>
+<td></td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td></tr>
+<tr><td>Sum (actually the difference):</td>
+<td></td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>1</td></tr></table>
+<p>The sum of the calculation is 0011, which is 3. As with the addition algorithm, the subtraction algorithm will also work on values considered to be unsigned. After taking into account the
+complementing of the second argument, overflow is calculated in same manner: for unsigned calculations, there is normally a carry, so the absence of a carry indicates overflow, and for signed
+calculations, if the operands have different signs then the sign of the difference must be the same as the sign of the minuend.</p>
+
+<p>In some processors, when a subtraction is performed, instead of having a carry bit, the complement of the value is used and is called a borrow. In that case, an unsigned overflow is indicated by a
+borrow out of 1 instead of a carry out of 0.</p>
+<h2><a name="Multiplication of Integers">Multiplication of Integers</a></h2>
+
+<p>Multiplication of unsigned integers is done in the same manner one multiplies by hand. If N bit operands are used, then the maximum value of the product would be (2<sup>N</sup>-1)*(2<sup>N</sup>-1) = 2<sup>2N</sup> - 2(2<sup>N</sup>-1) + 1,
+So the product takes 2N bits to store. Lets look at the example of multiplying two four bit values, 1110 (decimal 14) and 0101 (decimal 5) to produce an 8 bit product:</p>
+<pre>        0 1 0 1
+      x 1 1 1 0
+_______________
+        0 0 0 0     (0101 * 0)
+      0 1 0 1       (0101 * 1)
+    0 1 0 1
+  0 1 0 1
+_______________
+0 1 0 0 0 1 1 0     ( = 70 decimal )</pre>
+
+<p>However, there is a problem if the same algorithm is used to multiply signed values. The product between the sign bit and one of the remaining bits is negative, yet the value gets added. This gives
+erroneous bit values in the upper half of the result. Take the simple case of 1111 (-1) times 1111 (-1) which should give a product of 00000001 (1):</p>
+<pre>        1 1 1 1
+      x 1 1 1 1
+_______________
+        1 1 1 1
+      1 1 1 1
+    1 1 1 1
+  1 1 1 1 
+_______________
+1 1 1 0 0 0 0 1</pre>
+
+<p>If we could take account of the sign of the product terms, we would get:</p>
+<pre>        1 1 1 1
+      x 1 1 1 1
+_______________
+       -1 1 1 1   (Sign is applied to individual bits, not partial product!)
+     -1 1 1 1
+   -1 1 1 1
+  1-1-1-1
+_______________
+0 0 0 0 0 0 0 1
+     \
+      Note that this is -1 + -1, or 0 with a carry of -1</pre>
+
+<p>Alas, the processor cannot handle bits with 3 values, so another technique must be used. One approach is to perform a 2's complement of any negative operands (basically, get their absolute values) then
+2's complement the product if an odd number of operands were negative. Doing that, our "trivial" problem becomes 1*1, and our original multiplication algorithm can handle this unsigned
+calculation.</p>
+<h2><a name="Division of Integers">Division of Integers</a></h2>
+
+<p>Division of unsigned binary integers is performed like one does long division. However binary division is easier. Typically, the algorithm divides a 2N bit number by an N bit number producing an N
+bit quotient and an N bit remainder. Overflow is possible, and division by zero is typically detected before performing the operation.</p>
+
+<p>The 2N bit dividend is shifted to the left with each division step, with
+the quotient bits being shifted in at the right end. If a one bit gets
+shifted out the left end, then an overflow has occurred. The algorithm
+does a N+1 bit compare and subtract using the most significant N+1 bits
+of the dividend and the divisor. (The actual hardware algorithms are slightly
+cleverer and only use the most significant N bits in the operation.) Upon
+completion, the most significant N bits of the space occupied by the dividend
+is the remainder, while the least significant N bits are the quotient.
+Lets divide the 8 bit value 00101110 (decimal 46) by 1001 (decimal 9):</p>
+<pre>0 0 1 0 1 1 1 0    Dividend
+  1 0 0 1          Divisor</pre>
+
+<p>We compare the upper 5 bits of the dividend with the divisor, and subtract off the divisor if it is less than the dividend. Only the upper 5 bits are affected. How do we do the compare? The common
+technique is to perform a subtraction! The processor attempts to subtract, and if the difference overflows (negative result with unsigned values) the subtraction is abandoned while if the difference is
+fine it gets stored. In this case, we cannot complete the subtraction since 00101 - 1001 is negative.</p>
+
+<p>Then we shift in the dividend bits one position to the left, shifting in a 1 if we performed the subtract, or zero if we didn't. In this case we shift in a zero:</p>
+<pre>0 1 0 1 1 1 0 0    Dividend
+  1 0 0 1          Divisor</pre>
+
+<p>We repeat the process three more times. The upper five bits of the dividend are larger than the divisor, so we do the subtract:</p>
+<pre>0 0 0 1 0 1 0 0    Dividend
+  1 0 0 1          Divisor</pre>
+
+<p>And then shift to the left, shifting in a 1 bit:</p>
+<pre>0 0 1 0 1 0 0 1    Dividend
+  1 0 0 1          Divisor</pre>
+
+<p>In the third iteration, the divisor is larger, so we shift in a zero:</p>
+<pre>0 1 0 1 0 0 1 0    Dividend
+  1 0 0 1          Divisor</pre>
+
+<p>For the last iteration, the divisor is smaller, so we subtract:</p>
+<pre>0 0 0 0 1 0 1 0    Dividend
+  1 0 0 1</pre>
+
+<p>And then shift left, shifting in a 1:</p>
+<pre>0 0 0 1 0 1 0 1</pre>
+
+<p>This gives us a quotient of 0101 (5) with a remainder of 0001 (1), the correct answer.</p>
+
+<p>Division of signed numbers has the same pitfalls as multiplication of signed numbers, and is handled in the same manner.</p>
+<h2><a name="Hexadecimal Numbers"></a>Hexadecimal, Octal and Binary Coded Decimal Numbers</h2>
+
+<p>Although values are represented as binary numbers, it can be tedious for
+people to use binary numbers because of the large number of binary digits
+involved. It is much easier to use octal (radix 8) or hexadecimal (radix
+16) numbers as they need 1/3 or 1/4, respectively, as many digits to represent
+a value. In octal, each digit is three bits and the digit values range
+from 0 to 7. The more common (and used here) hexadecimal represents each
+digit with four bits, and the digit values range from 0 to 15. Since Arabic
+numerals only exist for digit values 0 through 9, the letters A through
+F are used for digit values 10 through 15:</p>
+
+<table border="1" width="100%" cellpadding="1" cellspacing="1">
+<tr><th width="100">Binary</th>
+<th width="200">Hexadecimal</th>
+<th width="10" bgcolor="#000000"></th>
+<th width="100">Binary</th>
+<th width="200">Hexadecimal</th></tr>
+<tr><td>0000</td>
+<td>0</td>
+<td bgcolor="#000000"></td>
+<td>1000</td>
+<td>8</td></tr>
+<tr><td>0001</td>
+<td>1</td>
+<td bgcolor="#000000"></td>
+<td>1001</td>
+<td>9</td></tr>
+<tr><td>0010</td>
+<td>2</td>
+<td bgcolor="#000000"></td>
+<td>1010</td>
+<td>A</td></tr>
+<tr><td>0011</td>
+<td>3</td>
+<td bgcolor="#000000"></td>
+<td>1011</td>
+<td>B</td></tr>
+<tr><td>0100</td>
+<td>4</td>
+<td bgcolor="#000000"></td>
+<td>1100</td>
+<td>C</td></tr>
+<tr><td>0101</td>
+<td>5</td>
+<td bgcolor="#000000"></td>
+<td>1101</td>
+<td>D</td></tr>
+<tr><td>0110</td>
+<td>6</td>
+<td bgcolor="#000000"></td>
+<td>1110</td>
+<td>E</td></tr>
+<tr><td>0111</td>
+<td>7</td>
+<td bgcolor="#000000"></td>
+<td>1111</td>
+<td>F</td></tr></table>
+
+<p> The 15 bit binary value 101111000110100 in hexadecimal would be:</p>
+
+<table BORDER="1" WIDTH="100%" CELLPADDING="1" CELLSPACING="1">
+<tr><td>101</td>
+<td>1110</td>
+<td>0011</td>
+<td>0100</td></tr>
+<tr><td>5</td>
+<td>E</td>
+<td>3</td>
+<td>4</td></tr></table>
+
+<p>5E34 in hexadecimal. The binary digits are grouped by fours from the right, and then each group is converted to the hexadecimal digit.</p>
+
+<p>To avoid confusing hexadecimal values containing only digits 0 through 9 with decimal values, one of several different indicators is used to indicate a hexadecimal value. Freescale uses a leading
+dollar sign, for instance $5E34. Intel uses a trailing letter H, 5E34H. Another common method is a leading "0x" which is used by the C language: 0x5e34.</p>
+
+<p>It is difficult to perform arithmetic by hand in hexadecimal, unless you happen to have sixteen fingers. Keep a calculator handy for this task. Here is an example, adding $3A58 to $1769:</p>
+
+<table WIDTH="299" CELLPADDING="1" CELLSPACING="1">
+<tr><td width="258">Carry:</td>
+<td width="36">0</td>
+<td width="36">1</td>
+<td width="35">0</td>
+<td width="35">1</td>
+<td width="35"></td></tr>
+<tr><td>Addend:</td>
+<td></td>
+<td>3 </td>
+<td>A</td>
+<td>5</td>
+<td>8</td></tr>
+<tr><td>Addend:</td>
+<td></td>
+<td>1</td>
+<td>7</td>
+<td>6</td>
+<td>9</td></tr>
+<tr><td>Sum:</td>
+<td></td>
+<td>5</td>
+<td>1</td>
+<td>C</td>
+<td>1</td></tr></table>
+
+<p>$8 + $9 = $11 (17 in decimal), so we put down the 1 and carry a 1. $1 + $5 + $6 = $C (12 in decimal), so we put down a C and carry 0. $A + $7 = $11 (again, 17 in decimal). $1 + $3 + $1 = $5.</p>
+
+<p>Binary Coded Decimal, or BCD, is a representation of decimal digits in binary. Like hexadecimal, 4 bits are used for each digit. However in BCD only the values 0000 through 1001 (0 through 9)
+are valid. While it is easy to convert BCD to decimal digits, it is inefficient. A byte will only hold 100 values (two decimal digits) instead of 256. In addition, special instructions are necessary to
+perform arithmetic on decimal numbers. </p>
+
+<p>The decimal value 1976 is represented in BCD in 16 bits:</p>
+
+<table BORDER="1" WIDTH="50%" CELLPADDING="1" CELLSPACING="1">
+<tr><td>1</td>
+<td>9</td>
+<td>7</td>
+<td>6</td></tr>
+<tr><td>0001</td>
+<td>1001</td>
+<td>0111</td>
+<td>0110</td></tr></table>
+
+<p>a binary value 0001100101110110. </p>
+<h2><a name="Conversion from Value to Text"></a>Conversion from Value to Digits</h2>
+
+<p>These binary coded values are not <em>human readable</em>. People
+have no way of looking directly at bytes to determine their value. To
+read values they must be first converted into digits in a selected
+radix, usually hexadecimal or decimal. These digits can then be
+displayed on a computer display screen or LCD panel. The memory data
+is a binary value (although the fact that it <strong>is</strong> binary is not
+really important!), but the display requires individual characters for
+each digit representing the memory value. The algorithm to accomplish
+this conversion works for any radix (decimal, octal, hexadecimal,
+...), and the conversion algorithm produces digits from least
+significant to most significant.</p>
+
+<div class="minor"><ol>
+  <li>At the start, the number to convert is N, and the radix is R.</li>
+  <li>Divide N by R, call the remainder X, and the quotient Q.</li>
+  <li>Output the digit X.</li>
+  <li>Set N to the value Q.</li>
+  <li>If N is non-zero, go to step 2.</li>
+  <li>Finished.</li>
+</ol></div>
+
+<p>Let's see how this works, converting the value $273 to decimal digits (R=10).</p>
+
+<table BORDER="1" WIDTH="100%" CELLPADDING="1" CELLSPACING="1">
+<tr><th>N</th>
+<th>X</th>
+<th>Q</th>
+<th>Digit produced</th></tr>
+<tr><td>$273</td>
+<td>7</td>
+<td>$3E</td>
+<td>7</td></tr>
+<tr><td>$3E (Last Q value)</td>
+<td>2</td>
+<td>$6</td>
+<td>2</td></tr>
+<tr><td>$6</td>
+<td>6</td>
+<td>$0</td>
+<td>6</td></tr>
+<tr><td>$0 - Finished!</td>
+<td></td>
+<td></td>
+<td></td></tr></table>
+
+<p>The decimal number produced is 627. Checking the result by evaluating $273, $273 = 2*256 + 7*16 + 3*1 = 512 + 112 + 3 = 627. You may wonder how I divided $273 by $A. Well, I used a
+calculator, of course!</p>
+
+<p>Typically the decimal digits can't be directly sent to the display, since the display usually requires character values encoded in ASCII. The chart for conversion to ASCII is <a href="ascii.html">here</a>. The characters <em>0</em>
+through <em>9</em> are hexadecimal values $30 through $39 respectively. Therefore we can convert the decimal digit to the correct ASCII character by adding $30 (which is decimal 48).</p>
+<h2><a name="Conversion from Text to Value"></a>Conversion from Digits to Value</h2>
+
+<p>It's also important to be able to convert from a string of digits into
+a value. This is done when a person enters a number into the computer.
+Again, the person enters the digits of a value, typically on a keypad or
+keyboard, and these digits must be converted to a value. Here is the algorithm
+for input radix R:</p>
+
+<div class="minor"><ol>
+  <li>Initialize the value N to 0.</li>
+  <li>Is there another digit input? If not, the algorithm is finished with result being N.</li>
+  <li>Multiply N by R, put product back in N.</li>
+  <li>Add digit into N.</li>
+  <li>Go to step 2.</li>
+</ol></div>
+
+<p>Let's see how this works, converting the decimal digits 4 4 3 9 to a value.</p>
+
+<table BORDER="1" WIDTH="100%" CELLPADDING="1" CELLSPACING="1">
+<tr><th>Digit</th>
+<th>N</th>
+<th>Multiply by 10 </th>
+<th>Add digit</th></tr>
+<tr><td>4</td>
+<td>0</td>
+<td>0</td>
+<td>$4</td></tr>
+<tr><td>4</td>
+<td>$4</td>
+<td>$28 (decimal 40)</td>
+<td>$2C (44)</td></tr>
+<tr><td>3</td>
+<td>$2C</td>
+<td>$1B8 (440)</td>
+<td>$1BB (443)</td></tr>
+<tr><td>9</td>
+<td>$1BB</td>
+<td>$114E (4430)</td>
+<td>$1157 (final result, 4439)</td></tr></table>
+<p>Continue with the <a href="part003.html"><em>Central Processing Unit</em>.</a></p>
+
+<p>Return to the <a href="index.html">Index</a>.</p>
+
+</body>
+</html>
